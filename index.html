@@ -333,22 +333,6 @@
       cursor: pointer;
     }
 
-    /* Fullscreen specific behavior for monitor container */
-    .monitor-container:fullscreen {
-      width: 100vw;
-      height: 100vh;
-      border-radius: 0;
-      border: none;
-      background: #000;
-    }
-    .monitor-container:-webkit-full-screen {
-      width: 100vw;
-      height: 100vh;
-      border-radius: 0;
-      border: none;
-      background: #000;
-    }
-
     /* Live Status Banner Overlay */
     .live-status-banner {
       position: absolute;
@@ -430,8 +414,6 @@
       filter: brightness(2.5) contrast(1.5) sepia(0.6) hue-rotate(-10deg) saturate(1.2);
     }
 
-    video:fullscreen { height: 100vh; border-radius: 0; border: none; }
-    video:-webkit-full-screen { height: 100vh; border-radius: 0; border: none; }
     video::-webkit-media-controls-enclosure { display:none !important; }
 
     /* Parent Controls Grid - Compact 5x2 Grid */
@@ -540,8 +522,19 @@
     }
     .slider-container input { width: 100%; margin-top: 2px; cursor: pointer; accent-color: #f6ad55; height: 14px; }
 
-    /* Fullscreen YouTube-Style Toggle Overlay */
-    .controls.fullscreen-overlay {
+    /* Fullscreen YouTube-Style Toggle Overlay - Attached directly inside monitor container */
+    .monitor-container.fullscreen-mode {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 2147483646 !important;
+      border-radius: 0 !important;
+      border: none !important;
+    }
+
+    .monitor-container.fullscreen-mode .controls.fullscreen-overlay {
       position: absolute;
       bottom: 24px;
       left: 50%;
@@ -558,9 +551,10 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease, transform 0.2s ease;
+      display: grid !important;
     }
 
-    .controls.fullscreen-overlay.visible {
+    .monitor-container.fullscreen-mode .controls.fullscreen-overlay.visible {
       opacity: 1;
       pointer-events: auto;
       transform: translateX(-50%) translateY(0);
@@ -740,6 +734,25 @@
       </div>
 
       <video id="myCamera" autoplay playsinline></video>
+
+      <!-- FULLSCREEN OVERLAY CONTROLS (INJECTED INSIDE MONITOR CONTAINER) -->
+      <div class="controls fullscreen-overlay" id="fullscreenControls">
+        <button id="fsCamBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
+        <button id="fsTalkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
+        <button id="fsMicBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_off</span> Mute</button>
+        <button onclick="rotateCamera()"><span class="material-symbols-outlined">screen_rotation</span> Rotate</button>
+        <button id="fsNightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night</button>
+        
+        <button onclick="togglePiP()"><span class="material-symbols-outlined">picture_in_picture_alt</span> PiP</button>
+        <button onclick="toggleFullScreen()"><span class="material-symbols-outlined">fullscreen_exit</span> Exit</button>
+        <button id="fsAlarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm</button>
+        <div class="slider-container">
+          <label for="alarmSensitivity">Sensitivity</label>
+          <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
+        </div>
+        <button onclick="goBack()" class="off" style="background-color: #2d3748; color: white;"><span class="material-symbols-outlined">close</span> End</button>
+      </div>
+
     </div>
 
     <audio id="parentAudioOut" autoplay></audio>
@@ -770,7 +783,7 @@
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row; max-height: 52px;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
 
-    <!-- PARENT CONTROLS - Exactly 10 items formatted into a compact 5x2 grid -->
+    <!-- PARENT CONTROLS - Standard Grid View -->
     <div class="controls" id="parentControls" style="display:none;">
       <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
       <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
@@ -836,11 +849,7 @@
 
     function getPeerConfig() {
       if (selectedNetworkMode === 'wifi') {
-        return {
-          config: {
-            iceServers: [] 
-          }
-        };
+        return { config: { iceServers: [] } };
       } else {
         return {
           config: {
@@ -1144,8 +1153,10 @@
       document.getElementById('babyControls').style.display = "none";
       const controls = document.getElementById('parentControls');
       controls.style.display = "none";
-      controls.classList.remove('fullscreen-overlay', 'visible');
       
+      const fsControls = document.getElementById('fullscreenControls');
+      fsControls.classList.remove('visible');
+
       document.getElementById('camBtn').innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Pause';
       document.getElementById('camBtn').className = '';
       document.getElementById('talkBtn').innerHTML = '<span class="material-symbols-outlined">mic</span> Talk';
@@ -1156,6 +1167,10 @@
       const nightBtn = document.getElementById('nightModeBtn');
       nightBtn.innerHTML = '<span class="material-symbols-outlined">nightlight</span> Night';
       nightBtn.className = 'off';
+
+      const fsNightBtn = document.getElementById('fsNightModeBtn');
+      fsNightBtn.innerHTML = '<span class="material-symbols-outlined">nightlight</span> Night';
+      fsNightBtn.className = 'off';
 
       const aBtn = document.getElementById('alarmBtn');
       aBtn.innerHTML = '<span class="material-symbols-outlined">notifications_off</span> Alarm';
@@ -1232,15 +1247,20 @@
     function toggleNightMode() {
       isNightMode = !isNightMode;
       const nightBtn = document.getElementById('nightModeBtn');
+      const fsNightBtn = document.getElementById('fsNightModeBtn');
 
       if (isNightMode) {
         videoBox.classList.add('night-mode');
         nightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Day';
         nightBtn.className = 'night-active';
+        fsNightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Day';
+        fsNightBtn.className = 'night-active';
       } else {
         videoBox.classList.remove('night-mode');
         nightBtn.innerHTML = '<span class="material-symbols-outlined">nightlight</span> Night';
         nightBtn.className = 'off';
+        fsNightBtn.innerHTML = '<span class="material-symbols-outlined">nightlight</span> Night';
+        fsNightBtn.className = 'off';
       }
     }
 
@@ -1265,9 +1285,9 @@
       const optimalConstraints = {
         video: { facingMode: { ideal: "user" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15 } },
         audio: { 
-          echoCancellation: true, 
-          noiseSuppression: true, 
-          autoGainControl: true,
+          echoCancellation: false, 
+          noiseSuppression: false, 
+          autoGainControl: false,
           sampleRate: 48000
         }
       };
@@ -1331,7 +1351,7 @@
 
       peer.on('error', showDisconnect);
 
-      navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false })
+      navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false }, video: false })
         .then(function(stream) {
           parentLocalStream = stream;
           parentLocalStream.getAudioTracks()[0].enabled = false;
@@ -1366,7 +1386,7 @@
           videoBox.muted = false; 
           videoBox.srcObject = remoteStream;
 
-          // Stable Audio Pipeline using AudioContext & Anti-Choppy Buffer Settings
+          // Clean, uncompressed High-Gain Audio Pipeline
           try {
             if (!parentAudioCtx) {
               parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1379,18 +1399,10 @@
             }
             parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
             
-            const compressor = parentAudioCtx.createDynamicsCompressor();
-            compressor.threshold.setValueAtTime(-30, parentAudioCtx.currentTime);
-            compressor.knee.setValueAtTime(20, parentAudioCtx.currentTime);
-            compressor.ratio.setValueAtTime(20, parentAudioCtx.currentTime);
-            compressor.attack.setValueAtTime(0.001, parentAudioCtx.currentTime);
-            compressor.release.setValueAtTime(0.1, parentAudioCtx.currentTime);
-
             const gainNode = parentAudioCtx.createGain();
-            gainNode.gain.value = 10.0; 
+            gainNode.gain.value = 10.0; // Clean amplification without artifacts
 
-            parentAudioSource.connect(compressor);
-            compressor.connect(gainNode);
+            parentAudioSource.connect(gainNode);
             gainNode.connect(parentAudioCtx.destination);
           } catch (e) {
             console.log("Audio pipeline error:", e);
@@ -1463,16 +1475,19 @@
       if (!activeStream) return;
       const videoTrack = activeStream.getVideoTracks()[0];
       const btn = document.getElementById('camBtn');
+      const fsBtn = document.getElementById('fsCamBtn');
       
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled; 
         
         if (videoTrack.enabled) {
-          btn.innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Pause';
-          btn.classList.remove('off');
+          const text = '<span class="material-symbols-outlined">videocam_off</span> Pause';
+          btn.innerHTML = text; btn.classList.remove('off');
+          fsBtn.innerHTML = text; fsBtn.classList.remove('off');
         } else {
-          btn.innerHTML = '<span class="material-symbols-outlined">videocam</span> Resume';
-          btn.classList.add('off');
+          const text = '<span class="material-symbols-outlined">videocam</span> Resume';
+          btn.innerHTML = text; btn.classList.add('off');
+          fsBtn.innerHTML = text; fsBtn.classList.add('off');
         }
       }
     }
@@ -1485,69 +1500,83 @@
       
       const audioTrack = parentLocalStream.getAudioTracks()[0];
       const btn = document.getElementById('talkBtn');
+      const fsBtn = document.getElementById('fsTalkBtn');
       
       audioTrack.enabled = !audioTrack.enabled; 
       
       if (audioTrack.enabled) {
-        btn.innerHTML = '<span class="material-symbols-outlined">mic_off</span> Unmic';
-        btn.classList.add('active-green');
+        const text = '<span class="material-symbols-outlined">mic_off</span> Unmic';
+        btn.innerHTML = text; btn.classList.add('active-green');
+        fsBtn.innerHTML = text; fsBtn.classList.add('active-green');
       } else {
-        btn.innerHTML = '<span class="material-symbols-outlined">mic</span> Talk';
-        btn.classList.remove('active-green');
+        const text = '<span class="material-symbols-outlined">mic</span> Talk';
+        btn.innerHTML = text; btn.classList.remove('active-green');
+        fsBtn.innerHTML = text; fsBtn.classList.remove('active-green');
       }
     }
 
     function toggleParentListening() {
       const btn = document.getElementById('micBtn');
+      const fsBtn = document.getElementById('fsMicBtn');
       videoBox.muted = !videoBox.muted;
       
       if (videoBox.muted) {
-        btn.innerHTML = '<span class="material-symbols-outlined">volume_up</span> Unmute';
-        btn.classList.add('off');
+        const text = '<span class="material-symbols-outlined">volume_up</span> Unmute';
+        btn.innerHTML = text; btn.classList.add('off');
+        fsBtn.innerHTML = text; fsBtn.classList.add('off');
       } else {
-        btn.innerHTML = '<span class="material-symbols-outlined">volume_off</span> Mute';
-        btn.classList.remove('off');
+        const text = '<span class="material-symbols-outlined">volume_off</span> Mute';
+        btn.innerHTML = text; btn.classList.remove('off');
+        fsBtn.innerHTML = text; fsBtn.classList.remove('off');
       }
     }
 
     function toggleFullScreen() {
       const container = document.getElementById('monitorContainer'); 
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) { 
+      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) { 
         if (container.requestFullscreen) {
           container.requestFullscreen().catch(err => alert(`Fullscreen error: ${err.message}`));
         } else if (container.webkitRequestFullscreen) {
           container.webkitRequestFullscreen();
+        } else if (container.msRequestFullscreen) {
+          container.msRequestFullscreen();
         }
       } else { 
         if (document.exitFullscreen) {
           document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
           document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
         }
       }
     }
 
     // YouTube-Style Tap to Toggle Controls in Fullscreen Mode
     function handleVideoTap(event) {
-      const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+      const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
       if (isFullscreen && !isBaby) {
         event.stopPropagation();
-        const controls = document.getElementById('parentControls');
+        const controls = document.getElementById('fullscreenControls');
         controls.classList.toggle('visible');
       }
     }
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
 
     function handleFullscreenChange() {
-      const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
-      const controls = document.getElementById('parentControls');
+      const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+      const container = document.getElementById('monitorContainer');
+      const controls = document.getElementById('fullscreenControls');
+      
       if (isFullscreen && !isBaby) {
-        controls.classList.add('fullscreen-overlay');
+        container.classList.add('fullscreen-mode');
         controls.classList.remove('visible');
       } else {
-        controls.classList.remove('fullscreen-overlay', 'visible');
+        container.classList.remove('fullscreen-mode');
+        controls.classList.remove('visible');
       }
     }
 
@@ -1612,9 +1641,10 @@
       container.classList.add('flashing-severe');
 
       const btn = document.getElementById('alarmBtn');
-      btn.innerHTML = '<span class="material-symbols-outlined">notifications_active</span> Dismiss';
-      btn.classList.add('ringing');
-      btn.classList.remove('active-green');
+      const fsBtn = document.getElementById('fsAlarmBtn');
+      const text = '<span class="material-symbols-outlined">notifications_active</span> Dismiss';
+      btn.innerHTML = text; btn.classList.add('ringing'); btn.classList.remove('active-green');
+      fsBtn.innerHTML = text; fsBtn.classList.add('ringing'); fsBtn.classList.remove('active-green');
 
       playBeep();
       alarmBeepInterval = setInterval(playBeep, 1000);
@@ -1638,32 +1668,33 @@
 
     function toggleAlarm() {
       const btn = document.getElementById('alarmBtn');
+      const fsBtn = document.getElementById('fsAlarmBtn');
 
       if (isAlarmRinging) {
         isAlarmRinging = false;
         clearInterval(alarmBeepInterval);
         document.getElementById('monitorContainer').classList.remove('flashing-severe');
         
-        btn.innerHTML = '<span class="material-symbols-outlined">notifications_on</span> Alarm ON';
-        btn.classList.remove('ringing');
-        btn.classList.add('active-green');
+        const text = '<span class="material-symbols-outlined">notifications_on</span> Alarm ON';
+        btn.innerHTML = text; btn.classList.remove('ringing'); btn.classList.add('active-green');
+        fsBtn.innerHTML = text; fsBtn.classList.remove('ringing'); fsBtn.classList.add('active-green');
         return;
       }
 
       alarmActive = !alarmActive;
       if (alarmActive) {
-        btn.innerHTML = '<span class="material-symbols-outlined">notifications_on</span> Alarm ON';
-        btn.classList.remove('off');
-        btn.classList.add('active-green');
+        const text = '<span class="material-symbols-outlined">notifications_on</span> Alarm ON';
+        btn.innerHTML = text; btn.classList.remove('off'); btn.classList.add('active-green');
+        fsBtn.innerHTML = text; fsBtn.classList.remove('off'); fsBtn.classList.add('active-green');
         
         try {
           if (!alarmSoundCtx) { alarmSoundCtx = new (window.AudioContext || window.webkitAudioContext)(); }
           if (alarmSoundCtx.state === 'suspended') alarmSoundCtx.resume();
         } catch(e){}
       } else {
-        btn.innerHTML = '<span class="material-symbols-outlined">notifications_off</span> Alarm OFF';
-        btn.classList.remove('active-green');
-        btn.classList.add('off');
+        const text = '<span class="material-symbols-outlined">notifications_off</span> Alarm OFF';
+        btn.innerHTML = text; btn.classList.remove('active-green'); btn.classList.add('off');
+        fsBtn.innerHTML = text; fsBtn.classList.remove('active-green'); fsBtn.classList.add('off');
       }
     }
   </script>
