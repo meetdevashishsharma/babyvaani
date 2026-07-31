@@ -270,12 +270,15 @@
     </div>
 
     <div class="controls" id="parentControls" style="display:none;">
+      <!-- ROW 1 -->
       <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
       <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
       <button id="micBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_up</span> Unmute</button>
       <button onclick="rotateCamera()"><span class="material-symbols-outlined">screen_rotation</span> Rotate</button>
-      <button id="nightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night</button>
+      <button onclick="requestCameraSwitch()"><span class="material-symbols-outlined">flip_camera_ios</span> Flip Cam</button>
       
+      <!-- ROW 2 -->
+      <button id="nightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night</button>
       <button onclick="togglePiP()"><span class="material-symbols-outlined">picture_in_picture_alt</span> PiP</button>
       <button id="fsBtn" onclick="toggleFullScreen()"><span class="material-symbols-outlined">fullscreen</span> Full</button>
       <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm</button>
@@ -283,7 +286,11 @@
         <label for="alarmSensitivity">Sensitivity</label>
         <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
       </div>
-      <button onclick="goBack()" class="off" style="background-color: #2d3748; color: white;"><span class="material-symbols-outlined">close</span> End</button>
+      
+      <!-- ROW 3 (Spans Full Width) -->
+      <button onclick="goBack()" class="off" style="grid-column: 1 / -1; background-color: #2d3748; color: white; min-height: 40px; flex-direction: row; gap: 8px;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">close</span> End Session
+      </button>
     </div>
   </div>
 
@@ -299,6 +306,12 @@
     let selectedNetworkMode = 'internet', currentQuality = 'balanced';
     let pingInterval = null, heartbeatTimeout = null;
     let dimTimer = null; const DIM_TIMEOUT_MS = 10000; 
+
+    // Enable physical browser BACK button functionality 
+    window.addEventListener('popstate', () => {
+      // If the user presses the phone's physical back button, safely wipe streams and reload the app home page
+      window.location.reload(); 
+    });
 
     function initNetworkMode() { setNetworkMode(localStorage.getItem('babyVaani_netMode') || 'internet', false); }
     function setNetworkMode(mode, save = true) {
@@ -393,10 +406,17 @@
       }
     }
 
+    function getQualityConfig(quality) {
+      if (quality === 'fast') {
+        return { width: 640, height: 360, frameRate: 15, scaleFactor: 2.0, maxBitrate: 300000 }; 
+      } else {
+        return { width: 1280, height: 720, frameRate: 24, scaleFactor: 1.0, maxBitrate: 1500000 }; 
+      }
+    }
+
     function getVideoConstraints(quality) {
-      return quality === 'fast' 
-        ? { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 15 } }
-        : { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24 } };
+      const config = getQualityConfig(quality);
+      return { width: { ideal: config.width }, height: { ideal: config.height }, frameRate: { ideal: config.frameRate } };
     }
 
     async function populateCameras() {
@@ -418,7 +438,6 @@
       } catch (err) { console.log(err); }
     }
 
-    // FIX 1: Release hardware camera lock on Android before opening the new one
     async function switchCamera() {
       const deviceId = document.getElementById('cameraSelect').value;
       const constraints = { 
@@ -433,7 +452,6 @@
         let oldTrack = null;
         if (activeStream) {
           oldTrack = activeStream.getVideoTracks()[0];
-          // STOP the old track first to release hardware lock!
           if (oldTrack) oldTrack.stop(); 
         }
         
@@ -458,7 +476,33 @@
 
     async function applyQualityConstraints(quality) {
       currentQuality = quality;
-      switchCamera(); 
+      const config = getQualityConfig(quality);
+
+      if (activeStream) {
+        const track = activeStream.getVideoTracks()[0];
+        if (track) {
+          try {
+            await track.applyConstraints({
+              width: { ideal: config.width }, height: { ideal: config.height }, frameRate: { ideal: config.frameRate }
+            });
+          } catch (err) { console.log("Track constraint adjustment warning:", err); }
+        }
+      }
+
+      if (currentCall && currentCall.peerConnection) {
+        const sender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (sender && sender.getParameters) {
+          try {
+            const params = sender.getParameters();
+            if (!params.encodings || params.encodings.length === 0) { params.encodings = [{}]; }
+            
+            params.encodings[0].scaleResolutionDownBy = config.scaleFactor;
+            params.encodings[0].maxBitrate = config.maxBitrate;
+            
+            await sender.setParameters(params);
+          } catch (err) { console.log("Failed to adjust WebRTC RTP encoding parameters:", err); }
+        }
+      }
     }
 
     async function requestWakeLock() {
@@ -477,10 +521,10 @@
 
     function startBabyMode() {
       isBaby = true;
+      history.pushState({ active: true }, "", "#active"); // Triggers popstate on back button
       requestWakeLock();
       resetDimTimer();
       
-      // FIX 2: Pre-unlock the audio element during this exact button click to bypass mobile AutoPlay policies
       babyAudioOut.volume = 1.0;
       babyAudioOut.play().catch(e => { /* Ignore empty play error */ });
 
@@ -524,7 +568,6 @@
         currentCall = peer.call(conn.peer, activeStream); 
         currentCall.on('stream', parentStream => { 
           babyAudioOut.srcObject = parentStream;
-          // Force playback when the stream attaches
           babyAudioOut.play().catch(e => console.log("Talk stream autoplay blocked:", e));
         });
       });
@@ -532,6 +575,7 @@
 
     function startParentMode() {
       isBaby = false;
+      history.pushState({ active: true }, "", "#active"); // Triggers popstate on back button
       requestWakeLock(); 
       populateSavedDevicesDropdown();
       
@@ -601,9 +645,25 @@
       conn.on('data', data => handleDataChannelMessage(data, conn));
     }
 
+    // Triggered by the "Flip Cam" button on the parent side
+    function requestCameraSwitch() {
+      dataConnections.forEach(conn => { if(conn.open) conn.send(`SWITCH_CAM`); });
+    }
+
     function handleDataChannelMessage(data, conn) {
       if (typeof data !== 'string') return;
-      if (data.startsWith('BAT:')) {
+      
+      if (data === 'SWITCH_CAM') {
+        if (isBaby) {
+          const select = document.getElementById('cameraSelect');
+          if (select && select.options.length > 1) {
+            // Cycle to the next available camera index
+            select.selectedIndex = (select.selectedIndex + 1) % select.options.length;
+            switchCamera(); // Execute hardware swap
+          }
+        }
+      }
+      else if (data.startsWith('BAT:')) {
         const parts = data.split(':');
         const level = parseInt(parts[1]);
         const isCharging = parts[2] === 'true';
@@ -626,11 +686,6 @@
       else if (data.startsWith('QUALITY:')) {
         if(isBaby) applyQualityConstraints(data.split(':')[1]);
       }
-    }
-
-    function requestQualityChange() {
-      const q = document.getElementById('qualitySelect').value;
-      dataConnections.forEach(conn => { if(conn.open) conn.send(`QUALITY:${q}`); });
     }
 
     function toggleCamera() {
