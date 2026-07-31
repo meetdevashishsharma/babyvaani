@@ -164,6 +164,7 @@
       </div>
     </div>
 
+    <!-- NETWORK MODE BOX WITH CLEAR WARNING -->
     <div class="network-mode-box">
       <h4><span class="material-symbols-outlined" style="font-size: 18px;">router</span> Connection Speed Mode</h4>
       <div class="mode-options">
@@ -175,6 +176,9 @@
           <span class="material-symbols-outlined">wifi</span> Local Wi-Fi (LAN)
           <small style="font-size: 10px; font-weight: 400; color: #718096;">*Devices must share Wi-Fi</small>
         </button>
+      </div>
+      <div style="background: #fffaf0; border: 1px dashed #feebc8; padding: 8px 12px; border-radius: 10px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #dd6b20; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span class="material-symbols-outlined" style="font-size: 16px;">warning</span> Warning: Choose the exact same mode as the baby cam!
       </div>
     </div>
 
@@ -271,8 +275,9 @@
            <p style="color: #4a5568; font-size: 13px; margin:0;">Do not lock device or switch apps.</p>
          </div>
          
+         <!-- UPDATED DIM BUTTON TEXT -->
          <button onclick="forceDim()" class="active-green" style="margin-top: 15px; flex-direction: row; width: auto; margin-left: auto; margin-right: auto; background-color: #2d3748;">
-           <span class="material-symbols-outlined">mode_night</span> Dim Screen Now
+           <span class="material-symbols-outlined">mode_night</span> Dim Screen (To reduce battery)
          </button>
       </div>
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
@@ -558,7 +563,6 @@
 
       initBabyPeer();
 
-      // UNIVERSAL FIX: Use basic constraints to prevent hardware/driver hanging on mobile
       const basicConstraints = { video: true, audio: true };
 
       const cameraTimeout = new Promise((resolve, reject) => {
