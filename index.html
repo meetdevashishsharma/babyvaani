@@ -4,18 +4,18 @@
   <title>Baby Vaani Monitor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%230%22><text y=%22.9em%22 font-size=%2290%22>👶</text></svg>">
+  <!-- Fixed Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%22><text y=%22.9em%22 font-size=%2290%22>👶</text></svg>">
   <!-- Google Fonts: Inter -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    /* Professional Clean Aesthetic */
+    /* Warm, Nurturing, Baby-Oriented Professional Aesthetic (Non-SaaS) */
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-      background-color: #f8fafc; 
-      color: #0f172a;
+      background-color: #fffdf9; /* Soft nursery cream background */
+      color: #2d3748;
       text-align: center;
       margin: 0;
       padding: 24px 16px;
@@ -38,48 +38,49 @@
     }
     .brand-title {
       font-weight: 800;
-      letter-spacing: -1px;
-      font-size: 34px;
+      letter-spacing: -0.5px;
+      font-size: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       margin: 0;
     }
     .logo-icon { 
-      font-size: 42px; 
-      color: #2563eb; 
-      background: #eff6ff; 
-      padding: 6px; 
+      font-size: 44px; 
+      color: #f6ad55; /* Warm baby orange/coral */
+      background: #fffaf0; 
+      padding: 8px; 
       border-radius: 50%; 
+      box-shadow: 0 4px 15px rgba(246, 173, 85, 0.2);
     }
-    .brand-baby { color: #2563eb; }
-    .brand-vaani { color: #0f172a; }
+    .brand-baby { color: #f6ad55; }
+    .brand-vaani { color: #2d3748; }
     .brand-subtitle {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 2px;
-      color: #64748b;
+      letter-spacing: 2.5px;
+      color: #a0aec0;
       margin-top: 6px;
     }
 
-    /* Floating Context Graphic Banner */
+    /* Context Graphic Banner */
     .context-lineart-banner {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
       margin: 10px auto 20px auto;
-      background: #eff6ff;
+      background: #fffaf0;
       padding: 8px 18px;
       border-radius: 30px;
-      border: 1px solid #dbeafe;
+      border: 1px solid #feebc8;
     }
     .context-lineart-banner span {
       font-size: 13px;
       font-weight: 600;
-      color: #1e40af;
+      color: #dd6b20;
     }
 
     .screen { display: none; width: 100%; max-width: 900px; }
@@ -96,28 +97,32 @@
       box-sizing: border-box;
     }
 
-    /* USP Banner */
+    /* Warm Nursery USP Banner */
     .usp-banner {
-      background: #eff6ff;
-      border-left: 4px solid #2563eb;
-      padding: 16px 24px;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #fffaf0 100%, #f0fff4 0%);
+      border-left: 4px solid #f6ad55;
+      padding: 18px 24px;
+      border-radius: 16px;
       margin: 0 auto 25px auto;
       display: flex;
       align-items: center;
       gap: 16px;
       text-align: left;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 8px 20px rgba(246, 173, 85, 0.06);
     }
     .usp-banner .material-symbols-outlined {
-      font-size: 36px;
-      color: #2563eb;
+      font-size: 38px;
+      color: #f6ad55;
+      background: #ffffff;
+      padding: 8px;
+      border-radius: 50%;
       flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     .usp-text h3 {
       margin: 0 0 4px 0;
       font-size: 15px;
-      color: #1e3a8a;
+      color: #dd6b20;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       font-weight: 800;
@@ -125,7 +130,7 @@
     .usp-text p {
       margin: 0;
       font-size: 14px;
-      color: #334155;
+      color: #4a5568;
       line-height: 1.5;
       font-weight: 500;
     }
@@ -140,9 +145,9 @@
     .onboard-step {
       background: #ffffff;
       padding: 20px 15px;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03);
+      border-radius: 20px;
+      border: 1px solid #edf2f7;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -150,8 +155,8 @@
       text-align: center;
     }
     .onboard-icon {
-      background: #eff6ff;
-      color: #2563eb;
+      background: #fffaf0;
+      color: #f6ad55;
       padding: 12px;
       border-radius: 50%;
       font-size: 24px;
@@ -161,12 +166,12 @@
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #0f172a;
+      color: #2d3748;
       margin: 0;
     }
     .onboard-text {
       font-size: 13px;
-      color: #64748b;
+      color: #718096;
       margin: 0;
       line-height: 1.4;
     }
@@ -178,9 +183,9 @@
     .hero-image-container img {
       width: 100%;
       height: auto;
-      border-radius: 16px;
+      border-radius: 24px;
       border: 6px solid #ffffff;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.08);
       object-fit: cover;
       display: block;
     }
@@ -189,17 +194,18 @@
     .room-code-box {
       font-size: 28px;
       font-weight: 800;
-      background: #f8fafc;
+      background: #ffffff;
       padding: 16px 24px;
-      border-radius: 8px;
-      border: 2px dashed #cbd5e1;
+      border-radius: 16px;
+      border: 2px dashed #feebc8;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
       letter-spacing: 6px;
-      color: #2563eb;
+      color: #dd6b20;
       margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(246, 173, 85, 0.08);
     }
 
     .copy-share-group {
@@ -217,21 +223,22 @@
       font-size: 20px;
       padding: 16px;
       text-align: center;
-      border: 2px solid #cbd5e1;
+      border: 2px solid #e2e8f0;
       background: #ffffff;
-      border-radius: 8px;
+      border-radius: 16px;
       width: 100%;
       max-width: 320px;
       text-transform: uppercase;
       letter-spacing: 3px;
       font-weight: 700;
-      color: #0f172a;
+      color: #2d3748;
       outline: none;
       transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
     input[type="text"]:focus { 
-      border-color: #2563eb; 
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+      border-color: #f6ad55; 
+      box-shadow: 0 0 0 4px rgba(246, 173, 85, 0.15);
     }
     select { text-transform: none; letter-spacing: normal; }
 
@@ -243,28 +250,28 @@
       margin-bottom: 25px;
       font-size: 14px;
       font-weight: 500;
-      color: #475569;
+      color: #4a5568;
       cursor: pointer;
     }
     .checkbox-container input {
       width: 18px;
       height: 18px;
-      accent-color: #2563eb;
+      accent-color: #f6ad55;
       cursor: pointer;
     }
 
     /* Main Video Container */
     .monitor-container {
       background: #000;
-      border-radius: 16px;
+      border-radius: 24px;
       overflow: hidden; 
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
       position: relative;
       height: 60vh; 
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 4px solid #1e293b;
+      border: 4px solid #ffffff;
       margin-bottom: 15px;
     }
 
@@ -273,9 +280,9 @@
       position: absolute;
       top: 20px;
       left: 20px;
-      background: rgba(15, 23, 42, 0.75);
+      background: rgba(45, 55, 72, 0.8);
       color: #ffffff;
-      padding: 8px 14px;
+      padding: 8px 16px;
       border-radius: 20px;
       font-size: 13px;
       font-weight: 600;
@@ -284,6 +291,7 @@
       gap: 10px;
       z-index: 20;
       backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.15);
     }
     
     .keep-open-overlay {
@@ -291,9 +299,9 @@
       bottom: 25px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(220, 38, 38, 0.9);
+      background: rgba(220, 38, 38, 0.92);
       color: #ffffff;
-      padding: 10px 20px;
+      padding: 10px 22px;
       border-radius: 30px;
       font-size: 13px;
       font-weight: 700;
@@ -302,6 +310,7 @@
       gap: 8px;
       z-index: 25;
       backdrop-filter: blur(6px);
+      box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
       white-space: nowrap;
     }
 
@@ -310,28 +319,28 @@
       height: 10px;
       border-radius: 50%;
     }
-    .status-dot.live { background-color: #22c55e; animation: pulseLive 2s infinite; }
-    .status-dot.waiting { background-color: #eab308; animation: pulseWait 2s infinite; }
-    .status-dot.offline { background-color: #ef4444; }
+    .status-dot.live { background-color: #48bb78; animation: pulseLive 2s infinite; }
+    .status-dot.waiting { background-color: #ecc94b; animation: pulseWait 2s infinite; }
+    .status-dot.offline { background-color: #f56565; }
 
     @keyframes pulseLive {
-      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
-      70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.6); }
+      70% { box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
     }
     @keyframes pulseWait {
-      0% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.6); }
-      70% { box-shadow: 0 0 0 6px rgba(234, 179, 8, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(236, 201, 75, 0.6); }
+      70% { box-shadow: 0 0 0 6px rgba(236, 201, 75, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(236, 201, 75, 0); }
     }
 
     .flashing-severe {
-      border-color: #ef4444 !important;
+      border-color: #f56565 !important;
       animation: severeFlash 0.5s infinite alternate;
     }
     @keyframes severeFlash {
-      from { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
-      to { box-shadow: 0 0 60px rgba(239, 68, 68, 1); }
+      from { box-shadow: 0 0 20px rgba(245, 101, 101, 0.4); }
+      to { box-shadow: 0 0 60px rgba(245, 101, 101, 1); }
     }
 
     video { 
@@ -354,7 +363,7 @@
     .controls {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
+      gap: 12px;
       margin-top: 10px;
       width: 100%;
     }
@@ -367,13 +376,13 @@
 
     button {
       font-family: inherit;
-      background-color: #0f172a;
+      background-color: #2d3748; /* Warm professional pebble slate */
       color: white;
       border: none;
       padding: 12px 10px;
       font-size: 13px;
       font-weight: 600;
-      border-radius: 8px;
+      border-radius: 16px;
       cursor: pointer;
       width: 100%;
       min-height: 56px;
@@ -384,25 +393,25 @@
       gap: 4px;
       box-sizing: border-box;
       transition: all 0.2s ease;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
 
     button:active { transform: scale(0.97); }
     button:hover { 
-      background-color: #1e293b; 
+      background-color: #1a202c; 
       transform: translateY(-2px);
     }
     
-    button.off { background-color: #64748b; color: #ffffff; }
-    button.off:hover { background-color: #475569; }
+    button.off { background-color: #cbd5e0; color: #4a5568; }
+    button.off:hover { background-color: #a0aec0; }
     
-    button.active-green { background-color: #10b981; }
-    button.active-green:hover { background-color: #059669; }
+    button.active-green { background-color: #48bb78; }
+    button.active-green:hover { background-color: #38a169; }
     
-    button.night-active { background-color: #d97706; color: #fff; }
-    button.night-active:hover { background-color: #b45309; }
+    button.night-active { background-color: #d69e2e; color: #fff; }
+    button.night-active:hover { background-color: #b7791f; }
 
-    button.ringing { background-color: #ef4444; animation: pulseRed 1s infinite; }
+    button.ringing { background-color: #f56565; animation: pulseRed 1s infinite; }
     @keyframes pulseRed {
       0% { transform: scale(1); }
       50% { transform: scale(1.05); }
@@ -411,19 +420,19 @@
 
     button.back-btn, button.icon-btn {
       background-color: #ffffff;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
+      color: #2d3748;
+      border: 1px solid #e2e8f0;
       padding: 10px 16px;
       margin-bottom: 10px;
-      border-radius: 8px;
+      border-radius: 12px;
       width: auto;
       min-height: auto;
       flex-direction: row;
     }
     button.back-btn:hover, button.icon-btn:hover {
-      background-color: #f8fafc;
-      color: #2563eb;
-      border-color: #2563eb;
+      background-color: #fffaf0;
+      color: #dd6b20;
+      border-color: #feebc8;
     }
 
     /* Slider Container Matched to Grid Cell Size */
@@ -434,27 +443,27 @@
       justify-content: center;
       background: #ffffff;
       padding: 8px 12px;
-      border-radius: 8px;
+      border-radius: 16px;
       font-size: 12px;
       font-weight: 700;
-      border: 2px solid #cbd5e1;
+      border: 2px solid #e2e8f0;
       width: 100%;
       min-height: 56px;
       box-sizing: border-box;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-      color: #0f172a;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      color: #2d3748;
     }
-    .slider-container input { width: 100%; margin-top: 4px; cursor: pointer; accent-color: #2563eb; }
+    .slider-container input { width: 100%; margin-top: 4px; cursor: pointer; accent-color: #f6ad55; }
 
     /* Wizard Steps */
     .wizard-step {
       background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
+      border: 1px solid #edf2f7;
+      border-radius: 20px;
       padding: 30px 20px;
       margin-top: 15px;
       display: none;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03);
       width: 100%;
       box-sizing: border-box;
     }
@@ -462,7 +471,7 @@
     
     .wizard-step h3 {
       margin-top: 0;
-      color: #0f172a;
+      color: #2d3748;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -475,7 +484,7 @@
     .overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(45, 55, 72, 0.9);
       backdrop-filter: blur(4px);
       color: white;
       display: flex;
@@ -490,9 +499,9 @@
       font-size: 15px;
       font-weight: 500;
       margin-top: 15px;
-      color: #cbd5e1;
+      color: #e2e8f0;
     }
-    #pipOverlay { z-index: 5; background: #0f172a; }
+    #pipOverlay { z-index: 5; background: #2d3748; }
   </style>
 </head>
 <body>
@@ -506,10 +515,10 @@
     
     <!-- Context Graphic Banner -->
     <div class="context-lineart-banner">
-      <span class="material-symbols-outlined" style="font-size: 18px; color: #2563eb;">smartphone</span>
-      <span style="color: #94a3b8; font-size: 12px;">⇄</span>
-      <span class="material-symbols-outlined" style="font-size: 18px; color: #2563eb;">child_care</span>
-      <span style="font-size: 12px; font-weight: 600; color: #1e3a8a;">Secure P2P Nursery Stream</span>
+      <span class="material-symbols-outlined" style="font-size: 18px; color: #f6ad55;">smartphone</span>
+      <span style="color: #cbd5e0; font-size: 12px;">⇄</span>
+      <span class="material-symbols-outlined" style="font-size: 18px; color: #f6ad55;">child_care</span>
+      <span style="font-size: 12px; font-weight: 600; color: #dd6b20;">Secure P2P Nursery Stream</span>
     </div>
   </div>
 
@@ -542,7 +551,7 @@
     </div>
 
     <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
-      <button onclick="startBabyMode()" style="background-color: #2563eb; color: #fff; flex-direction: row;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
+      <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
       <button onclick="startParentMode()" style="flex-direction: row;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
     </div>
 
@@ -563,13 +572,13 @@
       <input type="checkbox" id="rememberCodeCheck" checked> Remember this room code on this device
     </label>
 
-    <button onclick="connectToBaby()" style="width: 100%; background-color: #2563eb; color: #fff; padding: 16px; font-size: 16px; flex-direction: row;"><span class="material-symbols-outlined">link</span> Connect to Monitor</button>
+    <button onclick="connectToBaby()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px; flex-direction: row;"><span class="material-symbols-outlined">link</span> Connect to Monitor</button>
   </div>
 
   <div id="videoScreen" class="screen">
     
     <div id="parentTopBar" style="display:none; flex-direction: column; align-items: center;">
-      <div id="activeCodeDisplay" class="room-code-box" style="font-size: 16px; padding: 12px 24px; margin-bottom: 10px; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>
+      <div id="activeCodeDisplay" class="room-code-box" style="font-size: 16px; padding: 12px 24px; margin-bottom: 10px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05);"></div>
       <div class="copy-share-group">
         <button class="icon-btn" style="padding: 8px 16px; font-size: 13px;" onclick="copyCode()"><span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span> Copy Link</button>
         <button class="icon-btn" style="padding: 8px 16px; font-size: 13px;" onclick="shareCode()"><span class="material-symbols-outlined" style="font-size: 18px;">ios_share</span> Share</button>
@@ -591,13 +600,13 @@
       </div>
 
       <div id="disconnectOverlay" class="overlay" style="display:none;">
-        <span class="material-symbols-outlined" style="font-size: 54px; color: #ef4444; margin-bottom: 12px;">signal_disconnected</span>
-        <span style="color:#ef4444;">Disconnected</span>
+        <span class="material-symbols-outlined" style="font-size: 54px; color: #f56565; margin-bottom: 12px;">signal_disconnected</span>
+        <span style="color:#f56565;">Disconnected</span>
         <p>The connection has been lost.</p>
       </div>
 
       <div id="pipOverlay" class="overlay" style="display:none;">
-        <span class="material-symbols-outlined" style="font-size: 54px; color: #3b82f6; margin-bottom: 12px;">picture_in_picture_alt</span>
+        <span class="material-symbols-outlined" style="font-size: 54px; color: #f6ad55; margin-bottom: 12px;">picture_in_picture_alt</span>
         <span>PiP Active</span>
         <p style="max-width: 80%; text-align: center;">Return to this screen after sharing your code to keep the stream running.</p>
       </div>
@@ -610,21 +619,21 @@
     <div id="babyControls" style="display:none; width: 100%;">
       
       <div id="babyStep1" class="wizard-step active">
-         <h3><span class="material-symbols-outlined" style="color: #2563eb;">center_focus_strong</span> Step 1: Position</h3>
-         <p style="font-size: 15px; margin-bottom: 25px; color: #475569;">Prop your device up so the baby is perfectly in frame.</p>
+         <h3><span class="material-symbols-outlined" style="color: #f6ad55;">center_focus_strong</span> Step 1: Position</h3>
+         <p style="font-size: 15px; margin-bottom: 25px; color: #718096;">Prop your device up so the baby is perfectly in frame.</p>
          <button onclick="nextBabyStep(2)" class="active-green" style="margin: 0 auto; padding: 14px 24px; width: auto; flex-direction: row;">Looks Good <span class="material-symbols-outlined">arrow_forward</span></button>
       </div>
 
       <div id="babyStep2" class="wizard-step">
-         <h3><span class="material-symbols-outlined" style="color: #2563eb;">smartphone</span> Step 2: Connect</h3>
+         <h3><span class="material-symbols-outlined" style="color: #f6ad55;">smartphone</span> Step 2: Connect</h3>
          
-         <p style="font-size: 15px; font-weight: 600; color: #475569; margin-bottom: 15px;">Enter this code on parent device:</p>
+         <p style="font-size: 15px; font-weight: 600; color: #718096; margin-bottom: 15px;">Enter this code on parent device:</p>
          <div class="room-code-box" id="wizardCodeDisplay" style="margin-bottom: 25px;">Loading...</div>
 
-         <div style="background: #eff6ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; text-align: center;">
-           <span class="material-symbols-outlined" style="font-size: 32px; color: #2563eb; margin-bottom: 8px;">verified</span>
-           <h4 style="color: #1e3a8a; margin: 0 0 8px 0; font-size: 16px; font-weight: 800; letter-spacing: 0.5px;">Keep This Page Open</h4>
-           <p style="color: #334155; font-weight: 500; font-size: 14px; margin:0; line-height: 1.5;">
+         <div style="background: #fffaf0; border: 1px solid #feebc8; border-radius: 16px; padding: 20px; text-align: center;">
+           <span class="material-symbols-outlined" style="font-size: 32px; color: #dd6b20; margin-bottom: 8px;">verified</span>
+           <h4 style="color: #dd6b20; margin: 0 0 8px 0; font-size: 16px; font-weight: 800; letter-spacing: 0.5px;">Keep This Page Open</h4>
+           <p style="color: #4a5568; font-weight: 500; font-size: 14px; margin:0; line-height: 1.5;">
              Do not manually lock your device or switch apps.<br>Your screen will stay awake automatically.
            </p>
          </div>
@@ -648,7 +657,7 @@
         <label for="alarmSensitivity">Alarm Sensitivity</label>
         <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
       </div>
-      <button onclick="goBack()" class="off" style="background-color: #0f172a; color: white;"><span class="material-symbols-outlined">close</span> End Stream</button>
+      <button onclick="goBack()" class="off" style="background-color: #2d3748; color: white;"><span class="material-symbols-outlined">close</span> End Stream</button>
     </div>
   </div>
 
