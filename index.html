@@ -59,7 +59,7 @@
     .checkbox-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
     .checkbox-container input { width: 16px; height: 16px; accent-color: #f6ad55; }
 
-    .monitor-container { background: #000; border-radius: 20px; overflow: hidden; position: relative; height: 52vh; display: flex; align-items: center; justify-content: center; border: 3px solid #ffffff; margin-bottom: 10px; cursor: pointer; transform: translateZ(0); will-change: transform; }
+    .monitor-container { background: #000; border-radius: 20px; overflow: hidden; position: relative; height: 52vh; width: 100%; display: flex; align-items: center; justify-content: center; border: 3px solid #ffffff; margin-bottom: 10px; cursor: pointer; transform: translateZ(0); will-change: transform; }
     .live-status-banner { position: absolute; top: 15px; left: 15px; background: rgba(45, 55, 72, 0.8); color: #ffffff; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; z-index: 20; backdrop-filter: blur(8px); }
     .battery-indicator { display: none; align-items: center; gap: 4px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 12px; margin-left: 8px; font-size: 11px; }
     
@@ -80,13 +80,16 @@
     video.night-mode { filter: brightness(2.5) contrast(1.5) sepia(0.6) hue-rotate(-10deg) saturate(1.2); }
     video::-webkit-media-controls-enclosure { display:none !important; }
 
-    /* FULL PAGE OLED Dimming Overlay */
+    /* FULL PAGE OLED Dimming Overlay (Fixed for Mobile Viewports) */
     #dimOverlay { 
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-      background: #000000; z-index: 9999; opacity: 0; 
-      pointer-events: none; transition: opacity 1.5s ease-in-out; 
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; /* Pins to all 4 corners */
+      background-color: #000000; /* Pure black for OLED shutoff */
+      z-index: 2147483647; /* Maximum possible z-index */
+      opacity: 0; 
+      pointer-events: none; 
+      transition: opacity 1.5s ease-in-out; 
     }
-    #dimOverlay.active { opacity: 0.98; pointer-events: auto; }
+    #dimOverlay.active { opacity: 1; pointer-events: auto; } /* 100% Opacity = completely black */
 
     .controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 5px; width: 100%; }
     button { font-family: inherit; background-color: #2d3748; color: white; border: none; padding: 8px 4px; font-size: 11px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
@@ -260,12 +263,18 @@
       <div id="babyStep2" class="wizard-step">
          <h3><span class="material-symbols-outlined" style="color: #f6ad55;">smartphone</span> Step 2: Connect</h3>
          <p style="font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 12px;">Enter code on parent device:</p>
-         <div class="room-code-box" id="wizardCodeDisplay" style="margin-bottom: 20px;">Loading...</div>
+         <div class="room-code-box" id="wizardCodeDisplay" style="margin-bottom: 20px;"></div>
          <div style="background: #fffaf0; border: 1px solid #feebc8; border-radius: 14px; padding: 16px;">
            <span class="material-symbols-outlined" style="font-size: 28px; color: #dd6b20;">verified</span>
            <h4 style="color: #dd6b20; margin: 6px 0; font-size: 15px;">Keep This Window Open</h4>
            <p style="color: #4a5568; font-size: 13px; margin:0;">Do not lock device or switch apps.</p>
          </div>
+         
+         <!-- NEW: Dim Screen Now Button so you don't have to wait 10 seconds -->
+         <button onclick="forceDim()" class="active-green" style="margin-top: 15px; flex-direction: row; width: auto; margin-left: auto; margin-right: auto; background-color: #2d3748;">
+           <span class="material-symbols-outlined">mode_night</span> Dim Screen Now
+         </button>
+
       </div>
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
@@ -364,6 +373,12 @@
       document.getElementById('statusDot').className = 'status-dot ' + mode;
     }
 
+    function forceDim() {
+      if (!isBaby) return;
+      clearTimeout(dimTimer);
+      document.getElementById('dimOverlay').classList.add('active');
+    }
+
     function resetDimTimer() {
       if (!isBaby) return;
       const overlay = document.getElementById('dimOverlay');
@@ -371,7 +386,8 @@
       clearTimeout(dimTimer);
       dimTimer = setTimeout(() => { overlay.classList.add('active'); }, DIM_TIMEOUT_MS);
     }
-    ['touchstart', 'click', 'mousemove'].forEach(evt => { window.addEventListener(evt, resetDimTimer); });
+    // Only wake on actual touches/clicks, not tiny accelerometer mousemoves
+    ['touchstart', 'click'].forEach(evt => { window.addEventListener(evt, resetDimTimer); });
 
     function startBatteryTracking() {
       if ('getBattery' in navigator) {
@@ -473,14 +489,16 @@
       resetDimTimer();
       
       let code = localStorage.getItem('babyVaani_roomCode');
-      if (!code) {
+      if (!code || code.length !== 6) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         code = Array.from({length:6}).map(()=>chars.charAt(Math.floor(Math.random()*chars.length))).join('');
         localStorage.setItem('babyVaani_roomCode', code);
       }
       activeRoomCode = code;
+      document.getElementById('wizardCodeDisplay').innerText = activeRoomCode;
+
       peer = new Peer(activeRoomCode, getPeerConfig());
-      peer.on('open', id => document.getElementById('wizardCodeDisplay').innerText = id);
+      peer.on('error', err => console.log("Peer error:", err));
 
       const optimalConstraints = { video: getVideoConstraints('balanced'), audio: { echoCancellation: false, noiseSuppression: false } };
 
@@ -490,7 +508,11 @@
           videoBox.srcObject = stream;
           videoBox.muted = true; 
           showScreen('videoScreen');
+          
           document.getElementById('babyControls').style.display = "block";
+          document.getElementById('parentControls').style.display = "none";
+          document.getElementById('parentTopBar').style.display = "none";
+          
           document.getElementById('babyKeepOpenOverlay').style.display = "flex";
           setLiveStatus('waiting', 'Camera Ready');
 
@@ -586,7 +608,6 @@
         const level = parseInt(parts[1]);
         const isCharging = parts[2] === 'true';
 
-        // Update top bar battery text
         const battUI = document.getElementById('remoteBattery');
         battUI.style.display = 'flex';
         document.getElementById('battLevel').innerText = level + '%';
@@ -594,7 +615,6 @@
         icon.innerText = isCharging ? 'battery_charging_full' : 'battery_full';
         icon.style.color = level <= 20 ? '#f56565' : '#48bb78';
 
-        // Handle Low Battery Popup Alert
         const lowBattAlert = document.getElementById('lowBatteryAlert');
         if (level <= 20 && !isCharging) {
           lowBattAlert.style.display = 'flex';
