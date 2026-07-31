@@ -333,6 +333,22 @@
       cursor: pointer;
     }
 
+    /* Fullscreen specific behavior for monitor container */
+    .monitor-container:fullscreen {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      border: none;
+      background: #000;
+    }
+    .monitor-container:-webkit-full-screen {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      border: none;
+      background: #000;
+    }
+
     /* Live Status Banner Overlay */
     .live-status-banner {
       position: absolute;
@@ -415,6 +431,7 @@
     }
 
     video:fullscreen { height: 100vh; border-radius: 0; border: none; }
+    video:-webkit-full-screen { height: 100vh; border-radius: 0; border: none; }
     video::-webkit-media-controls-enclosure { display:none !important; }
 
     /* Parent Controls Grid - Compact 5x2 Grid */
@@ -525,19 +542,19 @@
 
     /* Fullscreen YouTube-Style Toggle Overlay */
     .controls.fullscreen-overlay {
-      position: fixed;
-      bottom: 20px;
+      position: absolute;
+      bottom: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(20px);
       width: 92%;
-      max-width: 600px;
-      background: rgba(45, 55, 72, 0.95);
+      max-width: 560px;
+      background: rgba(45, 55, 72, 0.94);
       backdrop-filter: blur(12px);
       padding: 10px;
       border-radius: 20px;
       border: 1px solid rgba(255, 255, 255, 0.3);
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
-      z-index: 2147483647; /* Maximum z-index above fullscreen video element */
+      z-index: 2147483647;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease, transform 0.2s ease;
@@ -1349,7 +1366,7 @@
           videoBox.muted = false; 
           videoBox.srcObject = remoteStream;
 
-          // Jitter Buffer Optimization + Audio Boost & Anti-Choppy Compressor
+          // Stable Audio Pipeline using AudioContext & Anti-Choppy Buffer Settings
           try {
             if (!parentAudioCtx) {
               parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1363,20 +1380,20 @@
             parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
             
             const compressor = parentAudioCtx.createDynamicsCompressor();
-            compressor.threshold.setValueAtTime(-28, parentAudioCtx.currentTime);
-            compressor.knee.setValueAtTime(25, parentAudioCtx.currentTime);
-            compressor.ratio.setValueAtTime(16, parentAudioCtx.currentTime);
-            compressor.attack.setValueAtTime(0.002, parentAudioCtx.currentTime);
-            compressor.release.setValueAtTime(0.2, parentAudioCtx.currentTime);
+            compressor.threshold.setValueAtTime(-30, parentAudioCtx.currentTime);
+            compressor.knee.setValueAtTime(20, parentAudioCtx.currentTime);
+            compressor.ratio.setValueAtTime(20, parentAudioCtx.currentTime);
+            compressor.attack.setValueAtTime(0.001, parentAudioCtx.currentTime);
+            compressor.release.setValueAtTime(0.1, parentAudioCtx.currentTime);
 
             const gainNode = parentAudioCtx.createGain();
-            gainNode.gain.value = 10.0; // High audio volume boost
+            gainNode.gain.value = 10.0; 
 
             parentAudioSource.connect(compressor);
             compressor.connect(gainNode);
             gainNode.connect(parentAudioCtx.destination);
           } catch (e) {
-            console.log("Audio boost context error:", e);
+            console.log("Audio pipeline error:", e);
           }
         });
       });
@@ -1495,33 +1512,44 @@
 
     function toggleFullScreen() {
       const container = document.getElementById('monitorContainer'); 
-      if (!document.fullscreenElement) { 
-        container.requestFullscreen().catch(err => {
-          alert(`Error attempting to enable full-screen mode: ${err.message}`);
-        }); 
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) { 
+        if (container.requestFullscreen) {
+          container.requestFullscreen().catch(err => alert(`Fullscreen error: ${err.message}`));
+        } else if (container.webkitRequestFullscreen) {
+          container.webkitRequestFullscreen();
+        }
       } else { 
-        document.exitFullscreen(); 
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
       }
     }
 
     // YouTube-Style Tap to Toggle Controls in Fullscreen Mode
     function handleVideoTap(event) {
-      if (document.fullscreenElement && !isBaby) {
+      const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+      if (isFullscreen && !isBaby) {
         event.stopPropagation();
         const controls = document.getElementById('parentControls');
         controls.classList.toggle('visible');
       }
     }
 
-    document.addEventListener('fullscreenchange', () => {
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    function handleFullscreenChange() {
+      const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
       const controls = document.getElementById('parentControls');
-      if (document.fullscreenElement && !isBaby) {
+      if (isFullscreen && !isBaby) {
         controls.classList.add('fullscreen-overlay');
         controls.classList.remove('visible');
       } else {
         controls.classList.remove('fullscreen-overlay', 'visible');
       }
-    });
+    }
 
     function startAudioAnalysis(stream) {
       if (!babyAudioCtx) return;
