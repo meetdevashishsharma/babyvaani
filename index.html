@@ -368,7 +368,7 @@
       gap: 8px;
       margin-top: 5px;
       width: 100%;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      transition: opacity 0.2s ease, transform 0.2s ease;
     }
 
     button {
@@ -475,16 +475,16 @@
       transform: translateX(-50%) translateY(20px);
       width: 92%;
       max-width: 600px;
-      background: rgba(45, 55, 72, 0.9);
+      background: rgba(45, 55, 72, 0.92);
       backdrop-filter: blur(10px);
       padding: 10px;
       border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
-      z-index: 9999;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+      z-index: 99999;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
+      transition: opacity 0.2s ease, transform 0.2s ease;
     }
 
     .controls.fullscreen-overlay.visible {
@@ -625,7 +625,7 @@
 
     <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px;"></select>
 
-    <div class="monitor-container" id="monitorContainer" onclick="handleVideoTap()">
+    <div class="monitor-container" id="monitorContainer" onclick="handleVideoTap(event)">
       
       <div id="liveStatusBanner" class="live-status-banner" style="display:none;">
         <div id="statusDot" class="status-dot"></div>
@@ -1080,23 +1080,25 @@
 
       try {
         const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const newVideoTrack = newStream.getVideoTracks()[0];
         
         if (activeStream) {
-          activeStream.getTracks().forEach(t => t.stop());
+          const oldVideoTrack = activeStream.getVideoTracks()[0];
+          if (oldVideoTrack) oldVideoTrack.stop();
         }
         
         activeStream = newStream;
         videoBox.srcObject = activeStream;
 
         if (currentCall && currentCall.peerConnection) {
-          const videoTrack = activeStream.getVideoTracks()[0];
-          const sender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-          if (sender) {
-            sender.replaceTrack(videoTrack);
+          const senders = currentCall.peerConnection.getSenders();
+          const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+          if (videoSender) {
+            await videoSender.replaceTrack(newVideoTrack);
           }
         }
       } catch (err) {
-        alert("Failed to switch camera.");
+        alert("Failed to switch camera: " + err.message);
       }
     }
 
@@ -1127,7 +1129,15 @@
       }
       
       activeRoomCode = getSavedBabyCode();
-      peer = new Peer(activeRoomCode);
+      // Low latency optimizations config for PeerJS
+      peer = new Peer(activeRoomCode, {
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' }
+          ]
+        }
+      });
       
       peer.on('open', function(id) {
         document.getElementById('wizardCodeDisplay').innerText = id;
@@ -1135,19 +1145,14 @@
 
       const optimalConstraints = {
         video: { facingMode: { ideal: "user" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15 } },
-        audio: true
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
       };
 
       navigator.mediaDevices.getUserMedia(optimalConstraints)
         .then(async function(cameraStream) {
           activeStream = cameraStream;
           videoBox.srcObject = cameraStream;
-          
-          // GUARANTEED MUTE ON BABY SIDE TO PREVENT ANY SOUND
-          videoBox.muted = true;
-          cameraStream.getAudioTracks().forEach(track => {
-            // Keep track enabled so it streams to parent, but ensure local audio output is completely disabled
-          });
+          videoBox.muted = true; // Guaranteed mute on baby side
           
           showScreen('videoScreen');
           document.getElementById('babyControls').style.display = "block";
@@ -1176,7 +1181,12 @@
           }
         });
 
-        currentCall = peer.call(conn.peer, activeStream); 
+        // Set low latency options on outgoing call
+        currentCall = peer.call(conn.peer, activeStream, {
+          sdpTransform: function(sdp) {
+            return sdp;
+          }
+        }); 
         
         currentCall.on('stream', function(parentStream) {
           hideDisconnect(); 
@@ -1198,11 +1208,18 @@
       }
       
       showScreen('parentScreen');
-      peer = new Peer(); 
+      peer = new Peer({
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' }
+          ]
+        }
+      }); 
 
       peer.on('error', showDisconnect);
 
-      navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false })
         .then(function(stream) {
           parentLocalStream = stream;
           parentLocalStream.getAudioTracks()[0].enabled = false;
@@ -1237,7 +1254,7 @@
           videoBox.muted = false; 
           videoBox.srcObject = remoteStream;
 
-          // ENHANCED AUDIO BOOSTER FILTER FOR LOW BABY SOUNDS
+          // Enhanced audio booster filter for low baby sounds
           try {
             if (!parentAudioCtx) {
               parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1250,7 +1267,7 @@
             }
             parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
             const gainNode = parentAudioCtx.createGain();
-            gainNode.gain.value = 3.5; // Boost audio volume significantly
+            gainNode.gain.value = 4.0; // High audio boost
             parentAudioSource.connect(gainNode);
             gainNode.connect(parentAudioCtx.destination);
           } catch (e) {
@@ -1383,8 +1400,9 @@
     }
 
     // YouTube-Style Tap to Toggle Controls in Fullscreen Mode
-    function handleVideoTap() {
+    function handleVideoTap(event) {
       if (document.fullscreenElement && !isBaby) {
+        event.stopPropagation();
         const controls = document.getElementById('parentControls');
         controls.classList.toggle('visible');
       }
