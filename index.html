@@ -197,8 +197,8 @@
       margin-bottom: 25px;
     }
 
-    /* Inputs */
-    .input-group { margin: 25px 0; }
+    /* Inputs & Checkbox */
+    .input-group { margin: 25px 0 15px 0; }
     input[type="text"], select {
       font-family: inherit;
       font-size: 20px;
@@ -222,6 +222,24 @@
       box-shadow: 0 0 0 4px rgba(246, 173, 85, 0.15);
     }
     select { text-transform: none; letter-spacing: normal; }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 25px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #4a5568;
+      cursor: pointer;
+    }
+    .checkbox-container input {
+      width: 18px;
+      height: 18px;
+      accent-color: #f6ad55;
+      cursor: pointer;
+    }
 
     /* Main Video Container */
     .monitor-container {
@@ -261,13 +279,12 @@
       border: 1px solid rgba(255,255,255,0.15);
     }
     
-    /* Reddish Keep Open Alert Overlay for Baby Side */
     .keep-open-overlay {
       position: absolute;
       bottom: 25px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(220, 38, 38, 0.92); /* Rich crimson red to prevent screen sleeping */
+      background: rgba(220, 38, 38, 0.92);
       color: #ffffff;
       padding: 10px 22px;
       border-radius: 30px;
@@ -504,9 +521,16 @@
   <div id="parentScreen" class="screen">
     <button class="back-btn" onclick="goBack()"><span class="material-symbols-outlined">arrow_back</span> Back</button>
     <p style="font-size: 16px; margin-top: 25px; font-weight: 600;">Enter the 6-character Room Code:</p>
+    
     <div class="input-group">
       <input type="text" id="joinCode" placeholder="A7X9Q2" maxlength="6">
     </div>
+
+    <!-- NEW: Checkbox to control whether code is remembered -->
+    <label class="checkbox-container">
+      <input type="checkbox" id="rememberCodeCheck" checked> Remember this room code on this device
+    </label>
+
     <button onclick="connectToBaby()" style="width: 100%; max-width: 320px; margin: 0 auto; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px;"><span class="material-symbols-outlined">link</span> Connect to Monitor</button>
   </div>
 
@@ -529,7 +553,6 @@
         <span id="liveStatusText">Waiting...</span>
       </div>
 
-      <!-- Reddish Keep Open Overlay for Baby Side -->
       <div id="babyKeepOpenOverlay" class="keep-open-overlay" style="display:none;">
         <span class="material-symbols-outlined" style="font-size: 18px;">visibility</span> 
         Keep Screen Open - Stays Awake Automatically
@@ -1059,6 +1082,7 @@
       const savedParentCode = localStorage.getItem('babyVaani_parentCode');
       if (savedParentCode) {
         document.getElementById('joinCode').value = savedParentCode;
+        document.getElementById('rememberCodeCheck').checked = true;
       }
       
       showScreen('parentScreen');
@@ -1107,7 +1131,13 @@
       const targetCode = document.getElementById('joinCode').value.toUpperCase().trim();
       if (targetCode.length !== 6) return alert("Please enter a 6-character code.");
       
-      localStorage.setItem('babyVaani_parentCode', targetCode);
+      const rememberChecked = document.getElementById('rememberCodeCheck').checked;
+      if (rememberChecked) {
+        localStorage.setItem('babyVaani_parentCode', targetCode);
+      } else {
+        localStorage.removeItem('babyVaani_parentCode');
+      }
+
       activeRoomCode = targetCode; 
       
       const conn = peer.connect(targetCode);
