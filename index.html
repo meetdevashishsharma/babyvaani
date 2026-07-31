@@ -1129,7 +1129,6 @@
       }
       
       activeRoomCode = getSavedBabyCode();
-      // Low latency optimizations config for PeerJS
       peer = new Peer(activeRoomCode, {
         config: {
           iceServers: [
@@ -1145,7 +1144,12 @@
 
       const optimalConstraints = {
         video: { facingMode: { ideal: "user" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 15 } },
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        audio: { 
+          echoCancellation: true, 
+          noiseSuppression: true, 
+          autoGainControl: true,
+          sampleRate: 44100
+        }
       };
 
       navigator.mediaDevices.getUserMedia(optimalConstraints)
@@ -1181,12 +1185,7 @@
           }
         });
 
-        // Set low latency options on outgoing call
-        currentCall = peer.call(conn.peer, activeStream, {
-          sdpTransform: function(sdp) {
-            return sdp;
-          }
-        }); 
+        currentCall = peer.call(conn.peer, activeStream); 
         
         currentCall.on('stream', function(parentStream) {
           hideDisconnect(); 
@@ -1254,7 +1253,7 @@
           videoBox.muted = false; 
           videoBox.srcObject = remoteStream;
 
-          // Enhanced audio booster filter for low baby sounds
+          // ENHANCED AUDIO BOOSTER FILTER + DYNAMICS COMPRESSOR
           try {
             if (!parentAudioCtx) {
               parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1266,9 +1265,21 @@
               parentAudioSource.disconnect();
             }
             parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
+            
+            // Compressor to balance soft and loud sounds dynamically
+            const compressor = parentAudioCtx.createDynamicsCompressor();
+            compressor.threshold.setValueAtTime(-24, parentAudioCtx.currentTime);
+            compressor.knee.setValueAtTime(30, parentAudioCtx.currentTime);
+            compressor.ratio.setValueAtTime(12, parentAudioCtx.currentTime);
+            compressor.attack.setValueAtTime(0.003, parentAudioCtx.currentTime);
+            compressor.release.setValueAtTime(0.25, parentAudioCtx.currentTime);
+
+            // High Gain Boost Node for low baby sounds (amplified to 8x)
             const gainNode = parentAudioCtx.createGain();
-            gainNode.gain.value = 4.0; // High audio boost
-            parentAudioSource.connect(gainNode);
+            gainNode.gain.value = 8.0; 
+
+            parentAudioSource.connect(compressor);
+            compressor.connect(gainNode);
             gainNode.connect(parentAudioCtx.destination);
           } catch (e) {
             console.log("Audio boost context error:", e);
