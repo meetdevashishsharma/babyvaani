@@ -151,7 +151,34 @@
       </div>
     </div>
 
-    <div class="network-mode-box">
+    <!-- The Network Mode Selector has been moved to the Parent Screen -->
+
+    <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
+      <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
+      <button onclick="startParentMode()" style="flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
+    </div>
+
+    <div class="hero-image-container">
+      <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Baby Monitor Setup">
+    </div>
+  </div>
+
+  <!-- PARENT CONNECTION SCREEN -->
+  <div id="parentScreen" class="screen" style="align-items: flex-start;">
+    <button class="back-btn" onclick="goBack()"><span class="material-symbols-outlined">arrow_back</span> Back</button>
+    <p style="font-size: 15px; margin: 10px 0 5px 0; font-weight: 600; width: 100%; text-align: center;">Enter or Select Room Code:</p>
+    
+    <div class="saved-devices-container" id="savedDevicesWrapper" style="display:none;">
+      <label for="savedDevicesSelect">Previously Connected Devices:</label>
+      <select id="savedDevicesSelect" onchange="onSelectSavedDevice()" style="margin-bottom: 10px; max-width: 100%;"></select>
+    </div>
+
+    <div class="input-group">
+      <input type="text" id="joinCode" placeholder="A7X9Q2" maxlength="6" oninput="onCustomCodeInput()">
+    </div>
+
+    <!-- MOVED HERE: Network Mode is selected by the parent before connecting -->
+    <div class="network-mode-box" style="margin-bottom: 15px;">
       <h4><span class="material-symbols-outlined" style="font-size: 18px;">router</span> Connection Speed Mode</h4>
       <div class="mode-options">
         <button type="button" id="modeInternet" class="mode-option-btn selected" onclick="setNetworkMode('internet')">
@@ -165,28 +192,6 @@
       </div>
     </div>
 
-    <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
-      <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
-      <button onclick="startParentMode()" style="flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
-    </div>
-
-    <div class="hero-image-container">
-      <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Baby Monitor Setup">
-    </div>
-  </div>
-
-  <div id="parentScreen" class="screen" style="align-items: flex-start;">
-    <button class="back-btn" onclick="goBack()"><span class="material-symbols-outlined">arrow_back</span> Back</button>
-    <p style="font-size: 15px; margin: 10px 0 5px 0; font-weight: 600; width: 100%; text-align: center;">Enter or Select Room Code:</p>
-    
-    <div class="saved-devices-container" id="savedDevicesWrapper" style="display:none;">
-      <label for="savedDevicesSelect">Previously Connected Devices:</label>
-      <select id="savedDevicesSelect" onchange="onSelectSavedDevice()" style="margin-bottom: 10px; max-width: 100%;"></select>
-    </div>
-
-    <div class="input-group">
-      <input type="text" id="joinCode" placeholder="A7X9Q2" maxlength="6" oninput="onCustomCodeInput()">
-    </div>
     <label class="checkbox-container" style="width: 100%;">
       <input type="checkbox" id="rememberCodeCheck" checked> Remember code on this device
     </label>
@@ -392,10 +397,16 @@
       }
     }
 
-    // RESOLUTION FIX: Using absolute HARD limits (max) instead of weak 'ideal' suggestions
+    function getQualityConfig(quality) {
+      if (quality === 'fast') {
+        return { width: 640, height: 360, frameRate: 15, scaleFactor: 2.0, maxBitrate: 300000 }; 
+      } else {
+        return { width: 1280, height: 720, frameRate: 24, scaleFactor: 1.0, maxBitrate: 1500000 }; 
+      }
+    }
+
     function getVideoConstraints(quality) {
       if (quality === 'fast') {
-        // Enforce strict cap for mobile devices to force downscaling
         return { width: { max: 640 }, height: { max: 360 }, frameRate: { max: 15 } };
       } else {
         return { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24 } };
@@ -462,11 +473,8 @@
 
     async function applyQualityConstraints(quality) {
       currentQuality = quality;
-      
-      // Forces hardware camera to reboot using strict constraints
       await switchCamera(); 
       
-      // Throttle network stream dynamically
       if (currentCall && currentCall.peerConnection) {
         const sender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
         if (sender && sender.getParameters) {
@@ -502,6 +510,8 @@
       history.pushState({ active: true }, "", "#active"); 
       requestWakeLock();
       resetDimTimer();
+
+      videoBox.disablePictureInPicture = true;
 
       babyAudioOut.volume = 1.0;
       babyAudioOut.play().catch(e => { /* Ignore empty play error */ });
@@ -557,17 +567,42 @@
       requestWakeLock(); 
       populateSavedDevicesDropdown();
 
+      videoBox.disablePictureInPicture = false;
+
       const savedCode = localStorage.getItem('babyVaani_parentCode');
       if (savedCode) document.getElementById('joinCode').value = savedCode;
       
       showScreen('parentScreen');
-      peer = new Peer(getPeerConfig()); 
 
       navigator.mediaDevices.getUserMedia({ audio: true, video: false })
         .then(stream => {
           parentLocalStream = stream;
           parentLocalStream.getAudioTracks()[0].enabled = false; 
         }).catch(err => { parentLocalStream = null; });
+    }
+
+    // CONNECT LOGIC (Moved Peer initialization here to catch network setting!)
+    function connectToBaby() {
+      const targetCode = document.getElementById('joinCode').value.toUpperCase().trim();
+      if (targetCode.length !== 6) return alert("Enter a 6-character code.");
+      
+      if (document.getElementById('rememberCodeCheck').checked) {
+        localStorage.setItem('babyVaani_parentCode', targetCode);
+        saveParentDevice(targetCode);
+      }
+      
+      activeRoomCode = targetCode; 
+      
+      if (peer) peer.destroy();
+      peer = new Peer(getPeerConfig());
+      
+      setLiveStatus('waiting', 'Connecting...');
+
+      peer.on('open', (id) => {
+        const conn = peer.connect(targetCode);
+        dataConnections.push(conn);
+        conn.on('data', data => handleDataChannelMessage(data, conn));
+      });
 
       peer.on('call', call => {
         currentCall = call;
@@ -585,7 +620,6 @@
           videoBox.muted = true; 
           videoBox.srcObject = remoteStream;
 
-          // ALARM FIX: Merge listening stream and analyzer securely into ONE context.
           try {
             if (!parentAudioCtx) parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
@@ -599,7 +633,6 @@
             parentAudioGain = parentAudioCtx.createGain();
             parentAudioGain.gain.value = 0.0; 
             
-            // Connect: Source -> Analyzer (reads volume) -> Gain (mutes/unmutes) -> Speaker
             parentAudioSource.connect(parentAnalyser);
             parentAnalyser.connect(parentAudioGain);
             parentAudioGain.connect(parentAudioCtx.destination);
@@ -612,23 +645,11 @@
           }
         });
       });
-    }
 
-    function connectToBaby() {
-      const targetCode = document.getElementById('joinCode').value.toUpperCase().trim();
-      if (targetCode.length !== 6) return alert("Enter a 6-character code.");
-      
-      if (document.getElementById('rememberCodeCheck').checked) {
-        localStorage.setItem('babyVaani_parentCode', targetCode);
-        saveParentDevice(targetCode);
-      }
-      
-      activeRoomCode = targetCode; 
-      const conn = peer.connect(targetCode);
-      dataConnections.push(conn);
-      
-      setLiveStatus('waiting', 'Connecting...');
-      conn.on('data', data => handleDataChannelMessage(data, conn));
+      peer.on('error', err => {
+        alert("Connection Error: " + err.type);
+        goBack();
+      });
     }
 
     function requestCameraSwitch() {
