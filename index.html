@@ -531,13 +531,13 @@
       transform: translateX(-50%) translateY(20px);
       width: 92%;
       max-width: 600px;
-      background: rgba(45, 55, 72, 0.92);
-      backdrop-filter: blur(10px);
+      background: rgba(45, 55, 72, 0.95);
+      backdrop-filter: blur(12px);
       padding: 10px;
       border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-      z-index: 99999;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+      z-index: 2147483647; /* Maximum z-index above fullscreen video element */
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease, transform 0.2s ease;
@@ -698,7 +698,7 @@
 
     <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px;"></select>
 
-    <div class="monitor-container" id="monitorContainer" onclick="handleVideoTap(event)">
+    <div class="monitor-container" id="monitorContainer" onclick="handleVideoTap(event)" ontouchend="handleVideoTap(event)">
       
       <div id="liveStatusBanner" class="live-status-banner" style="display:none;">
         <div id="statusDot" class="status-dot"></div>
@@ -795,7 +795,7 @@
     let isNightMode = false;
     let parentAudioCtx = null;
     let parentAudioSource = null;
-    let selectedNetworkMode = 'internet'; // 'internet' or 'wifi'
+    let selectedNetworkMode = 'internet';
 
     let pingInterval = null;
     let heartbeatTimeout = null;
@@ -819,14 +819,12 @@
 
     function getPeerConfig() {
       if (selectedNetworkMode === 'wifi') {
-        // Local Wi-Fi mode: Disable public STUN servers so WebRTC forces local network ICE connection candidates
         return {
           config: {
             iceServers: [] 
           }
         };
       } else {
-        // Standard Internet mode with public STUN servers
         return {
           config: {
             iceServers: [
@@ -1253,7 +1251,7 @@
           echoCancellation: true, 
           noiseSuppression: true, 
           autoGainControl: true,
-          sampleRate: 44100
+          sampleRate: 48000
         }
       };
 
@@ -1351,7 +1349,7 @@
           videoBox.muted = false; 
           videoBox.srcObject = remoteStream;
 
-          // Enhanced audio booster filter + dynamics compressor
+          // Jitter Buffer Optimization + Audio Boost & Anti-Choppy Compressor
           try {
             if (!parentAudioCtx) {
               parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1365,14 +1363,14 @@
             parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
             
             const compressor = parentAudioCtx.createDynamicsCompressor();
-            compressor.threshold.setValueAtTime(-24, parentAudioCtx.currentTime);
-            compressor.knee.setValueAtTime(30, parentAudioCtx.currentTime);
-            compressor.ratio.setValueAtTime(12, parentAudioCtx.currentTime);
-            compressor.attack.setValueAtTime(0.003, parentAudioCtx.currentTime);
-            compressor.release.setValueAtTime(0.25, parentAudioCtx.currentTime);
+            compressor.threshold.setValueAtTime(-28, parentAudioCtx.currentTime);
+            compressor.knee.setValueAtTime(25, parentAudioCtx.currentTime);
+            compressor.ratio.setValueAtTime(16, parentAudioCtx.currentTime);
+            compressor.attack.setValueAtTime(0.002, parentAudioCtx.currentTime);
+            compressor.release.setValueAtTime(0.2, parentAudioCtx.currentTime);
 
             const gainNode = parentAudioCtx.createGain();
-            gainNode.gain.value = 8.0; 
+            gainNode.gain.value = 10.0; // High audio volume boost
 
             parentAudioSource.connect(compressor);
             compressor.connect(gainNode);
