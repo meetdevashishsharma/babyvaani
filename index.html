@@ -18,7 +18,7 @@
       color: #2d3748;
       text-align: center;
       margin: 0;
-      padding: 24px 16px;
+      padding: 16px 12px;
       overflow-x: hidden; 
       -webkit-font-smoothing: antialiased;
       display: flex;
@@ -28,7 +28,7 @@
     
     /* Brand Header */
     .brand-header {
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -39,30 +39,30 @@
     .brand-title {
       font-weight: 800;
       letter-spacing: -0.5px;
-      font-size: 36px;
+      font-size: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       margin: 0;
     }
     .logo-icon { 
-      font-size: 44px; 
+      font-size: 40px; 
       color: #f6ad55; 
       background: #fffaf0; 
-      padding: 8px; 
+      padding: 6px; 
       border-radius: 50%; 
       box-shadow: 0 4px 15px rgba(246, 173, 85, 0.2);
     }
     .brand-baby { color: #f6ad55; }
     .brand-vaani { color: #2d3748; }
     .brand-subtitle {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 2.5px;
+      letter-spacing: 2px;
       color: #a0aec0;
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     /* Context Graphic Banner */
@@ -70,15 +70,15 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      margin: 10px auto 20px auto;
+      gap: 10px;
+      margin: 8px auto 15px auto;
       background: #fffaf0;
-      padding: 8px 18px;
+      padding: 6px 16px;
       border-radius: 30px;
       border: 1px solid #feebc8;
     }
     .context-lineart-banner span {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: #dd6b20;
     }
@@ -95,23 +95,15 @@
     .usp-banner, .onboarding-grid, .hero-image-container, .input-group, .checkbox-container, #parentTopBar, #cameraSelect, .monitor-container, #babyControls, .controls {
       width: 100%;
       box-sizing: border-box;
-      transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-
-    /* Fullscreen Auto-Hide Mode for Controls */
-    .controls.fullscreen-hidden {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(10px);
     }
 
     /* Warm Nursery USP Banner */
     .usp-banner {
       background: linear-gradient(135deg, #fffaf0 100%, #f0fff4 0%);
       border-left: 4px solid #f6ad55;
-      padding: 18px 24px;
+      padding: 16px 20px;
       border-radius: 16px;
-      margin: 0 auto 25px auto;
+      margin: 0 auto 20px auto;
       display: flex;
       align-items: center;
       gap: 16px;
@@ -119,7 +111,7 @@
       box-shadow: 0 8px 20px rgba(246, 173, 85, 0.06);
     }
     .usp-banner .material-symbols-outlined {
-      font-size: 38px;
+      font-size: 36px;
       color: #f6ad55;
       background: #ffffff;
       padding: 8px;
@@ -137,9 +129,9 @@
     }
     .usp-text p {
       margin: 0;
-      font-size: 14px;
+      font-size: 13px;
       color: #4a5568;
-      line-height: 1.5;
+      line-height: 1.4;
       font-weight: 500;
     }
 
@@ -147,30 +139,30 @@
     .onboarding-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 25px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
     .onboard-step {
       background: #ffffff;
-      padding: 20px 15px;
-      border-radius: 20px;
+      padding: 16px 10px;
+      border-radius: 16px;
       border: 1px solid #edf2f7;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       text-align: center;
     }
     .onboard-icon {
       background: #fffaf0;
       color: #f6ad55;
-      padding: 12px;
+      padding: 10px;
       border-radius: 50%;
-      font-size: 24px;
+      font-size: 22px;
     }
     .onboard-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -178,64 +170,65 @@
       margin: 0;
     }
     .onboard-text {
-      font-size: 13px;
+      font-size: 12px;
       color: #718096;
       margin: 0;
-      line-height: 1.4;
+      line-height: 1.3;
     }
 
     /* Hero Image */
     .hero-image-container {
-      margin: 10px auto 20px auto;
+      margin: 5px auto 15px auto;
     }
     .hero-image-container img {
       width: 100%;
       height: auto;
-      border-radius: 24px;
-      border: 6px solid #ffffff;
+      border-radius: 20px;
+      border: 4px solid #ffffff;
       box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.08);
       object-fit: cover;
       display: block;
+      max-height: 220px;
     }
 
     /* Room Code Box */
     .room-code-box {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 800;
       background: #ffffff;
-      padding: 16px 24px;
-      border-radius: 16px;
+      padding: 14px 20px;
+      border-radius: 14px;
       border: 2px dashed #feebc8;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      letter-spacing: 6px;
+      letter-spacing: 5px;
       color: #dd6b20;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       box-shadow: 0 4px 12px rgba(246, 173, 85, 0.08);
     }
 
     .copy-share-group {
       display: flex;
       justify-content: center;
-      gap: 12px;
-      margin-bottom: 20px;
+      gap: 10px;
+      margin-bottom: 15px;
       width: 100%;
     }
 
     /* Inputs & Checkbox */
-    .input-group { margin: 20px 0 10px 0; display: flex; justify-content: center; }
+    .input-group { margin: 15px 0 10px 0; display: flex; justify-content: center; }
     input[type="text"], select {
       font-family: inherit;
-      font-size: 20px;
-      padding: 16px;
+      font-size: 18px;
+      padding: 14px;
       text-align: center;
       border: 2px solid #e2e8f0;
       background: #ffffff;
-      border-radius: 16px;
+      border-radius: 14px;
       width: 100%;
-      max-width: 320px;
+      max-width: 280px;
       text-transform: uppercase;
       letter-spacing: 3px;
       font-weight: 700;
@@ -255,15 +248,15 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-bottom: 25px;
-      font-size: 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
       font-weight: 500;
       color: #4a5568;
       cursor: pointer;
     }
     .checkbox-container input {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       accent-color: #f6ad55;
       cursor: pointer;
     }
@@ -271,33 +264,33 @@
     /* Main Video Container */
     .monitor-container {
       background: #000;
-      border-radius: 24px;
+      border-radius: 20px;
       overflow: hidden; 
-      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
       position: relative;
-      height: 60vh; 
+      height: 52vh; 
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 4px solid #ffffff;
-      margin-bottom: 15px;
+      border: 3px solid #ffffff;
+      margin-bottom: 10px;
       cursor: pointer;
     }
 
     /* Live Status Banner Overlay */
     .live-status-banner {
       position: absolute;
-      top: 20px;
-      left: 20px;
+      top: 15px;
+      left: 15px;
       background: rgba(45, 55, 72, 0.8);
       color: #ffffff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 12px;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       z-index: 20;
       backdrop-filter: blur(8px);
       border: 1px solid rgba(255,255,255,0.15);
@@ -305,27 +298,27 @@
     
     .keep-open-overlay {
       position: absolute;
-      bottom: 25px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(220, 38, 38, 0.92);
       color: #ffffff;
-      padding: 10px 22px;
-      border-radius: 30px;
-      font-size: 13px;
+      padding: 8px 18px;
+      border-radius: 24px;
+      font-size: 12px;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       z-index: 25;
       backdrop-filter: blur(6px);
-      box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
+      box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
       white-space: nowrap;
     }
 
     .status-dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
     }
     .status-dot.live { background-color: #48bb78; animation: pulseLive 2s infinite; }
@@ -368,18 +361,20 @@
     video:fullscreen { height: 100vh; border-radius: 0; border: none; }
     video::-webkit-media-controls-enclosure { display:none !important; }
 
-    /* Parent Controls Grid - Exactly 5 Items per Row (2 Rows Total) */
+    /* Parent Controls Grid - Compact 5x2 Grid to Fit Portrait Viewports Perfectly */
     .controls {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
-      margin-top: 10px;
+      gap: 8px;
+      margin-top: 5px;
       width: 100%;
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
-    @media(max-width: 900px) {
+    @media(max-width: 850px) {
       .controls {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
       }
     }
 
@@ -388,27 +383,32 @@
       background-color: #2d3748;
       color: white;
       border: none;
-      padding: 12px 10px;
-      font-size: 13px;
+      padding: 8px 4px;
+      font-size: 11px;
       font-weight: 600;
-      border-radius: 16px;
+      border-radius: 12px;
       cursor: pointer;
       width: 100%;
-      min-height: 56px;
+      min-height: 46px;
+      max-height: 52px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 2px;
       box-sizing: border-box;
       transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    button .material-symbols-outlined {
+      font-size: 20px;
     }
 
     button:active { transform: scale(0.97); }
     button:hover { 
       background-color: #1a202c; 
-      transform: translateY(-2px);
+      transform: translateY(-1px);
     }
     
     button.off { background-color: #cbd5e0; color: #4a5568; }
@@ -431,12 +431,14 @@
       background-color: #ffffff;
       color: #2d3748;
       border: 1px solid #e2e8f0;
-      padding: 10px 16px;
-      margin-bottom: 10px;
-      border-radius: 12px;
+      padding: 8px 14px;
+      margin-bottom: 8px;
+      border-radius: 10px;
       width: auto;
       min-height: auto;
+      max-height: none;
       flex-direction: row;
+      font-size: 12px;
     }
     button.back-btn:hover, button.icon-btn:hover {
       background-color: #fffaf0;
@@ -451,26 +453,60 @@
       align-items: center;
       justify-content: center;
       background: #ffffff;
-      padding: 8px 12px;
-      border-radius: 16px;
-      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 10px;
       font-weight: 700;
       border: 2px solid #e2e8f0;
       width: 100%;
-      min-height: 56px;
+      min-height: 46px;
+      max-height: 52px;
       box-sizing: border-box;
       box-shadow: 0 2px 4px rgba(0,0,0,0.02);
       color: #2d3748;
     }
-    .slider-container input { width: 100%; margin-top: 4px; cursor: pointer; accent-color: #f6ad55; }
+    .slider-container label {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      font-size: 9px;
+    }
+    .slider-container input { width: 100%; margin-top: 2px; cursor: pointer; accent-color: #f6ad55; height: 14px; }
+
+    /* Fullscreen Floating Overlay Mode for Controls */
+    .controls.fullscreen-overlay {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92%;
+      max-width: 600px;
+      background: rgba(45, 55, 72, 0.88);
+      backdrop-filter: blur(10px);
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .controls.fullscreen-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
 
     /* Wizard Steps */
     .wizard-step {
       background: #ffffff;
       border: 1px solid #edf2f7;
       border-radius: 20px;
-      padding: 30px 20px;
-      margin-top: 15px;
+      padding: 24px 16px;
+      margin-top: 10px;
       display: none;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.03);
       width: 100%;
@@ -484,8 +520,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      font-size: 18px;
+      gap: 8px;
+      font-size: 16px;
       font-weight: 800;
     }
 
@@ -502,12 +538,12 @@
       flex-direction: column;
       z-index: 10;
       font-weight: 800;
-      font-size: 26px;
+      font-size: 24px;
     }
     .overlay p {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 500;
-      margin-top: 15px;
+      margin-top: 12px;
       color: #e2e8f0;
     }
     #pipOverlay { z-index: 5; background: #2d3748; }
@@ -524,10 +560,10 @@
     
     <!-- Context Graphic Banner -->
     <div class="context-lineart-banner">
-      <span class="material-symbols-outlined" style="font-size: 18px; color: #f6ad55;">smartphone</span>
-      <span style="color: #cbd5e0; font-size: 12px;">⇄</span>
-      <span class="material-symbols-outlined" style="font-size: 18px; color: #f6ad55;">child_care</span>
-      <span style="font-size: 12px; font-weight: 600; color: #dd6b20;">Secure P2P Nursery Stream</span>
+      <span class="material-symbols-outlined" style="font-size: 16px; color: #f6ad55;">smartphone</span>
+      <span style="color: #cbd5e0; font-size: 11px;">⇄</span>
+      <span class="material-symbols-outlined" style="font-size: 16px; color: #f6ad55;">child_care</span>
+      <span style="font-size: 11px; font-weight: 600; color: #dd6b20;">Secure P2P Nursery Stream</span>
     </div>
   </div>
 
@@ -560,8 +596,8 @@
     </div>
 
     <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
-      <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
-      <button onclick="startParentMode()" style="flex-direction: row;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
+      <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row; max-height: 52px;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
+      <button onclick="startParentMode()" style="flex-direction: row; max-height: 52px;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
     </div>
 
     <div class="hero-image-container">
@@ -571,7 +607,7 @@
 
   <div id="parentScreen" class="screen" style="align-items: flex-start;">
     <button class="back-btn" onclick="goBack()"><span class="material-symbols-outlined">arrow_back</span> Back</button>
-    <p style="font-size: 16px; margin: 15px 0 5px 0; font-weight: 600; width: 100%; text-align: center;">Enter the 6-character Room Code:</p>
+    <p style="font-size: 15px; margin: 10px 0 5px 0; font-weight: 600; width: 100%; text-align: center;">Enter the 6-character Room Code:</p>
     
     <div class="input-group">
       <input type="text" id="joinCode" placeholder="A7X9Q2" maxlength="6">
@@ -581,20 +617,20 @@
       <input type="checkbox" id="rememberCodeCheck" checked> Remember this room code on this device
     </label>
 
-    <button onclick="connectToBaby()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px; flex-direction: row;"><span class="material-symbols-outlined">link</span> Connect to Monitor</button>
+    <button onclick="connectToBaby()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 14px; font-size: 15px; flex-direction: row; max-height: 52px;"><span class="material-symbols-outlined">link</span> Connect to Monitor</button>
   </div>
 
   <div id="videoScreen" class="screen">
     
     <div id="parentTopBar" style="display:none; flex-direction: column; align-items: center;">
-      <div id="activeCodeDisplay" class="room-code-box" style="font-size: 16px; padding: 12px 24px; margin-bottom: 10px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05);"></div>
+      <div id="activeCodeDisplay" class="room-code-box" style="font-size: 15px; padding: 10px 20px; margin-bottom: 8px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05);"></div>
       <div class="copy-share-group">
-        <button class="icon-btn" style="padding: 8px 16px; font-size: 13px;" onclick="copyCode()"><span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span> Copy Link</button>
-        <button class="icon-btn" style="padding: 8px 16px; font-size: 13px;" onclick="shareCode()"><span class="material-symbols-outlined" style="font-size: 18px;">ios_share</span> Share</button>
+        <button class="icon-btn" style="padding: 6px 14px; font-size: 12px;" onclick="copyCode()"><span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span> Copy Link</button>
+        <button class="icon-btn" style="padding: 6px 14px; font-size: 12px;" onclick="shareCode()"><span class="material-symbols-outlined" style="font-size: 16px;">ios_share</span> Share</button>
       </div>
     </div>
 
-    <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 15px; padding: 10px;"></select>
+    <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px;"></select>
 
     <div class="monitor-container" id="monitorContainer" onclick="handleVideoTap()">
       
@@ -604,19 +640,19 @@
       </div>
 
       <div id="babyKeepOpenOverlay" class="keep-open-overlay" style="display:none;">
-        <span class="material-symbols-outlined" style="font-size: 18px;">visibility</span> 
+        <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span> 
         Keep Screen Open - Stays Awake Automatically
       </div>
 
       <div id="disconnectOverlay" class="overlay" style="display:none;">
-        <span class="material-symbols-outlined" style="font-size: 54px; color: #f56565; margin-bottom: 12px;">signal_disconnected</span>
-        <span style="color:#f56565;">Disconnected</span>
+        <span class="material-symbols-outlined" style="font-size: 48px; color: #f56565; margin-bottom: 8px;">signal_disconnected</span>
+        <span style="color:#f56565; font-size: 20px;">Disconnected</span>
         <p>The connection has been lost.</p>
       </div>
 
       <div id="pipOverlay" class="overlay" style="display:none;">
-        <span class="material-symbols-outlined" style="font-size: 54px; color: #f6ad55; margin-bottom: 12px;">picture_in_picture_alt</span>
-        <span>PiP Active</span>
+        <span class="material-symbols-outlined" style="font-size: 48px; color: #f6ad55; margin-bottom: 8px;">picture_in_picture_alt</span>
+        <span style="font-size: 20px;">PiP Active</span>
         <p style="max-width: 80%; text-align: center;">Return to this screen after sharing your code to keep the stream running.</p>
       </div>
 
@@ -629,44 +665,44 @@
       
       <div id="babyStep1" class="wizard-step active">
          <h3><span class="material-symbols-outlined" style="color: #f6ad55;">center_focus_strong</span> Step 1: Position</h3>
-         <p style="font-size: 15px; margin-bottom: 25px; color: #718096;">Prop your device up so the baby is perfectly in frame.</p>
-         <button onclick="nextBabyStep(2)" class="active-green" style="margin: 0 auto; padding: 14px 24px; width: auto; flex-direction: row;">Looks Good <span class="material-symbols-outlined">arrow_forward</span></button>
+         <p style="font-size: 14px; margin-bottom: 20px; color: #718096;">Prop your device up so the baby is perfectly in frame.</p>
+         <button onclick="nextBabyStep(2)" class="active-green" style="margin: 0 auto; padding: 12px 20px; width: auto; flex-direction: row; max-height: 52px;">Looks Good <span class="material-symbols-outlined">arrow_forward</span></button>
       </div>
 
       <div id="babyStep2" class="wizard-step">
          <h3><span class="material-symbols-outlined" style="color: #f6ad55;">smartphone</span> Step 2: Connect</h3>
          
-         <p style="font-size: 15px; font-weight: 600; color: #718096; margin-bottom: 15px;">Enter this code on parent device:</p>
-         <div class="room-code-box" id="wizardCodeDisplay" style="margin-bottom: 25px;">Loading...</div>
+         <p style="font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 12px;">Enter this code on parent device:</p>
+         <div class="room-code-box" id="wizardCodeDisplay" style="margin-bottom: 20px;">Loading...</div>
 
-         <div style="background: #fffaf0; border: 1px solid #feebc8; border-radius: 16px; padding: 20px; text-align: center;">
-           <span class="material-symbols-outlined" style="font-size: 32px; color: #dd6b20; margin-bottom: 8px;">verified</span>
-           <h4 style="color: #dd6b20; margin: 0 0 8px 0; font-size: 16px; font-weight: 800; letter-spacing: 0.5px;">Keep This Page Open</h4>
-           <p style="color: #4a5568; font-weight: 500; font-size: 14px; margin:0; line-height: 1.5;">
+         <div style="background: #fffaf0; border: 1px solid #feebc8; border-radius: 14px; padding: 16px; text-align: center;">
+           <span class="material-symbols-outlined" style="font-size: 28px; color: #dd6b20; margin-bottom: 6px;">verified</span>
+           <h4 style="color: #dd6b20; margin: 0 0 6px 0; font-size: 15px; font-weight: 800; letter-spacing: 0.5px;">Keep This Page Open</h4>
+           <p style="color: #4a5568; font-weight: 500; font-size: 13px; margin:0; line-height: 1.4;">
              Do not manually lock your device or switch apps.<br>Your screen will stay awake automatically.
            </p>
          </div>
       </div>
 
-      <button onclick="goBack()" class="off" style="margin-top: 20px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
+      <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row; max-height: 52px;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
 
-    <!-- PARENT CONTROLS - Exactly 10 items formatted into a clean 5x2 grid -->
+    <!-- PARENT CONTROLS - Perfectly Compact 5x2 Grid -->
     <div class="controls" id="parentControls" style="display:none;">
-      <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause Video</button>
-      <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk to Baby</button>
-      <button id="micBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_off</span> Mute Audio</button>
-      <button onclick="rotateCamera()"><span class="material-symbols-outlined">screen_rotation</span> Rotate View</button>
-      <button id="nightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night Mode OFF</button>
+      <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
+      <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
+      <button id="micBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_off</span> Mute</button>
+      <button onclick="rotateCamera()"><span class="material-symbols-outlined">screen_rotation</span> Rotate</button>
+      <button id="nightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night</button>
       
-      <button onclick="togglePiP()"><span class="material-symbols-outlined">picture_in_picture_alt</span> PiP Mode</button>
-      <button id="fsBtn" onclick="toggleFullScreen()"><span class="material-symbols-outlined">fullscreen</span> Full Screen</button>
-      <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm OFF</button>
+      <button onclick="togglePiP()"><span class="material-symbols-outlined">picture_in_picture_alt</span> PiP</button>
+      <button id="fsBtn" onclick="toggleFullScreen()"><span class="material-symbols-outlined">fullscreen</span> Full</button>
+      <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm</button>
       <div class="slider-container">
-        <label for="alarmSensitivity">Alarm Sensitivity</label>
+        <label for="alarmSensitivity">Sensitivity</label>
         <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
       </div>
-      <button onclick="goBack()" class="off" style="background-color: #2d3748; color: white;"><span class="material-symbols-outlined">close</span> End Stream</button>
+      <button onclick="goBack()" class="off" style="background-color: #2d3748; color: white;"><span class="material-symbols-outlined">close</span> End</button>
     </div>
   </div>
 
@@ -984,22 +1020,23 @@
       document.getElementById('parentTopBar').style.display = "none";
       document.getElementById('cameraSelect').style.display = "none";
       document.getElementById('babyControls').style.display = "none";
-      document.getElementById('parentControls').style.display = "none";
-      document.getElementById('parentControls').classList.remove('fullscreen-hidden');
+      const controls = document.getElementById('parentControls');
+      controls.style.display = "none";
+      controls.classList.remove('fullscreen-overlay', 'visible');
       
-      document.getElementById('camBtn').innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Pause Video';
+      document.getElementById('camBtn').innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Pause';
       document.getElementById('camBtn').className = '';
-      document.getElementById('talkBtn').innerHTML = '<span class="material-symbols-outlined">mic</span> Talk to Baby';
+      document.getElementById('talkBtn').innerHTML = '<span class="material-symbols-outlined">mic</span> Talk';
       document.getElementById('talkBtn').className = '';
-      document.getElementById('micBtn').innerHTML = '<span class="material-symbols-outlined">volume_off</span> Mute Audio';
+      document.getElementById('micBtn').innerHTML = '<span class="material-symbols-outlined">volume_off</span> Mute';
       document.getElementById('micBtn').className = '';
       
       const nightBtn = document.getElementById('nightModeBtn');
-      nightBtn.innerHTML = '<span class="material-symbols-outlined">nightlight</span> Night Mode OFF';
+      nightBtn.innerHTML = '<span class="material-symbols-outlined">nightlight</span> Night';
       nightBtn.className = 'off';
 
       const aBtn = document.getElementById('alarmBtn');
-      aBtn.innerHTML = '<span class="material-symbols-outlined">notifications_off</span> Alarm OFF';
+      aBtn.innerHTML = '<span class="material-symbols-outlined">notifications_off</span> Alarm';
       aBtn.className = 'off';
       alarmActive = false;
 
@@ -1074,11 +1111,11 @@
 
       if (isNightMode) {
         videoBox.classList.add('night-mode');
-        nightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Night Mode ON';
+        nightBtn.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Day';
         nightBtn.className = 'night-active';
       } else {
         videoBox.classList.remove('night-mode');
-        nightBtn.innerHTML = '<span class="material-symbols-outlined">nightlight</span> Night Mode OFF';
+        nightBtn.innerHTML = '<span class="material-symbols-outlined">nightlight</span> Night';
         nightBtn.className = 'off';
       }
     }
@@ -1194,7 +1231,8 @@
           
           document.getElementById('activeCodeDisplay').innerText = activeRoomCode;
           document.getElementById('parentTopBar').style.display = "flex";
-          document.getElementById('parentControls').style.display = "flex";
+          const controls = document.getElementById('parentControls');
+          controls.style.display = "grid";
           
           videoBox.muted = false; 
           videoBox.srcObject = remoteStream;
@@ -1271,10 +1309,10 @@
         videoTrack.enabled = !videoTrack.enabled; 
         
         if (videoTrack.enabled) {
-          btn.innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Pause Video';
+          btn.innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Pause';
           btn.classList.remove('off');
         } else {
-          btn.innerHTML = '<span class="material-symbols-outlined">videocam</span> Resume Video';
+          btn.innerHTML = '<span class="material-symbols-outlined">videocam</span> Resume';
           btn.classList.add('off');
         }
       }
@@ -1292,10 +1330,10 @@
       audioTrack.enabled = !audioTrack.enabled; 
       
       if (audioTrack.enabled) {
-        btn.innerHTML = '<span class="material-symbols-outlined">mic_off</span> Mute Mic';
+        btn.innerHTML = '<span class="material-symbols-outlined">mic_off</span> Unmic';
         btn.classList.add('active-green');
       } else {
-        btn.innerHTML = '<span class="material-symbols-outlined">mic</span> Talk to Baby';
+        btn.innerHTML = '<span class="material-symbols-outlined">mic</span> Talk';
         btn.classList.remove('active-green');
       }
     }
@@ -1305,10 +1343,10 @@
       videoBox.muted = !videoBox.muted;
       
       if (videoBox.muted) {
-        btn.innerHTML = '<span class="material-symbols-outlined">volume_up</span> Unmute Audio';
+        btn.innerHTML = '<span class="material-symbols-outlined">volume_up</span> Unmute';
         btn.classList.add('off');
       } else {
-        btn.innerHTML = '<span class="material-symbols-outlined">volume_off</span> Mute Audio';
+        btn.innerHTML = '<span class="material-symbols-outlined">volume_off</span> Mute';
         btn.classList.remove('off');
       }
     }
@@ -1324,27 +1362,28 @@
       }
     }
 
-    // Fullscreen Tap to Show Controls logic
+    // Fullscreen Tap to Show / Hover Controls logic
     function handleVideoTap() {
       if (document.fullscreenElement && !isBaby) {
         const controls = document.getElementById('parentControls');
-        controls.classList.remove('fullscreen-hidden');
+        controls.classList.add('visible');
         
         clearTimeout(controlHideTimeout);
         controlHideTimeout = setTimeout(() => {
           if (document.fullscreenElement) {
-            controls.classList.add('fullscreen-hidden');
+            controls.classList.remove('visible');
           }
-        }, 3000);
+        }, 3500);
       }
     }
 
     document.addEventListener('fullscreenchange', () => {
       const controls = document.getElementById('parentControls');
       if (document.fullscreenElement && !isBaby) {
-        controls.classList.add('fullscreen-hidden');
+        controls.classList.add('fullscreen-overlay');
+        controls.classList.remove('visible');
       } else {
-        controls.classList.remove('fullscreen-hidden');
+        controls.classList.remove('fullscreen-overlay', 'visible');
         clearTimeout(controlHideTimeout);
       }
     });
@@ -1410,7 +1449,7 @@
       container.classList.add('flashing-severe');
 
       const btn = document.getElementById('alarmBtn');
-      btn.innerHTML = '<span class="material-symbols-outlined">notifications_active</span> Dismiss Alarm';
+      btn.innerHTML = '<span class="material-symbols-outlined">notifications_active</span> Dismiss';
       btn.classList.add('ringing');
       btn.classList.remove('active-green');
 
