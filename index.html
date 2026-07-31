@@ -80,16 +80,13 @@
     video.night-mode { filter: brightness(2.5) contrast(1.5) sepia(0.6) hue-rotate(-10deg) saturate(1.2); }
     video::-webkit-media-controls-enclosure { display:none !important; }
 
-    /* FULL PAGE OLED Dimming Overlay (Fixed for Mobile Viewports) */
+    /* FULL PAGE OLED Dimming Overlay */
     #dimOverlay { 
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0; /* Pins to all 4 corners */
-      background-color: #000000; /* Pure black for OLED shutoff */
-      z-index: 2147483647; /* Maximum possible z-index */
-      opacity: 0; 
-      pointer-events: none; 
-      transition: opacity 1.5s ease-in-out; 
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+      background-color: #000000; z-index: 2147483647; 
+      opacity: 0; pointer-events: none; transition: opacity 1.5s ease-in-out; 
     }
-    #dimOverlay.active { opacity: 1; pointer-events: auto; } /* 100% Opacity = completely black */
+    #dimOverlay.active { opacity: 1; pointer-events: auto; } 
 
     .controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 5px; width: 100%; }
     button { font-family: inherit; background-color: #2d3748; color: white; border: none; padding: 8px 4px; font-size: 11px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
@@ -113,7 +110,6 @@
 </head>
 <body>
 
-  <!-- Full Page Dim Overlay for Baby Device -->
   <div id="dimOverlay"></div>
   
   <div class="brand-header">
@@ -200,7 +196,6 @@
 
   <div id="videoScreen" class="screen">
     
-    <!-- TOP BAR (PARENT ONLY) -->
     <div id="parentTopBar" style="display:none; flex-direction: column; align-items: center; width: 100%;">
       <div id="activeCodeDisplay" class="room-code-box" style="font-size: 15px; padding: 10px 20px; margin-bottom: 8px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05);"></div>
       <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
@@ -212,13 +207,11 @@
       </div>
     </div>
 
-    <!-- MAIN VIEWPORT -->
     <div class="monitor-container" id="monitorContainer">
       <div id="liveStatusBanner" class="live-status-banner" style="display:none;">
         <div id="statusDot" class="status-dot"></div>
         <span id="liveStatusText">Waiting...</span>
         
-        <!-- Parent Side Battery Indicator (Explicit Label) -->
         <div id="remoteBattery" class="battery-indicator">
           <span class="material-symbols-outlined" style="font-size: 14px;">battery_full</span>
           <span style="margin-left: 2px;">Baby Device:</span>
@@ -230,7 +223,6 @@
         <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span> Keep Screen Open
       </div>
 
-      <!-- Parent Side Low Battery Alert -->
       <div id="lowBatteryAlert" class="keep-open-overlay low-battery-alert" style="display:none;">
         <span class="material-symbols-outlined" style="font-size: 18px;">battery_alert</span>
         Baby Monitor Battery Low! (<span id="lowBattText"></span>)
@@ -251,7 +243,6 @@
     <audio id="parentAudioOut" autoplay></audio>
     <audio id="babyAudioOut" autoplay></audio>
 
-    <!-- BABY UI -->
     <div id="babyControls" style="display:none; width: 100%;">
       <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px; width:100%; max-width: 250px;"></select>
 
@@ -270,7 +261,6 @@
            <p style="color: #4a5568; font-size: 13px; margin:0;">Do not lock device or switch apps.</p>
          </div>
          
-         <!-- NEW: Dim Screen Now Button so you don't have to wait 10 seconds -->
          <button onclick="forceDim()" class="active-green" style="margin-top: 15px; flex-direction: row; width: auto; margin-left: auto; margin-right: auto; background-color: #2d3748;">
            <span class="material-symbols-outlined">mode_night</span> Dim Screen Now
          </button>
@@ -279,7 +269,6 @@
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
 
-    <!-- PARENT CONTROLS Grid (Hidden by default) -->
     <div class="controls" id="parentControls" style="display:none;">
       <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
       <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
@@ -386,7 +375,6 @@
       clearTimeout(dimTimer);
       dimTimer = setTimeout(() => { overlay.classList.add('active'); }, DIM_TIMEOUT_MS);
     }
-    // Only wake on actual touches/clicks, not tiny accelerometer mousemoves
     ['touchstart', 'click'].forEach(evt => { window.addEventListener(evt, resetDimTimer); });
 
     function startBatteryTracking() {
@@ -430,6 +418,7 @@
       } catch (err) { console.log(err); }
     }
 
+    // FIX 1: Release hardware camera lock on Android before opening the new one
     async function switchCamera() {
       const deviceId = document.getElementById('cameraSelect').value;
       const constraints = { 
@@ -441,15 +430,18 @@
       };
       
       try {
+        let oldTrack = null;
+        if (activeStream) {
+          oldTrack = activeStream.getVideoTracks()[0];
+          // STOP the old track first to release hardware lock!
+          if (oldTrack) oldTrack.stop(); 
+        }
+        
         const newStream = await navigator.mediaDevices.getUserMedia(constraints);
         const newVideoTrack = newStream.getVideoTracks()[0];
         
         if (activeStream) {
-          const oldVideoTrack = activeStream.getVideoTracks()[0];
-          if (oldVideoTrack) {
-            oldVideoTrack.stop();
-            activeStream.removeTrack(oldVideoTrack);
-          }
+          if (oldTrack) activeStream.removeTrack(oldTrack);
           activeStream.addTrack(newVideoTrack);
         } else {
           activeStream = newStream;
@@ -488,6 +480,10 @@
       requestWakeLock();
       resetDimTimer();
       
+      // FIX 2: Pre-unlock the audio element during this exact button click to bypass mobile AutoPlay policies
+      babyAudioOut.volume = 1.0;
+      babyAudioOut.play().catch(e => { /* Ignore empty play error */ });
+
       let code = localStorage.getItem('babyVaani_roomCode');
       if (!code || code.length !== 6) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -526,7 +522,11 @@
         dataConnections.push(conn);
         conn.on('data', data => handleDataChannelMessage(data, conn));
         currentCall = peer.call(conn.peer, activeStream); 
-        currentCall.on('stream', parentStream => { babyAudioOut.srcObject = parentStream; });
+        currentCall.on('stream', parentStream => { 
+          babyAudioOut.srcObject = parentStream;
+          // Force playback when the stream attaches
+          babyAudioOut.play().catch(e => console.log("Talk stream autoplay blocked:", e));
+        });
       });
     }
 
@@ -646,8 +646,15 @@
     }
 
     function toggleTalk() {
-      if (!parentLocalStream) return alert("Microphone access denied.");
+      if (!parentLocalStream) {
+         alert("Microphone access is not available. Please ensure microphone permissions are granted.");
+         return;
+      }
       const track = parentLocalStream.getAudioTracks()[0];
+      if (!track) {
+         alert("No microphone track found.");
+         return;
+      }
       track.enabled = !track.enabled; 
       
       const state = track.enabled ? ['mic_off', 'Unmic', 'active-green'] : ['mic', 'Talk', ''];
