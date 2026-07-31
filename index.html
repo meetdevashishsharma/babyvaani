@@ -47,15 +47,25 @@
     .onboard-text { font-size: 12px; color: #718096; margin: 0; }
     .hero-image-container img { width: 100%; height: auto; border-radius: 20px; border: 4px solid #ffffff; max-height: 220px; object-fit: cover; margin-bottom: 15px; }
 
-    .room-code-box { font-size: 26px; font-weight: 800; background: #ffffff; padding: 14px 20px; border-radius: 14px; border: 2px dashed #feebc8; display: inline-flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 5px; color: #dd6b20; margin-bottom: 15px; }
-    .saved-devices-container { width: 100%; max-width: 320px; margin: 0 auto 15px auto; text-align: left; }
-    .saved-devices-container label { font-size: 12px; font-weight: 700; color: #718096; display: block; margin-bottom: 4px; }
-    .copy-share-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; width: 100%; }
-
-    .input-group { margin: 15px 0 10px 0; display: flex; justify-content: center; }
-    input[type="text"], select { font-family: inherit; font-size: 18px; padding: 14px; text-align: center; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 14px; width: 100%; max-width: 280px; font-weight: 700; color: #2d3748; outline: none; }
-    input[type="text"] { text-transform: uppercase; letter-spacing: 3px; }
-    select { font-size: 14px; letter-spacing: normal; text-transform: none; }
+    .room-code-box { font-size: 28px; font-weight: 800; background: #ffffff; padding: 14px 20px; border-radius: 14px; border: 2px dashed #feebc8; display: inline-flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 5px; color: #dd6b20; margin-bottom: 8px; }
+    
+    .saved-devices-container { width: 100%; max-width: 320px; margin: 0 auto 15px auto; text-align: center; }
+    .saved-devices-container label { font-size: 13px; font-weight: 700; color: #718096; display: block; margin-bottom: 8px; }
+    
+    .input-group { margin: 10px 0 20px 0; display: flex; justify-content: center; width: 100%; }
+    
+    input[type="text"] { 
+      font-family: inherit; font-size: 22px; padding: 16px; text-align: center; 
+      border: 2px solid #cbd5e0; background: #f7fafc; border-radius: 14px; 
+      width: 100%; max-width: 320px; font-weight: 800; color: #2d3748; 
+      outline: none; text-transform: uppercase; letter-spacing: 4px; 
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.06); transition: all 0.2s ease;
+    }
+    input[type="text"]::placeholder { color: #a0aec0; font-weight: 500; letter-spacing: 2px; }
+    input[type="text"]:focus { border-color: #f6ad55; background: #ffffff; box-shadow: inset 0 2px 6px rgba(0,0,0,0.03), 0 0 0 4px rgba(246, 173, 85, 0.2); }
+    
+    select { font-family: inherit; font-size: 14px; padding: 14px; text-align: center; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 14px; width: 100%; max-width: 320px; font-weight: 600; color: #2d3748; outline: none; }
+    
     .checkbox-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
     .checkbox-container input { width: 16px; height: 16px; accent-color: #f6ad55; }
 
@@ -75,12 +85,12 @@
     video { 
       width: 100%; height: 100%; object-fit: contain; display: block; 
       transition: transform 0.3s ease, filter 0.3s ease; transform: translateZ(0);
-      pointer-events: none; 
     }
     video.night-mode { filter: brightness(2.5) contrast(1.5) sepia(0.6) hue-rotate(-10deg) saturate(1.2); }
-    video::-webkit-media-controls-enclosure { display:none !important; }
+    
+    video.baby-locked { pointer-events: none; }
+    video.baby-locked::-webkit-media-controls-enclosure { display: none !important; }
 
-    /* FULL PAGE OLED Dimming Overlay */
     #dimOverlay { 
       position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
       background-color: #000000; z-index: 2147483647; 
@@ -89,9 +99,9 @@
     #dimOverlay.active { opacity: 1; pointer-events: auto; } 
 
     .controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 5px; width: 100%; }
-    button { font-family: inherit; background-color: #2d3748; color: white; border: none; padding: 8px 4px; font-size: 11px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+    button { font-family: inherit; background-color: #2d3748; color: white; border: none; padding: 8px 4px; font-size: 11px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: all 0.15s ease; }
     button .material-symbols-outlined { font-size: 20px; }
-    button:active { transform: scale(0.97); }
+    button:active { transform: scale(0.95); }
     button.off { background-color: #cbd5e0; color: #4a5568; }
     button.active-green { background-color: #48bb78; }
     button.night-active { background-color: #d69e2e; color: #fff; }
@@ -111,21 +121,22 @@
 
   <div id="dimOverlay"></div>
   
-  <div class="brand-header">
-    <h1 class="brand-title">
-      <span class="material-symbols-outlined logo-icon">child_care</span> 
-      <span class="brand-baby">Baby</span><span class="brand-vaani">Vaani</span>
-    </h1>
-    <span class="brand-subtitle">Turn any device into baby monitor</span>
-    <div class="context-lineart-banner">
-      <span class="material-symbols-outlined" style="font-size: 16px; color: #f6ad55;">smartphone</span>
-      <span style="color: #cbd5e0; font-size: 11px;">⇄</span>
-      <span class="material-symbols-outlined" style="font-size: 16px; color: #f6ad55;">child_care</span>
-      <span id="activeModeBannerText" style="font-size: 11px; font-weight: 600; color: #dd6b20;">Secure P2P Stream</span>
-    </div>
-  </div>
-
   <div id="selectionScreen" class="screen active">
+    
+    <div class="brand-header">
+      <h1 class="brand-title">
+        <span class="material-symbols-outlined logo-icon">child_care</span> 
+        <span class="brand-baby">Baby</span><span class="brand-vaani">Vaani</span>
+      </h1>
+      <span class="brand-subtitle">Turn any device into baby monitor</span>
+      <div class="context-lineart-banner">
+        <span class="material-symbols-outlined" style="font-size: 16px; color: #f6ad55;">smartphone</span>
+        <span style="color: #cbd5e0; font-size: 11px;">⇄</span>
+        <span class="material-symbols-outlined" style="font-size: 16px; color: #f6ad55;">child_care</span>
+        <span id="activeModeBannerText" style="font-size: 11px; font-weight: 600; color: #dd6b20;">Secure P2P Stream</span>
+      </div>
+    </div>
+
     <div class="usp-banner">
       <span class="material-symbols-outlined">family_restroom</span>
       <div class="usp-text">
@@ -133,25 +144,38 @@
         <p>Secure baby monitor from any device.</p>
       </div>
     </div>
+    
     <div class="onboarding-grid">
       <div class="onboard-step">
         <span class="material-symbols-outlined onboard-icon">videocam</span>
         <h4 class="onboard-title">1. Setup</h4>
-        <p class="onboard-text">Leave one device in the room as camera.</p>
+        <p class="onboard-text">Leave one device in the room.</p>
       </div>
       <div class="onboard-step">
         <span class="material-symbols-outlined onboard-icon">vpn_key</span>
         <h4 class="onboard-title">2. Connect</h4>
-        <p class="onboard-text">Share the secure 6-digit room code.</p>
+        <p class="onboard-text">Share the secure 6-digit code.</p>
       </div>
       <div class="onboard-step">
         <span class="material-symbols-outlined onboard-icon">visibility</span>
         <h4 class="onboard-title">3. Monitor</h4>
-        <p class="onboard-text">Watch, listen, and talk from anywhere.</p>
+        <p class="onboard-text">Watch and talk from anywhere.</p>
       </div>
     </div>
 
-    <!-- The Network Mode Selector has been moved to the Parent Screen -->
+    <div class="network-mode-box">
+      <h4><span class="material-symbols-outlined" style="font-size: 18px;">router</span> Connection Speed Mode</h4>
+      <div class="mode-options">
+        <button type="button" id="modeInternet" class="mode-option-btn selected" onclick="setNetworkMode('internet')">
+          <span class="material-symbols-outlined">public</span> Internet P2P
+          <small style="font-size: 10px; font-weight: 400; color: #718096;">Works anywhere</small>
+        </button>
+        <button type="button" id="modeWifi" class="mode-option-btn" onclick="setNetworkMode('wifi')">
+          <span class="material-symbols-outlined">wifi</span> Local Wi-Fi (LAN)
+          <small style="font-size: 10px; font-weight: 400; color: #718096;">*Devices must share Wi-Fi</small>
+        </button>
+      </div>
+    </div>
 
     <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
       <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
@@ -163,45 +187,34 @@
     </div>
   </div>
 
-  <!-- PARENT CONNECTION SCREEN -->
-  <div id="parentScreen" class="screen" style="align-items: flex-start;">
+  <div id="parentScreen" class="screen" style="align-items: flex-start; padding-top: 10px;">
     <button class="back-btn" onclick="goBack()"><span class="material-symbols-outlined">arrow_back</span> Back</button>
-    <p style="font-size: 15px; margin: 10px 0 5px 0; font-weight: 600; width: 100%; text-align: center;">Enter or Select Room Code:</p>
     
-    <div class="saved-devices-container" id="savedDevicesWrapper" style="display:none;">
-      <label for="savedDevicesSelect">Previously Connected Devices:</label>
-      <select id="savedDevicesSelect" onchange="onSelectSavedDevice()" style="margin-bottom: 10px; max-width: 100%;"></select>
-    </div>
-
-    <div class="input-group">
-      <input type="text" id="joinCode" placeholder="A7X9Q2" maxlength="6" oninput="onCustomCodeInput()">
-    </div>
-
-    <!-- MOVED HERE: Network Mode is selected by the parent before connecting -->
-    <div class="network-mode-box" style="margin-bottom: 15px;">
-      <h4><span class="material-symbols-outlined" style="font-size: 18px;">router</span> Connection Speed Mode</h4>
-      <div class="mode-options">
-        <button type="button" id="modeInternet" class="mode-option-btn selected" onclick="setNetworkMode('internet')">
-          <span class="material-symbols-outlined">public</span> Internet P2P
-          <small style="font-size: 10px; font-weight: 400; color: #718096;">Works anywhere</small>
-        </button>
-        <button type="button" id="modeWifi" class="mode-option-btn" onclick="setNetworkMode('wifi')">
-          <span class="material-symbols-outlined">wifi</span> Local Wi-Fi (LAN)
-          <small style="font-size: 10px; font-weight: 400; color: #718096;">Ultra-low latency</small>
-        </button>
+    <div style="width: 100%; max-width: 400px; margin: 20px auto; background: #ffffff; padding: 24px; border-radius: 20px; border: 1px solid #edf2f7; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      
+      <p style="font-size: 16px; margin: 0 0 15px 0; font-weight: 700; width: 100%; text-align: center; color: #2d3748;">Connect to Baby Camera</p>
+      
+      <div class="saved-devices-container" id="savedDevicesWrapper" style="display:none;">
+        <label for="savedDevicesSelect">Select a previously saved room:</label>
+        <select id="savedDevicesSelect" onchange="onSelectSavedDevice()"></select>
       </div>
-    </div>
 
-    <label class="checkbox-container" style="width: 100%;">
-      <input type="checkbox" id="rememberCodeCheck" checked> Remember code on this device
-    </label>
-    <button onclick="connectToBaby()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 14px; font-size: 15px; flex-direction: row;"><span class="material-symbols-outlined">link</span> Connect to Monitor</button>
+      <div class="input-group">
+        <input type="text" id="joinCode" placeholder="ENTER CODE" maxlength="6" oninput="onCustomCodeInput()">
+      </div>
+      
+      <label class="checkbox-container" style="width: 100%; margin-bottom: 24px;">
+        <input type="checkbox" id="rememberCodeCheck" checked> Remember code on this device
+      </label>
+      
+      <button onclick="connectToBaby()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px; flex-direction: row; border-radius: 14px;"><span class="material-symbols-outlined">link</span> Connect Now</button>
+    </div>
   </div>
 
   <div id="videoScreen" class="screen">
     
     <div id="parentTopBar" style="display:none; flex-direction: column; align-items: center; width: 100%;">
-      <div id="activeCodeDisplay" class="room-code-box" style="font-size: 15px; padding: 10px 20px; margin-bottom: 8px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05);"></div>
+      <div id="activeCodeDisplay" class="room-code-box" style="font-size: 15px; padding: 10px 20px; margin-bottom: 8px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: default;"></div>
       <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
         <label style="font-size: 12px; font-weight: 600;">Stream Quality:</label>
         <select id="qualitySelect" onchange="requestQualityChange()" style="padding: 6px; font-size: 12px; border-radius: 8px; max-width: 150px;">
@@ -240,17 +253,22 @@
       <video id="myCamera" autoplay playsinline disableRemotePlayback></video>
     </div>
 
-    <audio id="parentAudioOut" autoplay></audio>
-    <audio id="babyAudioOut" autoplay></audio>
+    <!-- PRE-LOADED AUDIO CHANNELS -->
+    <div id="babyAudioContainer" style="display:none;">
+       <audio class="parent-voice" autoplay></audio>
+       <audio class="parent-voice" autoplay></audio>
+       <audio class="parent-voice" autoplay></audio>
+    </div>
 
     <div id="babyControls" style="display:none; width: 100%;">
       <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px; width:100%; max-width: 250px;"></select>
 
-      <!-- Clean Single-Screen Baby Dashboard -->
       <div class="wizard-step active">
          <h3><span class="material-symbols-outlined" style="color: #f6ad55;">smartphone</span> Baby Camera Active</h3>
-         <p style="font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 12px;">Enter code on parent device:</p>
-         <div class="room-code-box" id="wizardCodeDisplay" style="margin-bottom: 20px;"></div>
+         <p style="font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 12px;">Enter code on parent device(s):</p>
+         
+         <!-- Removed copy function, code is strictly display-only to prevent app-switching -->
+         <div class="room-code-box" id="wizardCodeDisplay" style="margin-bottom: 20px; cursor: default;"></div>
          
          <div style="background: #fffaf0; border: 1px solid #feebc8; border-radius: 14px; padding: 16px;">
            <span class="material-symbols-outlined" style="font-size: 28px; color: #dd6b20;">verified</span>
@@ -283,7 +301,7 @@
         <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
       </div>
       
-      <!-- ROW 3 (Spans Full Width) -->
+      <!-- ROW 3 -->
       <button onclick="goBack()" class="off" style="grid-column: 1 / -1; background-color: #2d3748; color: white; min-height: 40px; flex-direction: row; gap: 8px;">
         <span class="material-symbols-outlined" style="font-size: 18px;">close</span> End Session
       </button>
@@ -292,12 +310,13 @@
 
   <script>
     const videoBox = document.getElementById('myCamera');
-    const parentAudioOut = document.getElementById('parentAudioOut');
-    const babyAudioOut = document.getElementById('babyAudioOut');
     
-    let activeStream, parentLocalStream, peer, currentCall, wakeLock = null, dataConnections = []; 
-    let alarmActive = false, isAlarmRinging = false, alarmBeepInterval = null;
-    let parentAudioCtx = null, parentAudioSource = null, parentAudioGain = null, parentAnalyser = null;
+    let activeStream, parentLocalStream, peer, currentCall, wakeLock = null; 
+    let activeCalls = []; 
+    let dataConnections = []; 
+    
+    let alarmActive = false, isAlarmRinging = false, alarmBeepInterval = null, batteryInterval = null;
+    let parentAudioCtx = null, parentAudioSource = null, parentAnalyser = null;
     let currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false;
     let selectedNetworkMode = 'internet', currentQuality = 'balanced';
     let dimTimer = null; const DIM_TIMEOUT_MS = 10000; 
@@ -322,12 +341,6 @@
       }
     }
     initNetworkMode();
-
-    function getPeerConfig() {
-      return selectedNetworkMode === 'wifi' 
-        ? { config: { iceServers: [] } } 
-        : { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
-    }
 
     function getSavedParentDevices() { try { return JSON.parse(localStorage.getItem('babyVaani_savedDevices')) || []; } catch(e) { return []; } }
     function saveParentDevice(code) {
@@ -356,7 +369,12 @@
       const select = document.getElementById('savedDevicesSelect');
       if (select.value) document.getElementById('joinCode').value = select.value;
     }
-    function onCustomCodeInput() { document.getElementById('savedDevicesSelect').value = ""; }
+    
+    function onCustomCodeInput() { 
+      const input = document.getElementById('joinCode');
+      input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      document.getElementById('savedDevicesSelect').value = ""; 
+    }
 
     function setLiveStatus(mode, text) {
       const banner = document.getElementById('liveStatusBanner');
@@ -392,7 +410,7 @@
           updateBattery();
           battery.addEventListener('levelchange', updateBattery);
           battery.addEventListener('chargingchange', updateBattery);
-          setInterval(updateBattery, 60000); 
+          batteryInterval = setInterval(updateBattery, 60000); 
         });
       }
     }
@@ -435,10 +453,7 @@
     async function switchCamera() {
       const deviceId = document.getElementById('cameraSelect').value;
       const constraints = { 
-        video: { 
-            ...getVideoConstraints(currentQuality), 
-            deviceId: deviceId ? { exact: deviceId } : undefined 
-        }, 
+        video: { ...getVideoConstraints(currentQuality), deviceId: deviceId ? { exact: deviceId } : undefined }, 
         audio: false 
       };
       
@@ -464,10 +479,13 @@
         
         videoBox.srcObject = activeStream;
         
-        if (currentCall && currentCall.peerConnection) {
-          const sender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-          if (sender) await sender.replaceTrack(newVideoTrack);
-        }
+        activeCalls.forEach(async call => {
+          if (call.peerConnection) {
+            const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+            if (sender) await sender.replaceTrack(newVideoTrack);
+          }
+        });
+
       } catch (err) { alert("Failed to open camera: " + err.message); }
     }
 
@@ -475,20 +493,22 @@
       currentQuality = quality;
       await switchCamera(); 
       
-      if (currentCall && currentCall.peerConnection) {
-        const sender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-        if (sender && sender.getParameters) {
-          try {
-            const params = sender.getParameters();
-            if (!params.encodings || params.encodings.length === 0) { params.encodings = [{}]; }
-            
-            params.encodings[0].maxBitrate = quality === 'fast' ? 300000 : 1500000;
-            params.encodings[0].scaleResolutionDownBy = quality === 'fast' ? 2.0 : 1.0;
-            
-            await sender.setParameters(params);
-          } catch (err) { console.log("RTP constraint adjust ignored by browser"); }
+      activeCalls.forEach(async call => {
+        if (call.peerConnection) {
+          const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+          if (sender && sender.getParameters) {
+            try {
+              const params = sender.getParameters();
+              if (!params.encodings || params.encodings.length === 0) { params.encodings = [{}]; }
+              
+              params.encodings[0].maxBitrate = quality === 'fast' ? 300000 : 1500000;
+              params.encodings[0].scaleResolutionDownBy = quality === 'fast' ? 2.0 : 1.0;
+              
+              await sender.setParameters(params);
+            } catch (err) { console.log("RTP constraint adjust ignored by browser"); }
+          }
         }
-      }
+      });
     }
 
     async function requestWakeLock() {
@@ -511,14 +531,15 @@
       requestWakeLock();
       resetDimTimer();
 
+      videoBox.classList.add('baby-locked');
       videoBox.disablePictureInPicture = true;
 
-      babyAudioOut.volume = 1.0;
-      babyAudioOut.play().catch(e => { /* Ignore empty play error */ });
+      const audioSlots = document.querySelectorAll('.parent-voice');
+      audioSlots.forEach(audio => { audio.play().catch(e => {}); });
 
       let code = localStorage.getItem('babyVaani_roomCode');
       if (!code || code.length !== 6) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         code = Array.from({length:6}).map(()=>chars.charAt(Math.floor(Math.random()*chars.length))).join('');
         localStorage.setItem('babyVaani_roomCode', code);
       }
@@ -553,10 +574,30 @@
       peer.on('connection', conn => {
         dataConnections.push(conn);
         conn.on('data', data => handleDataChannelMessage(data, conn));
-        currentCall = peer.call(conn.peer, activeStream); 
-        currentCall.on('stream', parentStream => { 
-          babyAudioOut.srcObject = parentStream;
-          babyAudioOut.play().catch(e => console.log("Talk stream autoplay blocked:", e));
+        
+        conn.on('close', () => { dataConnections = dataConnections.filter(c => c !== conn); });
+        
+        if ('getBattery' in navigator) {
+          navigator.getBattery().then(battery => {
+            conn.send(`BAT:${Math.round(battery.level * 100)}:${battery.charging}`);
+          });
+        }
+        
+        const call = peer.call(conn.peer, activeStream); 
+        activeCalls.push(call);
+
+        let freeAudioSlot = Array.from(audioSlots).find(a => !a.srcObject);
+
+        call.on('stream', parentStream => { 
+          if(freeAudioSlot) {
+             freeAudioSlot.srcObject = parentStream;
+             freeAudioSlot.play().catch(e => console.log("Talk stream autoplay blocked:", e));
+          }
+        });
+
+        call.on('close', () => {
+          if(freeAudioSlot) freeAudioSlot.srcObject = null;
+          activeCalls = activeCalls.filter(c => c !== call);
         });
       });
     }
@@ -567,6 +608,7 @@
       requestWakeLock(); 
       populateSavedDevicesDropdown();
 
+      videoBox.classList.remove('baby-locked');
       videoBox.disablePictureInPicture = false;
 
       const savedCode = localStorage.getItem('babyVaani_parentCode');
@@ -581,11 +623,15 @@
         }).catch(err => { parentLocalStream = null; });
     }
 
-    // CONNECT LOGIC (Moved Peer initialization here to catch network setting!)
     function connectToBaby() {
       const targetCode = document.getElementById('joinCode').value.toUpperCase().trim();
       if (targetCode.length !== 6) return alert("Enter a 6-character code.");
       
+      if (!parentAudioCtx) {
+        parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
+
       if (document.getElementById('rememberCodeCheck').checked) {
         localStorage.setItem('babyVaani_parentCode', targetCode);
         saveParentDevice(targetCode);
@@ -606,7 +652,7 @@
 
       peer.on('call', call => {
         currentCall = call;
-        call.answer(parentLocalStream); 
+        call.answer(parentLocalStream || null); 
         
         call.on('stream', remoteStream => {
           showScreen('videoScreen');
@@ -621,21 +667,11 @@
           videoBox.srcObject = remoteStream;
 
           try {
-            if (!parentAudioCtx) parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
             if (parentAudioSource) parentAudioSource.disconnect();
-            
             parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
-            
             parentAnalyser = parentAudioCtx.createAnalyser();
             parentAnalyser.fftSize = 256;
-            
-            parentAudioGain = parentAudioCtx.createGain();
-            parentAudioGain.gain.value = 0.0; 
-            
-            parentAudioSource.connect(parentAnalyser);
-            parentAnalyser.connect(parentAudioGain);
-            parentAudioGain.connect(parentAudioCtx.destination);
+            parentAudioSource.connect(parentAnalyser); 
           } catch (e) {}
 
           const micBtn = document.getElementById('micBtn');
@@ -647,7 +683,7 @@
       });
 
       peer.on('error', err => {
-        alert("Connection Error: " + err.type);
+        alert("Connection Error: Check Room Code and Network Mode.");
         goBack();
       });
     }
@@ -712,7 +748,7 @@
 
     function toggleTalk() {
       if (!parentLocalStream) {
-         alert("Microphone access is not available.");
+         alert("Microphone access is not available. Check permissions.");
          return;
       }
       const track = parentLocalStream.getAudioTracks()[0];
@@ -727,13 +763,7 @@
     }
 
     function toggleParentListening() {
-      if (parentAudioGain) {
-        parentAudioGain.gain.value = parentAudioGain.gain.value > 0 ? 0 : 5.0;
-        videoBox.muted = parentAudioGain.gain.value === 0;
-      } else {
-        videoBox.muted = !videoBox.muted;
-      }
-      
+      videoBox.muted = !videoBox.muted;
       const isMuted = videoBox.muted;
       const state = isMuted ? ['volume_up', 'Unmute', 'off'] : ['volume_off', 'Mute', ''];
       const b = document.getElementById('micBtn');
@@ -795,7 +825,7 @@
         let average = sum / dataArray.length;
         
         const sens = document.getElementById('alarmSensitivity').value;
-        const threshold = 100 - sens; // Higher slider = lower threshold
+        const threshold = 100 - sens; 
 
         if (average > threshold && !isAlarmRinging) {
           triggerAlarmUI();
@@ -812,7 +842,6 @@
         if (!alarmActive) return clearInterval(alarmBeepInterval);
         document.getElementById('monitorContainer').style.borderColor = toggle ? '#f56565' : '#ffffff';
         
-        // Play harsh warning beep
         if (parentAudioCtx && toggle) {
           const osc = parentAudioCtx.createOscillator();
           const gain = parentAudioCtx.createGain();
@@ -825,6 +854,25 @@
         }
         toggle = !toggle;
       }, 500);
+    }
+
+    function toggleFullScreen() {
+      const c = document.getElementById('monitorContainer'); 
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (c.requestFullscreen) {
+          c.requestFullscreen();
+        } else if (c.webkitRequestFullscreen) {
+          c.webkitRequestFullscreen();
+        } else if (videoBox.webkitEnterFullscreen) {
+          videoBox.webkitEnterFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
     }
 
     async function togglePiP() {
@@ -841,15 +889,24 @@
 
     function goBack() {
       clearTimeout(dimTimer);
+      clearInterval(batteryInterval);
+      clearInterval(alarmBeepInterval);
+      alarmActive = false;
+      isAlarmRinging = false;
+      document.getElementById('monitorContainer').style.borderColor = '#ffffff';
+
       if (activeStream) activeStream.getTracks().forEach(t => t.stop());
       if (parentLocalStream) parentLocalStream.getTracks().forEach(t => t.stop());
       if (peer) peer.destroy();
       
       activeStream = parentLocalStream = peer = currentCall = null;
-      dataConnections = [];
+      activeCalls = []; dataConnections = [];
       document.getElementById('remoteBattery').style.display = 'none';
       document.getElementById('lowBatteryAlert').style.display = 'none';
-      videoBox.srcObject = babyAudioOut.srcObject = parentAudioOut.srcObject = null;
+      
+      const audioSlots = document.querySelectorAll('.parent-voice');
+      audioSlots.forEach(audio => audio.srcObject = null);
+      videoBox.srcObject = null;
       
       showScreen('selectionScreen');
       window.location.reload(); 
