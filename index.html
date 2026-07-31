@@ -4,515 +4,114 @@
   <title>Baby Vaani Monitor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <!-- Favicon with White Background & Contrast Baby Icon -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%22><circle cx=%2250%22 cy=%2250%22 r=%2248%22 fill=%22%23ffffff%22 stroke=%22%23cbd5e1%22 stroke-width=%224%22/><text x=%2250%%22 y=%2255%%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2260%22>👶</text></svg>">
-  <!-- Google Fonts: Inter -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    /* Warm, Nurturing, Baby-Oriented Professional Aesthetic */
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-      background-color: #fffdf9; 
-      color: #2d3748;
-      text-align: center;
-      margin: 0;
-      padding: 16px 12px;
-      overflow-x: hidden; 
-      -webkit-font-smoothing: antialiased;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      background-color: #fffdf9; color: #2d3748; text-align: center;
+      margin: 0; padding: 16px 12px; overflow-x: hidden; 
+      -webkit-font-smoothing: antialiased; display: flex; flex-direction: column; align-items: center;
     }
     
-    /* Brand Header */
-    .brand-header {
-      margin-bottom: 15px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      max-width: 900px;
-    }
-    .brand-title {
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      font-size: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin: 0;
-    }
-    .logo-icon { 
-      font-size: 40px; 
-      color: #f6ad55; 
-      background: #fffaf0; 
-      padding: 6px; 
-      border-radius: 50%; 
-      box-shadow: 0 4px 15px rgba(246, 173, 85, 0.2);
-    }
-    .brand-baby { color: #f6ad55; }
-    .brand-vaani { color: #2d3748; }
-    .brand-subtitle {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: #a0aec0;
-      margin-top: 4px;
-    }
+    .brand-header { margin-bottom: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 900px; }
+    .brand-title { font-weight: 800; letter-spacing: -0.5px; font-size: 32px; display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0; }
+    .logo-icon { font-size: 40px; color: #f6ad55; background: #fffaf0; padding: 6px; border-radius: 50%; box-shadow: 0 4px 15px rgba(246, 173, 85, 0.2); }
+    .brand-baby { color: #f6ad55; } .brand-vaani { color: #2d3748; }
+    .brand-subtitle { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #a0aec0; margin-top: 4px; }
 
-    /* Context Graphic Banner */
-    .context-lineart-banner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin: 8px auto 15px auto;
-      background: #fffaf0;
-      padding: 6px 16px;
-      border-radius: 30px;
-      border: 1px solid #feebc8;
-    }
-    .context-lineart-banner span {
-      font-size: 12px;
-      font-weight: 600;
-      color: #dd6b20;
-    }
+    .context-lineart-banner { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px auto 15px auto; background: #fffaf0; padding: 6px 16px; border-radius: 30px; border: 1px solid #feebc8; }
+    .context-lineart-banner span { font-size: 12px; font-weight: 600; color: #dd6b20; }
 
     .screen { display: none; width: 100%; max-width: 900px; }
     .screen.active { display: flex; flex-direction: column; align-items: center; animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .usp-banner, .onboarding-grid, .hero-image-container, .input-group, .checkbox-container, #parentTopBar, #cameraSelect, .monitor-container, #babyControls, .controls { width: 100%; box-sizing: border-box; }
 
-    /* Uniform Alignment Containers */
-    .usp-banner, .onboarding-grid, .hero-image-container, .input-group, .checkbox-container, #parentTopBar, #cameraSelect, .monitor-container, #babyControls, .controls {
-      width: 100%;
-      box-sizing: border-box;
-    }
+    .network-mode-box { background: #ffffff; border: 2px solid #feebc8; border-radius: 16px; padding: 16px; margin-bottom: 20px; width: 100%; box-shadow: 0 4px 12px rgba(246, 173, 85, 0.08); text-align: left; }
+    .network-mode-box h4 { margin: 0 0 10px 0; font-size: 14px; color: #dd6b20; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+    .mode-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mode-option-btn { background: #fffaf0; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 700; color: #4a5568; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s ease; }
+    .mode-option-btn.selected { background: #f6ad55; color: #ffffff; border-color: #dd6b20; box-shadow: 0 4px 12px rgba(246, 173, 85, 0.3); }
 
-    /* Network Mode Selector Toggle Box */
-    .network-mode-box {
-      background: #ffffff;
-      border: 2px solid #feebc8;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 20px;
-      width: 100%;
-      box-shadow: 0 4px 12px rgba(246, 173, 85, 0.08);
-      text-align: left;
-    }
-    .network-mode-box h4 {
-      margin: 0 0 10px 0;
-      font-size: 14px;
-      color: #dd6b20;
-      font-weight: 800;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .mode-options {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .mode-option-btn {
-      background: #fffaf0;
-      border: 2px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #4a5568;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      transition: all 0.2s ease;
-    }
-    .mode-option-btn.selected {
-      background: #f6ad55;
-      color: #ffffff;
-      border-color: #dd6b20;
-      box-shadow: 0 4px 12px rgba(246, 173, 85, 0.3);
-    }
-
-    /* USP Banner */
-    .usp-banner {
-      background: linear-gradient(135deg, #fffaf0 100%, #f0fff4 0%);
-      border-left: 4px solid #f6ad55;
-      padding: 16px 20px;
-      border-radius: 16px;
-      margin: 0 auto 20px auto;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      text-align: left;
-    }
-    .usp-banner .material-symbols-outlined {
-      font-size: 36px;
-      color: #f6ad55;
-      background: #ffffff;
-      padding: 8px;
-      border-radius: 50%;
-    }
-    .usp-text h3 {
-      margin: 0 0 4px 0;
-      font-size: 15px;
-      color: #dd6b20;
-      text-transform: uppercase;
-      font-weight: 800;
-    }
-
-    /* Onboarding Grid */
-    .onboarding-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .onboard-step {
-      background: #ffffff;
-      padding: 16px 10px;
-      border-radius: 16px;
-      border: 1px solid #edf2f7;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      text-align: center;
-    }
-    .onboard-icon {
-      background: #fffaf0;
-      color: #f6ad55;
-      padding: 10px;
-      border-radius: 50%;
-      font-size: 22px;
-    }
+    .usp-banner { background: linear-gradient(135deg, #fffaf0 100%, #f0fff4 0%); border-left: 4px solid #f6ad55; padding: 16px 20px; border-radius: 16px; margin: 0 auto 20px auto; display: flex; align-items: center; gap: 16px; text-align: left; }
+    .usp-banner .material-symbols-outlined { font-size: 36px; color: #f6ad55; background: #ffffff; padding: 8px; border-radius: 50%; }
+    .usp-text h3 { margin: 0 0 4px 0; font-size: 15px; color: #dd6b20; text-transform: uppercase; font-weight: 800; }
+    .onboarding-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .onboard-step { background: #ffffff; padding: 16px 10px; border-radius: 16px; border: 1px solid #edf2f7; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+    .onboard-icon { background: #fffaf0; color: #f6ad55; padding: 10px; border-radius: 50%; font-size: 22px; }
     .onboard-title { font-size: 12px; font-weight: 800; text-transform: uppercase; margin: 0; }
     .onboard-text { font-size: 12px; color: #718096; margin: 0; }
+    .hero-image-container img { width: 100%; height: auto; border-radius: 20px; border: 4px solid #ffffff; max-height: 220px; object-fit: cover; margin-bottom: 15px; }
 
-    /* Hero Image */
-    .hero-image-container img {
-      width: 100%;
-      height: auto;
-      border-radius: 20px;
-      border: 4px solid #ffffff;
-      max-height: 220px;
-      object-fit: cover;
-      margin-bottom: 15px;
-    }
+    .room-code-box { font-size: 26px; font-weight: 800; background: #ffffff; padding: 14px 20px; border-radius: 14px; border: 2px dashed #feebc8; display: inline-flex; align-items: center; justify-content: center; gap: 10px; letter-spacing: 5px; color: #dd6b20; margin-bottom: 15px; }
+    .saved-devices-container { width: 100%; max-width: 320px; margin: 0 auto 15px auto; text-align: left; }
+    .saved-devices-container label { font-size: 12px; font-weight: 700; color: #718096; display: block; margin-bottom: 4px; }
+    .copy-share-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; width: 100%; }
 
-    /* Room Code Box & Saved History Dropdown */
-    .room-code-box {
-      font-size: 26px;
-      font-weight: 800;
-      background: #ffffff;
-      padding: 14px 20px;
-      border-radius: 14px;
-      border: 2px dashed #feebc8;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      letter-spacing: 5px;
-      color: #dd6b20;
-      margin-bottom: 15px;
-    }
-
-    .saved-devices-container {
-      width: 100%;
-      max-width: 320px;
-      margin: 0 auto 15px auto;
-      text-align: left;
-    }
-    .saved-devices-container label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #718096;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .copy-share-group {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 15px;
-      width: 100%;
-    }
-
-    /* Inputs & Checkbox */
     .input-group { margin: 15px 0 10px 0; display: flex; justify-content: center; }
-    input[type="text"], select {
-      font-family: inherit;
-      font-size: 18px;
-      padding: 14px;
-      text-align: center;
-      border: 2px solid #e2e8f0;
-      background: #ffffff;
-      border-radius: 14px;
-      width: 100%;
-      max-width: 280px;
-      font-weight: 700;
-      color: #2d3748;
-      outline: none;
-    }
+    input[type="text"], select { font-family: inherit; font-size: 18px; padding: 14px; text-align: center; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 14px; width: 100%; max-width: 280px; font-weight: 700; color: #2d3748; outline: none; }
     input[type="text"] { text-transform: uppercase; letter-spacing: 3px; }
     select { font-size: 14px; letter-spacing: normal; text-transform: none; }
-
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-    }
+    .checkbox-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
     .checkbox-container input { width: 16px; height: 16px; accent-color: #f6ad55; }
 
-    /* Main Video Container & Hardware Acceleration */
-    .monitor-container {
-      background: #000;
-      border-radius: 20px;
-      overflow: hidden; 
-      position: relative;
-      height: 52vh; 
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 3px solid #ffffff;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transform: translateZ(0); /* Hardware Acceleration */
-      will-change: transform;
-    }
-
-    /* Live Status Banner Overlay & Battery Indicator */
-    .live-status-banner {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      background: rgba(45, 55, 72, 0.8);
-      color: #ffffff;
-      padding: 6px 12px;
-      border-radius: 16px;
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 20;
-      backdrop-filter: blur(8px);
-    }
+    .monitor-container { background: #000; border-radius: 20px; overflow: hidden; position: relative; height: 52vh; display: flex; align-items: center; justify-content: center; border: 3px solid #ffffff; margin-bottom: 10px; cursor: pointer; transform: translateZ(0); will-change: transform; }
+    .live-status-banner { position: absolute; top: 15px; left: 15px; background: rgba(45, 55, 72, 0.8); color: #ffffff; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; z-index: 20; backdrop-filter: blur(8px); }
+    .battery-indicator { display: none; align-items: center; gap: 4px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 12px; margin-left: 8px; font-size: 11px; }
     
-    .battery-indicator {
-      display: none;
-      align-items: center;
-      gap: 4px;
-      background: rgba(0,0,0,0.5);
-      padding: 4px 8px;
-      border-radius: 12px;
-      margin-left: 8px;
-      font-size: 11px;
-    }
-
-    .keep-open-overlay {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(220, 38, 38, 0.92);
-      color: #ffffff;
-      padding: 8px 18px;
-      border-radius: 24px;
-      font-size: 12px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      z-index: 25;
-      white-space: nowrap;
-    }
+    .keep-open-overlay { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(220, 38, 38, 0.92); color: #ffffff; padding: 8px 18px; border-radius: 24px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; z-index: 25; white-space: nowrap; }
+    .low-battery-alert { background: rgba(220, 38, 38, 0.95); bottom: 70px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4); }
 
     .status-dot { width: 8px; height: 8px; border-radius: 50%; }
     .status-dot.live { background-color: #48bb78; animation: pulseLive 2s infinite; }
     .status-dot.waiting { background-color: #ecc94b; }
     .status-dot.offline { background-color: #f56565; }
-
-    @keyframes pulseLive {
-      0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.6); }
-      70% { box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
-    }
+    @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.6); } 70% { box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); } 100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); } }
 
     video { 
-      width: 100%; 
-      height: 100%;
-      object-fit: contain; 
-      display: block; 
-      transition: transform 0.3s ease, filter 0.3s ease; 
-      transform: translateZ(0);
+      width: 100%; height: 100%; object-fit: contain; display: block; 
+      transition: transform 0.3s ease, filter 0.3s ease; transform: translateZ(0);
+      pointer-events: none; 
     }
     video.night-mode { filter: brightness(2.5) contrast(1.5) sepia(0.6) hue-rotate(-10deg) saturate(1.2); }
     video::-webkit-media-controls-enclosure { display:none !important; }
 
-    /* Baby Side OLED Dimming Overlay */
-    #dimOverlay {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: #000000;
-      z-index: 50;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 1.5s ease-in-out;
+    /* FULL PAGE OLED Dimming Overlay */
+    #dimOverlay { 
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+      background: #000000; z-index: 9999; opacity: 0; 
+      pointer-events: none; transition: opacity 1.5s ease-in-out; 
     }
-    #dimOverlay.active {
-      opacity: 0.95; /* Pure black to save OLED battery */
-    }
+    #dimOverlay.active { opacity: 0.98; pointer-events: auto; }
 
-    /* Controls Grid */
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
-      margin-top: 5px;
-      width: 100%;
-    }
-
-    button {
-      font-family: inherit;
-      background-color: #2d3748;
-      color: white;
-      border: none;
-      padding: 8px 4px;
-      font-size: 11px;
-      font-weight: 600;
-      border-radius: 12px;
-      cursor: pointer;
-      width: 100%;
-      min-height: 46px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-    }
+    .controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 5px; width: 100%; }
+    button { font-family: inherit; background-color: #2d3748; color: white; border: none; padding: 8px 4px; font-size: 11px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
     button .material-symbols-outlined { font-size: 20px; }
     button:active { transform: scale(0.97); }
     button.off { background-color: #cbd5e0; color: #4a5568; }
     button.active-green { background-color: #48bb78; }
     button.night-active { background-color: #d69e2e; color: #fff; }
+    button.back-btn, button.icon-btn { background-color: #ffffff; color: #2d3748; border: 1px solid #e2e8f0; padding: 8px 14px; margin-bottom: 8px; border-radius: 10px; flex-direction: row; font-size: 12px; width: auto; min-height: auto; }
 
-    button.back-btn, button.icon-btn {
-      background-color: #ffffff;
-      color: #2d3748;
-      border: 1px solid #e2e8f0;
-      padding: 8px 14px;
-      margin-bottom: 8px;
-      border-radius: 10px;
-      flex-direction: row;
-      font-size: 12px;
-      width: auto;
-      min-height: auto;
-    }
-
-    /* Slider Container */
-    .slider-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #ffffff;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 10px;
-      font-weight: 700;
-      border: 2px solid #e2e8f0;
-      width: 100%;
-      min-height: 46px;
-      box-sizing: border-box;
-      color: #2d3748;
-    }
+    .slider-container { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ffffff; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; border: 2px solid #e2e8f0; width: 100%; min-height: 46px; box-sizing: border-box; color: #2d3748; }
     .slider-container input { width: 100%; margin-top: 2px; cursor: pointer; accent-color: #f6ad55; height: 14px; }
 
-    /* Streaming-Service Fullscreen Transparent Controls (<10% Viewport) */
-    .monitor-container.fullscreen-mode {
-      position: fixed !important;
-      top: 0 !important; left: 0 !important;
-      width: 100vw !important; height: 100vh !important;
-      z-index: 2147483646 !important;
-      border-radius: 0 !important; border: none !important;
-    }
-
-    .monitor-container.fullscreen-mode .controls.fullscreen-overlay {
-      position: absolute;
-      bottom: 0; left: 0; width: 100%;
-      height: 8vh; /* Strict <10% viewport height */
-      max-height: 60px;
-      background: rgba(15, 23, 42, 0.45);
-      backdrop-filter: blur(8px);
-      padding: 4px 12px;
-      z-index: 2147483647;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
-      display: grid !important;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 4px;
-      align-items: center;
-      box-sizing: border-box;
-    }
-
-    .monitor-container.fullscreen-mode .controls.fullscreen-overlay.visible {
-      opacity: 1; pointer-events: auto;
-    }
-
-    .monitor-container.fullscreen-mode .controls.fullscreen-overlay button, 
-    .monitor-container.fullscreen-mode .controls.fullscreen-overlay .slider-container {
-      min-height: 32px; font-size: 9px;
-      background: rgba(30, 41, 59, 0.6);
-      border-radius: 6px; padding: 2px;
-      color: #ffffff; border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    /* Wizard Steps */
-    .wizard-step {
-      background: #ffffff;
-      border: 1px solid #edf2f7;
-      border-radius: 20px;
-      padding: 24px 16px;
-      margin-top: 10px;
-      display: none;
-      width: 100%;
-      box-sizing: border-box;
-    }
+    .wizard-step { background: #ffffff; border: 1px solid #edf2f7; border-radius: 20px; padding: 24px 16px; margin-top: 10px; display: none; width: 100%; box-sizing: border-box; }
     .wizard-step.active { display: block; animation: fadeIn 0.4s ease-out; }
     .wizard-step h3 { margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; }
 
-    /* Overlays */
-    .overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(45, 55, 72, 0.9);
-      backdrop-filter: blur(4px);
-      color: white; display: flex; align-items: center; justify-content: center; flex-direction: column;
-      z-index: 10; font-weight: 800; font-size: 24px;
-    }
+    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(45, 55, 72, 0.9); backdrop-filter: blur(4px); color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 10; font-weight: 800; font-size: 24px; }
     #pipOverlay { z-index: 5; background: #2d3748; }
-
   </style>
 </head>
 <body>
+
+  <!-- Full Page Dim Overlay for Baby Device -->
+  <div id="dimOverlay"></div>
   
   <div class="brand-header">
     <h1 class="brand-title">
@@ -529,7 +128,6 @@
   </div>
 
   <div id="selectionScreen" class="screen active">
-    
     <div class="usp-banner">
       <span class="material-symbols-outlined">family_restroom</span>
       <div class="usp-text">
@@ -537,7 +135,6 @@
         <p>Secure baby monitor from any device.</p>
       </div>
     </div>
-
     <div class="onboarding-grid">
       <div class="onboard-step">
         <span class="material-symbols-outlined onboard-icon">videocam</span>
@@ -556,7 +153,6 @@
       </div>
     </div>
 
-    <!-- Connection Network Mode Selector (Persistent) -->
     <div class="network-mode-box">
       <h4><span class="material-symbols-outlined" style="font-size: 18px;">router</span> Connection Speed Mode</h4>
       <div class="mode-options">
@@ -585,7 +181,6 @@
     <button class="back-btn" onclick="goBack()"><span class="material-symbols-outlined">arrow_back</span> Back</button>
     <p style="font-size: 15px; margin: 10px 0 5px 0; font-weight: 600; width: 100%; text-align: center;">Enter or Select Room Code:</p>
     
-    <!-- Saved Devices Dropdown -->
     <div class="saved-devices-container" id="savedDevicesWrapper" style="display:none;">
       <label for="savedDevicesSelect">Previously Connected Devices:</label>
       <select id="savedDevicesSelect" onchange="onSelectSavedDevice()" style="margin-bottom: 10px; max-width: 100%;"></select>
@@ -594,20 +189,17 @@
     <div class="input-group">
       <input type="text" id="joinCode" placeholder="A7X9Q2" maxlength="6" oninput="onCustomCodeInput()">
     </div>
-
     <label class="checkbox-container" style="width: 100%;">
       <input type="checkbox" id="rememberCodeCheck" checked> Remember code on this device
     </label>
-
     <button onclick="connectToBaby()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 14px; font-size: 15px; flex-direction: row;"><span class="material-symbols-outlined">link</span> Connect to Monitor</button>
   </div>
 
   <div id="videoScreen" class="screen">
     
+    <!-- TOP BAR (PARENT ONLY) -->
     <div id="parentTopBar" style="display:none; flex-direction: column; align-items: center; width: 100%;">
       <div id="activeCodeDisplay" class="room-code-box" style="font-size: 15px; padding: 10px 20px; margin-bottom: 8px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05);"></div>
-      
-      <!-- Video Quality Toggle (Parent Panel) -->
       <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
         <label style="font-size: 12px; font-weight: 600;">Stream Quality:</label>
         <select id="qualitySelect" onchange="requestQualityChange()" style="padding: 6px; font-size: 12px; border-radius: 8px; max-width: 150px;">
@@ -615,69 +207,51 @@
           <option value="fast">Fast & Low-Res (360p)</option>
         </select>
       </div>
-
     </div>
 
-    <!-- Clean Camera Selector -->
-    <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px;"></select>
-
-    <!-- Main Viewport -->
-    <div class="monitor-container" id="monitorContainer" onclick="handleVideoTap(event)" ontouchend="handleVideoTap(event)">
-      
+    <!-- MAIN VIEWPORT -->
+    <div class="monitor-container" id="monitorContainer">
       <div id="liveStatusBanner" class="live-status-banner" style="display:none;">
         <div id="statusDot" class="status-dot"></div>
         <span id="liveStatusText">Waiting...</span>
-        <!-- Parent Side Battery Indicator -->
+        
+        <!-- Parent Side Battery Indicator (Explicit Label) -->
         <div id="remoteBattery" class="battery-indicator">
-          <span class="material-symbols-outlined" style="font-size: 14px;">battery_full</span> <span id="battLevel">--%</span>
+          <span class="material-symbols-outlined" style="font-size: 14px;">battery_full</span>
+          <span style="margin-left: 2px;">Baby Device:</span>
+          <span id="battLevel" style="font-weight: 700;">--%</span>
         </div>
       </div>
-
+      
       <div id="babyKeepOpenOverlay" class="keep-open-overlay" style="display:none;">
         <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span> Keep Screen Open
       </div>
 
-      <!-- Baby Side Dark Mode Dimming Overlay -->
-      <div id="dimOverlay"></div>
+      <!-- Parent Side Low Battery Alert -->
+      <div id="lowBatteryAlert" class="keep-open-overlay low-battery-alert" style="display:none;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">battery_alert</span>
+        Baby Monitor Battery Low! (<span id="lowBattText"></span>)
+      </div>
 
       <div id="disconnectOverlay" class="overlay" style="display:none;">
         <span class="material-symbols-outlined" style="font-size: 48px; color: #f56565; margin-bottom: 8px;">signal_disconnected</span>
         <span style="color:#f56565; font-size: 20px;">Disconnected</span>
       </div>
-
       <div id="pipOverlay" class="overlay" style="display:none;">
         <span class="material-symbols-outlined" style="font-size: 48px; color: #f6ad55; margin-bottom: 8px;">picture_in_picture_alt</span>
         <span style="font-size: 20px;">PiP Active</span>
       </div>
-
-      <video id="myCamera" autoplay playsinline></video>
-
-      <!-- FULLSCREEN STREAMING-SERVICE STYLE OVERLAY CONTROLS -->
-      <div class="controls fullscreen-overlay" id="fullscreenControls">
-        <button id="fsCamBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
-        <button id="fsTalkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
-        <button id="fsMicBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_off</span> Mute</button>
-        <button onclick="rotateCamera()"><span class="material-symbols-outlined">screen_rotation</span> Rotate</button>
-        <button id="fsNightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night</button>
-        <button onclick="togglePiP()"><span class="material-symbols-outlined">picture_in_picture_alt</span> PiP</button>
-        <button onclick="toggleFullScreen()"><span class="material-symbols-outlined">fullscreen_exit</span> Exit</button>
-        <button id="fsAlarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm</button>
-        <div class="slider-container">
-          <label for="alarmSensitivity">Sens</label>
-          <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
-        </div>
-        <button onclick="goBack()" class="off" style="background-color: #2d3748; color: white;"><span class="material-symbols-outlined">close</span> End</button>
-      </div>
-
+      
+      <video id="myCamera" autoplay playsinline disableRemotePlayback disablePictureInPicture></video>
     </div>
 
-    <!-- Parent audio out -->
     <audio id="parentAudioOut" autoplay></audio>
-    <!-- Baby audio out (Speaker for Talk Feature) -->
     <audio id="babyAudioOut" autoplay></audio>
 
-    <!-- BABY CONTROLS (Clean) -->
+    <!-- BABY UI -->
     <div id="babyControls" style="display:none; width: 100%;">
+      <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px; width:100%; max-width: 250px;"></select>
+
       <div id="babyStep1" class="wizard-step active">
          <h3><span class="material-symbols-outlined" style="color: #f6ad55;">center_focus_strong</span> Step 1: Position</h3>
          <p style="font-size: 14px; margin-bottom: 20px; color: #718096;">Prop device so baby is in frame.</p>
@@ -696,11 +270,11 @@
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
 
-    <!-- PARENT CONTROLS Grid -->
+    <!-- PARENT CONTROLS Grid (Hidden by default) -->
     <div class="controls" id="parentControls" style="display:none;">
       <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
       <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
-      <button id="micBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_off</span> Mute</button>
+      <button id="micBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_up</span> Unmute</button>
       <button onclick="rotateCamera()"><span class="material-symbols-outlined">screen_rotation</span> Rotate</button>
       <button id="nightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night</button>
       
@@ -720,39 +294,21 @@
     const parentAudioOut = document.getElementById('parentAudioOut');
     const babyAudioOut = document.getElementById('babyAudioOut');
     
-    let activeStream; 
-    let parentLocalStream; 
-    let peer;
-    let currentCall; 
-    let wakeLock = null;
-    let dataConnections = []; 
-    
+    let activeStream, parentLocalStream, peer, currentCall, wakeLock = null, dataConnections = []; 
     let alarmActive = false, isAlarmRinging = false, alarmBeepInterval = null;
     let alarmSoundCtx = null, babyAudioCtx = null, parentAudioCtx = null, parentAudioSource = null, parentAudioGain = null;
-    
     let currentRotation = 0, activeRoomCode = "", isBaby = false, swReg = null, isNightMode = false;
-    let selectedNetworkMode = 'internet';
-    let currentQuality = 'balanced';
-
+    let selectedNetworkMode = 'internet', currentQuality = 'balanced';
     let pingInterval = null, heartbeatTimeout = null;
-    
-    // Dimming Overlay variables
-    let dimTimer = null;
-    const DIM_TIMEOUT_MS = 10000; 
+    let dimTimer = null; const DIM_TIMEOUT_MS = 10000; 
 
-    // Point 1: Persistent Network Mode
-    function initNetworkMode() {
-      setNetworkMode(localStorage.getItem('babyVaani_netMode') || 'internet', false);
-    }
-
+    function initNetworkMode() { setNetworkMode(localStorage.getItem('babyVaani_netMode') || 'internet', false); }
     function setNetworkMode(mode, save = true) {
       selectedNetworkMode = mode;
       if (save) localStorage.setItem('babyVaani_netMode', mode);
-      
       const btnInternet = document.getElementById('modeInternet');
       const btnWifi = document.getElementById('modeWifi');
       const bannerText = document.getElementById('activeModeBannerText');
-
       if (mode === 'wifi') {
         if (btnWifi) btnWifi.className = 'mode-option-btn selected';
         if (btnInternet) btnInternet.className = 'mode-option-btn';
@@ -765,18 +321,13 @@
     }
     initNetworkMode();
 
-    // Point 10: Optimizing PeerJS config (No STUN on LAN for speed)
     function getPeerConfig() {
       return selectedNetworkMode === 'wifi' 
         ? { config: { iceServers: [] } } 
         : { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
     }
 
-    // Point 5: Saved Devices Array
-    function getSavedParentDevices() {
-      try { return JSON.parse(localStorage.getItem('babyVaani_savedDevices')) || []; } 
-      catch(e) { return []; }
-    }
+    function getSavedParentDevices() { try { return JSON.parse(localStorage.getItem('babyVaani_savedDevices')) || []; } catch(e) { return []; } }
     function saveParentDevice(code) {
       if (!code || code.length !== 6) return;
       let list = getSavedParentDevices();
@@ -803,9 +354,7 @@
       const select = document.getElementById('savedDevicesSelect');
       if (select.value) document.getElementById('joinCode').value = select.value;
     }
-    function onCustomCodeInput() {
-      document.getElementById('savedDevicesSelect').value = "";
-    }
+    function onCustomCodeInput() { document.getElementById('savedDevicesSelect').value = ""; }
 
     function setLiveStatus(mode, text) {
       const banner = document.getElementById('liveStatusBanner');
@@ -815,52 +364,37 @@
       document.getElementById('statusDot').className = 'status-dot ' + mode;
     }
 
-    // Point 9b: Auto-dimming logic for Baby side
     function resetDimTimer() {
       if (!isBaby) return;
       const overlay = document.getElementById('dimOverlay');
       overlay.classList.remove('active');
       clearTimeout(dimTimer);
-      dimTimer = setTimeout(() => {
-        overlay.classList.add('active');
-      }, DIM_TIMEOUT_MS);
+      dimTimer = setTimeout(() => { overlay.classList.add('active'); }, DIM_TIMEOUT_MS);
     }
+    ['touchstart', 'click', 'mousemove'].forEach(evt => { window.addEventListener(evt, resetDimTimer); });
 
-    // Bind interaction events for un-dimming
-    ['touchstart', 'click', 'mousemove'].forEach(evt => {
-      window.addEventListener(evt, resetDimTimer);
-    });
-
-    // Point 9a: Battery API Tracking
     function startBatteryTracking() {
       if ('getBattery' in navigator) {
         navigator.getBattery().then(battery => {
           function updateBattery() {
             const level = Math.round(battery.level * 100);
             const charging = battery.charging;
-            dataConnections.forEach(conn => {
-              if (conn.open) conn.send(`BAT:${level}:${charging}`);
-            });
+            dataConnections.forEach(conn => { if (conn.open) conn.send(`BAT:${level}:${charging}`); });
           }
           updateBattery();
           battery.addEventListener('levelchange', updateBattery);
           battery.addEventListener('chargingchange', updateBattery);
-          // Poll every 60s as fallback
           setInterval(updateBattery, 60000); 
         });
       }
     }
 
-    // Point 10: Get Video Constraints based on Quality Setting
     function getVideoConstraints(quality) {
-      if (quality === 'fast') {
-        return { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 15 } };
-      } else {
-        return { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24 } };
-      }
+      return quality === 'fast' 
+        ? { width: { ideal: 640 }, height: { ideal: 360 }, frameRate: { ideal: 15 } }
+        : { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24 } };
     }
 
-    // Point 2: Clean Camera Naming
     async function populateCameras() {
       const select = document.getElementById('cameraSelect');
       select.innerHTML = '';
@@ -882,46 +416,48 @@
 
     async function switchCamera() {
       const deviceId = document.getElementById('cameraSelect').value;
-      const constraints = { video: { ...getVideoConstraints(currentQuality), deviceId: { exact: deviceId } }, audio: true };
+      const constraints = { 
+        video: { 
+            ...getVideoConstraints(currentQuality), 
+            deviceId: deviceId ? { exact: deviceId } : undefined 
+        }, 
+        audio: false 
+      };
+      
       try {
         const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-        updateActiveStream(newStream);
+        const newVideoTrack = newStream.getVideoTracks()[0];
+        
+        if (activeStream) {
+          const oldVideoTrack = activeStream.getVideoTracks()[0];
+          if (oldVideoTrack) {
+            oldVideoTrack.stop();
+            activeStream.removeTrack(oldVideoTrack);
+          }
+          activeStream.addTrack(newVideoTrack);
+        } else {
+          activeStream = newStream;
+        }
+        
+        videoBox.srcObject = activeStream;
+        
+        if (currentCall && currentCall.peerConnection) {
+          const sender = currentCall.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+          if (sender) await sender.replaceTrack(newVideoTrack);
+        }
       } catch (err) { alert("Failed to switch camera: " + err.message); }
     }
 
     async function applyQualityConstraints(quality) {
       currentQuality = quality;
-      const deviceId = document.getElementById('cameraSelect').value || undefined;
-      const constraints = { video: { ...getVideoConstraints(quality) }, audio: true };
-      if(deviceId) constraints.video.deviceId = { exact: deviceId };
-      
-      try {
-        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-        updateActiveStream(newStream);
-      } catch (err) { console.log("Quality update failed:", err); }
-    }
-
-    function updateActiveStream(newStream) {
-      const newVideoTrack = newStream.getVideoTracks()[0];
-      if (activeStream) {
-        const oldVideoTrack = activeStream.getVideoTracks()[0];
-        if (oldVideoTrack) oldVideoTrack.stop();
-      }
-      activeStream = newStream;
-      videoBox.srcObject = activeStream;
-      if (currentCall && currentCall.peerConnection) {
-        const sender = currentCall.peerConnection.getSenders().find(s => s.track?.kind === 'video');
-        if (sender) sender.replaceTrack(newVideoTrack);
-      }
+      switchCamera(); 
     }
 
     async function requestWakeLock() {
       try {
         wakeLock = await navigator.wakeLock.request('screen');
         document.addEventListener('visibilitychange', async () => {
-          if (wakeLock !== null && document.visibilityState === 'visible') {
-            wakeLock = await navigator.wakeLock.request('screen');
-          }
+          if (wakeLock !== null && document.visibilityState === 'visible') wakeLock = await navigator.wakeLock.request('screen');
         });
       } catch (err) {}
     }
@@ -931,7 +467,6 @@
       document.getElementById(screenId).classList.add('active');
     }
 
-    // MAIN APP MODES
     function startBabyMode() {
       isBaby = true;
       requestWakeLock();
@@ -944,7 +479,6 @@
         localStorage.setItem('babyVaani_roomCode', code);
       }
       activeRoomCode = code;
-
       peer = new Peer(activeRoomCode, getPeerConfig());
       peer.on('open', id => document.getElementById('wizardCodeDisplay').innerText = id);
 
@@ -966,16 +500,11 @@
         })
         .catch(() => { alert("Camera access denied."); goBack(); });
 
-      // Point 8: When Parent connects, they send Audio for the Talk feature
       peer.on('connection', conn => {
         dataConnections.push(conn);
         conn.on('data', data => handleDataChannelMessage(data, conn));
-        
         currentCall = peer.call(conn.peer, activeStream); 
-        currentCall.on('stream', parentStream => {
-          // Play parent audio through baby's speaker
-          babyAudioOut.srcObject = parentStream;
-        });
+        currentCall.on('stream', parentStream => { babyAudioOut.srcObject = parentStream; });
       });
     }
 
@@ -985,23 +514,20 @@
       populateSavedDevicesDropdown();
       
       const savedCode = localStorage.getItem('babyVaani_parentCode');
-      if (savedCode) {
-        document.getElementById('joinCode').value = savedCode;
-      }
+      if (savedCode) document.getElementById('joinCode').value = savedCode;
+      
       showScreen('parentScreen');
       peer = new Peer(getPeerConfig()); 
 
-      // Pre-request Mic for Talk feature
       navigator.mediaDevices.getUserMedia({ audio: true, video: false })
         .then(stream => {
           parentLocalStream = stream;
-          parentLocalStream.getAudioTracks()[0].enabled = false; // Muted by default
+          parentLocalStream.getAudioTracks()[0].enabled = false; 
         }).catch(err => { parentLocalStream = null; });
 
-      // Answer incoming video call from baby
       peer.on('call', call => {
         currentCall = call;
-        call.answer(parentLocalStream); // Send parent audio to baby
+        call.answer(parentLocalStream); 
         
         call.on('stream', remoteStream => {
           showScreen('videoScreen');
@@ -1012,10 +538,9 @@
           document.getElementById('parentTopBar').style.display = "flex";
           document.getElementById('parentControls').style.display = "grid";
           
-          videoBox.muted = false; 
+          videoBox.muted = true; 
           videoBox.srcObject = remoteStream;
 
-          // Point 7: Gain Node for robust muting on parent side
           try {
             if (!parentAudioCtx) parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
@@ -1023,10 +548,16 @@
             
             parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
             parentAudioGain = parentAudioCtx.createGain();
-            parentAudioGain.gain.value = 5.0; // Boost
+            parentAudioGain.gain.value = 0.0; 
             parentAudioSource.connect(parentAudioGain);
             parentAudioGain.connect(parentAudioCtx.destination);
           } catch (e) {}
+
+          const micBtn = document.getElementById('micBtn');
+          if(micBtn) {
+            micBtn.innerHTML = '<span class="material-symbols-outlined">volume_up</span> Unmute';
+            micBtn.className = 'off';
+          }
         });
       });
     }
@@ -1048,62 +579,63 @@
       conn.on('data', data => handleDataChannelMessage(data, conn));
     }
 
-    // Data Channel Router
     function handleDataChannelMessage(data, conn) {
       if (typeof data !== 'string') return;
-      
       if (data.startsWith('BAT:')) {
         const parts = data.split(':');
+        const level = parseInt(parts[1]);
+        const isCharging = parts[2] === 'true';
+
+        // Update top bar battery text
         const battUI = document.getElementById('remoteBattery');
         battUI.style.display = 'flex';
-        document.getElementById('battLevel').innerText = parts[1] + '%';
+        document.getElementById('battLevel').innerText = level + '%';
         const icon = battUI.querySelector('.material-symbols-outlined');
-        icon.innerText = parts[2] === 'true' ? 'battery_charging_full' : 'battery_full';
-        icon.style.color = parts[1] <= 20 ? '#f56565' : '#48bb78';
+        icon.innerText = isCharging ? 'battery_charging_full' : 'battery_full';
+        icon.style.color = level <= 20 ? '#f56565' : '#48bb78';
+
+        // Handle Low Battery Popup Alert
+        const lowBattAlert = document.getElementById('lowBatteryAlert');
+        if (level <= 20 && !isCharging) {
+          lowBattAlert.style.display = 'flex';
+          document.getElementById('lowBattText').innerText = level + '%';
+        } else {
+          lowBattAlert.style.display = 'none';
+        }
       } 
       else if (data.startsWith('QUALITY:')) {
         if(isBaby) applyQualityConstraints(data.split(':')[1]);
       }
     }
 
-    // Point 10: Trigger Quality Change from Parent UI
     function requestQualityChange() {
       const q = document.getElementById('qualitySelect').value;
-      dataConnections.forEach(conn => {
-        if(conn.open) conn.send(`QUALITY:${q}`);
-      });
+      dataConnections.forEach(conn => { if(conn.open) conn.send(`QUALITY:${q}`); });
     }
 
-    // Controls
     function toggleCamera() {
       if (!activeStream) return;
       const track = activeStream.getVideoTracks()[0];
       if(track) {
         track.enabled = !track.enabled;
         const state = track.enabled ? ['videocam_off', 'Pause', ''] : ['videocam', 'Resume', 'off'];
-        ['camBtn', 'fsCamBtn'].forEach(id => {
-          const b = document.getElementById(id);
-          b.innerHTML = `<span class="material-symbols-outlined">${state[0]}</span> ${state[1]}`;
-          b.className = state[2];
-        });
+        const b = document.getElementById('camBtn');
+        b.innerHTML = `<span class="material-symbols-outlined">${state[0]}</span> ${state[1]}`;
+        b.className = state[2];
       }
     }
 
-    // Point 8: Talk Feature
     function toggleTalk() {
       if (!parentLocalStream) return alert("Microphone access denied.");
       const track = parentLocalStream.getAudioTracks()[0];
       track.enabled = !track.enabled; 
       
       const state = track.enabled ? ['mic_off', 'Unmic', 'active-green'] : ['mic', 'Talk', ''];
-      ['talkBtn', 'fsTalkBtn'].forEach(id => {
-        const b = document.getElementById(id);
-        b.innerHTML = `<span class="material-symbols-outlined">${state[0]}</span> ${state[1]}`;
-        b.className = state[2];
-      });
+      const b = document.getElementById('talkBtn');
+      b.innerHTML = `<span class="material-symbols-outlined">${state[0]}</span> ${state[1]}`;
+      b.className = state[2];
     }
 
-    // Point 7: Mute toggle via GainNode
     function toggleParentListening() {
       if (parentAudioGain) {
         parentAudioGain.gain.value = parentAudioGain.gain.value > 0 ? 0 : 5.0;
@@ -1114,11 +646,9 @@
       
       const isMuted = videoBox.muted;
       const state = isMuted ? ['volume_up', 'Unmute', 'off'] : ['volume_off', 'Mute', ''];
-      ['micBtn', 'fsMicBtn'].forEach(id => {
-        const b = document.getElementById(id);
-        b.innerHTML = `<span class="material-symbols-outlined">${state[0]}</span> ${state[1]}`;
-        b.className = state[2];
-      });
+      const b = document.getElementById('micBtn');
+      b.innerHTML = `<span class="material-symbols-outlined">${state[0]}</span> ${state[1]}`;
+      b.className = state[2];
     }
 
     function rotateCamera() {
@@ -1139,39 +669,16 @@
       isNightMode = !isNightMode;
       videoBox.classList.toggle('night-mode', isNightMode);
       const state = isNightMode ? ['light_mode', 'Day', 'night-active'] : ['nightlight', 'Night', 'off'];
-      ['nightModeBtn', 'fsNightModeBtn'].forEach(id => {
-        const b = document.getElementById(id);
-        b.innerHTML = `<span class="material-symbols-outlined">${state[0]}</span> ${state[1]}`;
-        b.className = state[2];
-      });
+      const b = document.getElementById('nightModeBtn');
+      b.innerHTML = `<span class="material-symbols-outlined">${state[0]}</span> ${state[1]}`;
+      b.className = state[2];
     }
 
-    // Point 6: Fullscreen & Streaming Service Controls Overlay
     function toggleFullScreen() {
       const c = document.getElementById('monitorContainer'); 
-      if (!document.fullscreenElement) { c.requestFullscreen?.(); } 
-      else { document.exitFullscreen?.(); }
+      if (!document.fullscreenElement) { c.requestFullscreen?.(); } else { document.exitFullscreen?.(); }
     }
     
-    function handleVideoTap(event) {
-      if (document.fullscreenElement && !isBaby) {
-        event.stopPropagation();
-        document.getElementById('fullscreenControls').classList.toggle('visible');
-      }
-    }
-
-    document.addEventListener('fullscreenchange', () => {
-      const c = document.getElementById('monitorContainer');
-      const fc = document.getElementById('fullscreenControls');
-      if (document.fullscreenElement && !isBaby) {
-        c.classList.add('fullscreen-mode');
-        fc.classList.remove('visible');
-      } else {
-        c.classList.remove('fullscreen-mode');
-        fc.classList.remove('visible');
-      }
-    });
-
     async function togglePiP() {
       try {
         if (document.pictureInPictureElement) await document.exitPictureInPicture();
@@ -1193,10 +700,11 @@
       activeStream = parentLocalStream = peer = currentCall = null;
       dataConnections = [];
       document.getElementById('remoteBattery').style.display = 'none';
+      document.getElementById('lowBatteryAlert').style.display = 'none';
       videoBox.srcObject = babyAudioOut.srcObject = parentAudioOut.srcObject = null;
       
       showScreen('selectionScreen');
-      window.location.reload(); // Hard reset state
+      window.location.reload(); 
     }
   </script>
 </body>
