@@ -312,8 +312,6 @@
     let currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false;
     let selectedNetworkMode = 'internet', currentQuality = 'balanced';
 
-    window.addEventListener('popstate', () => { window.location.reload(); });
-
     function initNetworkMode() { setNetworkMode(localStorage.getItem('babyVaani_netMode') || 'internet', false); }
     function setNetworkMode(mode, save = true) {
       selectedNetworkMode = mode;
@@ -332,6 +330,12 @@
       }
     }
     initNetworkMode();
+
+    function getPeerConfig() {
+      return selectedNetworkMode === 'wifi' 
+        ? { config: { iceServers: [] } } 
+        : { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
+    }
 
     function getSavedParentDevices() { try { return JSON.parse(localStorage.getItem('babyVaani_savedDevices')) || []; } catch(e) { return []; } }
     function saveParentDevice(code) {
@@ -405,14 +409,6 @@
       }
     }
 
-    function getVideoConstraints(quality) {
-      if (quality === 'fast') {
-        return { width: { max: 640 }, height: { max: 360 } };
-      } else {
-        return { width: { ideal: 1280 }, height: { ideal: 720 } };
-      }
-    }
-
     async function populateCameras() {
       const select = document.getElementById('cameraSelect');
       select.innerHTML = '';
@@ -435,7 +431,7 @@
     async function switchCamera() {
       const deviceId = document.getElementById('cameraSelect').value;
       const constraints = { 
-        video: { ...getVideoConstraints(currentQuality), deviceId: deviceId ? { exact: deviceId } : undefined }, 
+        video: deviceId ? { deviceId: { exact: deviceId } } : true, 
         audio: false 
       };
       
@@ -548,7 +544,6 @@
 
     function startBabyMode() {
       isBaby = true;
-      history.pushState({ active: true }, "", "#active"); 
       requestWakeLock();
 
       showScreen('videoScreen');
@@ -561,24 +556,17 @@
       videoBox.classList.add('baby-locked');
       videoBox.disablePictureInPicture = true;
 
-      localStorage.removeItem('babyVaani_roomCode');
-      
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let code = Array.from({length:6}).map(()=>chars.charAt(Math.floor(Math.random()*chars.length))).join('');
-      localStorage.setItem('babyVaani_roomCode', code);
-      activeRoomCode = code;
-      document.getElementById('wizardCodeDisplay').innerText = activeRoomCode;
-
       initBabyPeer();
 
-      const optimalConstraints = { video: getVideoConstraints('balanced'), audio: true };
+      // UNIVERSAL FIX: Use basic constraints to prevent hardware/driver hanging on mobile
+      const basicConstraints = { video: true, audio: true };
 
       const cameraTimeout = new Promise((resolve, reject) => {
-        setTimeout(() => reject(new Error("Camera request timed out. Please force-close background apps.")), 8000);
+        setTimeout(() => reject(new Error("Camera request timed out. Please check permissions.")), 8000);
       });
 
       Promise.race([
-        navigator.mediaDevices.getUserMedia(optimalConstraints),
+        navigator.mediaDevices.getUserMedia(basicConstraints),
         cameraTimeout
       ])
         .then(async stream => {
@@ -593,14 +581,13 @@
         })
         .catch(err => {
           setLiveStatus('offline', 'Camera Offline');
-          alert("Camera Error: " + err.message + "\n\nPlease check permissions and ensure no other app is using the camera.");
+          alert("Camera Error: " + err.message + "\n\nPlease check camera permissions in your browser settings.");
           goBack();
         });
     }
 
     function startParentMode() {
       isBaby = false;
-      history.pushState({ active: true }, "", "#active"); 
       requestWakeLock(); 
       populateSavedDevicesDropdown();
 
@@ -912,7 +899,6 @@
       videoBox.srcObject = null;
       
       showScreen('selectionScreen');
-      window.location.reload(); 
     }
   </script>
 </body>
