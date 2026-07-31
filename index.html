@@ -361,7 +361,7 @@
     video:fullscreen { height: 100vh; border-radius: 0; border: none; }
     video::-webkit-media-controls-enclosure { display:none !important; }
 
-    /* Parent Controls Grid - Compact 5x2 Grid to Fit Portrait Viewports Perfectly */
+    /* Parent Controls Grid - Compact 5x2 Grid */
     .controls {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -369,13 +369,6 @@
       margin-top: 5px;
       width: 100%;
       transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-
-    @media(max-width: 850px) {
-      .controls {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 6px;
-      }
     }
 
     button {
@@ -446,7 +439,7 @@
       border-color: #feebc8;
     }
 
-    /* Slider Container Matched to Grid Cell Size */
+    /* Slider Container */
     .slider-container {
       display: flex;
       flex-direction: column;
@@ -474,24 +467,24 @@
     }
     .slider-container input { width: 100%; margin-top: 2px; cursor: pointer; accent-color: #f6ad55; height: 14px; }
 
-    /* Fullscreen Floating Overlay Mode for Controls */
+    /* Fullscreen YouTube-Style Toggle Overlay */
     .controls.fullscreen-overlay {
       position: fixed;
       bottom: 20px;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) translateY(20px);
       width: 92%;
       max-width: 600px;
-      background: rgba(45, 55, 72, 0.88);
+      background: rgba(45, 55, 72, 0.9);
       backdrop-filter: blur(10px);
       padding: 10px;
       border-radius: 20px;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
       z-index: 9999;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      transition: opacity 0.25s ease, transform 0.25s ease;
     }
 
     .controls.fullscreen-overlay.visible {
@@ -687,7 +680,7 @@
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row; max-height: 52px;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
 
-    <!-- PARENT CONTROLS - Perfectly Compact 5x2 Grid -->
+    <!-- PARENT CONTROLS - Exactly 10 items formatted into a compact 5x2 grid -->
     <div class="controls" id="parentControls" style="display:none;">
       <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
       <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
@@ -727,10 +720,11 @@
     let isBaby = false;
     let swReg = null;
     let isNightMode = false;
+    let parentAudioCtx = null;
+    let parentAudioSource = null;
 
     let pingInterval = null;
     let heartbeatTimeout = null;
-    let controlHideTimeout = null;
 
     function getSavedBabyCode() {
       let code = localStorage.getItem('babyVaani_roomCode');
@@ -1013,6 +1007,7 @@
       }
       
       videoBox.srcObject = null;
+      parentAudioOut.srcObject = null;
       
       const overlay = document.getElementById('disconnectOverlay');
       if (overlay) overlay.style.display = 'none';
@@ -1147,7 +1142,12 @@
         .then(async function(cameraStream) {
           activeStream = cameraStream;
           videoBox.srcObject = cameraStream;
-          videoBox.muted = true; 
+          
+          // GUARANTEED MUTE ON BABY SIDE TO PREVENT ANY SOUND
+          videoBox.muted = true;
+          cameraStream.getAudioTracks().forEach(track => {
+            // Keep track enabled so it streams to parent, but ensure local audio output is completely disabled
+          });
           
           showScreen('videoScreen');
           document.getElementById('babyControls').style.display = "block";
@@ -1236,6 +1236,26 @@
           
           videoBox.muted = false; 
           videoBox.srcObject = remoteStream;
+
+          // ENHANCED AUDIO BOOSTER FILTER FOR LOW BABY SOUNDS
+          try {
+            if (!parentAudioCtx) {
+              parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (parentAudioCtx.state === 'suspended') {
+              parentAudioCtx.resume();
+            }
+            if (parentAudioSource) {
+              parentAudioSource.disconnect();
+            }
+            parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
+            const gainNode = parentAudioCtx.createGain();
+            gainNode.gain.value = 3.5; // Boost audio volume significantly
+            parentAudioSource.connect(gainNode);
+            gainNode.connect(parentAudioCtx.destination);
+          } catch (e) {
+            console.log("Audio boost context error:", e);
+          }
         });
       });
     }
@@ -1362,18 +1382,11 @@
       }
     }
 
-    // Fullscreen Tap to Show / Hover Controls logic
+    // YouTube-Style Tap to Toggle Controls in Fullscreen Mode
     function handleVideoTap() {
       if (document.fullscreenElement && !isBaby) {
         const controls = document.getElementById('parentControls');
-        controls.classList.add('visible');
-        
-        clearTimeout(controlHideTimeout);
-        controlHideTimeout = setTimeout(() => {
-          if (document.fullscreenElement) {
-            controls.classList.remove('visible');
-          }
-        }, 3500);
+        controls.classList.toggle('visible');
       }
     }
 
@@ -1384,7 +1397,6 @@
         controls.classList.remove('visible');
       } else {
         controls.classList.remove('fullscreen-overlay', 'visible');
-        clearTimeout(controlHideTimeout);
       }
     });
 
