@@ -4,17 +4,17 @@
   <title>Baby Vaani Monitor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <!-- Fixed Favicon -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%22><text y=%22.9em%22 font-size=%2290%22>👶</text></svg>">
+  <!-- Favicon with White Background & Contrast Baby Icon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%22><circle cx=%2250%22 cy=%2250%22 r=%2248%22 fill=%22%23ffffff%22 stroke=%22%23cbd5e1%22 stroke-width=%224%22/><text x=%2250%%22 y=%2255%%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2260%22>👶</text></svg>">
   <!-- Google Fonts: Inter -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    /* Warm, Nurturing, Baby-Oriented Professional Aesthetic (Non-SaaS) */
+    /* Warm, Nurturing, Baby-Oriented Professional Aesthetic */
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
-      background-color: #fffdf9; /* Soft nursery cream background */
+      background-color: #fffdf9; 
       color: #2d3748;
       text-align: center;
       margin: 0;
@@ -48,7 +48,7 @@
     }
     .logo-icon { 
       font-size: 44px; 
-      color: #f6ad55; /* Warm baby orange/coral */
+      color: #f6ad55; 
       background: #fffaf0; 
       padding: 8px; 
       border-radius: 50%; 
@@ -95,6 +95,14 @@
     .usp-banner, .onboarding-grid, .hero-image-container, .input-group, .checkbox-container, #parentTopBar, #cameraSelect, .monitor-container, #babyControls, .controls {
       width: 100%;
       box-sizing: border-box;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    /* Fullscreen Auto-Hide Mode for Controls */
+    .controls.fullscreen-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
     }
 
     /* Warm Nursery USP Banner */
@@ -273,6 +281,7 @@
       justify-content: center;
       border: 4px solid #ffffff;
       margin-bottom: 15px;
+      cursor: pointer;
     }
 
     /* Live Status Banner Overlay */
@@ -376,7 +385,7 @@
 
     button {
       font-family: inherit;
-      background-color: #2d3748; /* Warm professional pebble slate */
+      background-color: #2d3748;
       color: white;
       border: none;
       padding: 12px 10px;
@@ -587,7 +596,7 @@
 
     <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 15px; padding: 10px;"></select>
 
-    <div class="monitor-container" id="monitorContainer">
+    <div class="monitor-container" id="monitorContainer" onclick="handleVideoTap()">
       
       <div id="liveStatusBanner" class="live-status-banner" style="display:none;">
         <div id="statusDot" class="status-dot"></div>
@@ -685,6 +694,7 @@
 
     let pingInterval = null;
     let heartbeatTimeout = null;
+    let controlHideTimeout = null;
 
     function getSavedBabyCode() {
       let code = localStorage.getItem('babyVaani_roomCode');
@@ -975,6 +985,7 @@
       document.getElementById('cameraSelect').style.display = "none";
       document.getElementById('babyControls').style.display = "none";
       document.getElementById('parentControls').style.display = "none";
+      document.getElementById('parentControls').classList.remove('fullscreen-hidden');
       
       document.getElementById('camBtn').innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Pause Video';
       document.getElementById('camBtn').className = '';
@@ -1312,6 +1323,31 @@
         document.exitFullscreen(); 
       }
     }
+
+    // Fullscreen Tap to Show Controls logic
+    function handleVideoTap() {
+      if (document.fullscreenElement && !isBaby) {
+        const controls = document.getElementById('parentControls');
+        controls.classList.remove('fullscreen-hidden');
+        
+        clearTimeout(controlHideTimeout);
+        controlHideTimeout = setTimeout(() => {
+          if (document.fullscreenElement) {
+            controls.classList.add('fullscreen-hidden');
+          }
+        }, 3000);
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      const controls = document.getElementById('parentControls');
+      if (document.fullscreenElement && !isBaby) {
+        controls.classList.add('fullscreen-hidden');
+      } else {
+        controls.classList.remove('fullscreen-hidden');
+        clearTimeout(controlHideTimeout);
+      }
+    });
 
     function startAudioAnalysis(stream) {
       if (!babyAudioCtx) return;
