@@ -24,9 +24,9 @@
       align-items: center;
     }
     
-    /* Brand Header */
+    /* Playful Brand Header with Reversed Colors */
     .brand-header {
-      margin-bottom: 25px;
+      margin-bottom: 30px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -37,7 +37,7 @@
     .brand-title {
       font-weight: 800;
       letter-spacing: -0.5px;
-      font-size: 36px;
+      font-size: 38px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -45,15 +45,20 @@
       margin: 0;
     }
     .logo-icon { 
-      font-size: 44px; 
+      font-size: 46px; 
       color: #f6ad55; 
       background: #fffaf0; 
       padding: 8px; 
       border-radius: 50%; 
-      box-shadow: 0 4px 12px rgba(246, 173, 85, 0.2);
+      box-shadow: 0 4px 15px rgba(246, 173, 85, 0.25);
+      animation: gentleBounce 3s ease-in-out infinite;
     }
-    .brand-baby { color: #f6ad55; }
-    .brand-vaani { color: #2d3748; }
+    @keyframes gentleBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .brand-baby { color: #2d3748; }
+    .brand-vaani { color: #f6ad55; }
     .brand-subtitle {
       font-size: 13px;
       font-weight: 700;
@@ -343,22 +348,21 @@
       transition: transform 0.3s ease, filter 0.3s ease; 
     }
 
-    /* Night Mode Video Enhancement Filter */
+    /* Enhanced Amber/Yellowish Night Mode Filter for Low-Light Visibility */
     video.night-mode {
-      filter: brightness(2.2) contrast(1.4) saturate(0.8);
+      filter: brightness(2.5) contrast(1.5) sepia(0.6) hue-rotate(-10deg) saturate(1.2);
     }
 
     video:fullscreen { height: 100vh; border-radius: 0; border: none; }
     video::-webkit-media-controls-enclosure { display:none !important; }
 
-    /* Controls & Buttons */
+    /* Controls & Buttons - Perfect Symmetrical Alignment Grid */
     .controls {
-      display: flex;
-      justify-content: center;
-      align-items: stretch;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
       margin-top: 10px;
-      flex-wrap: wrap;
+      width: 100%;
     }
 
     button {
@@ -366,17 +370,18 @@
       background-color: #2d3748;
       color: white;
       border: none;
-      padding: 14px 18px;
+      padding: 14px 16px;
       font-size: 13px;
       font-weight: 600;
       border-radius: 16px;
       cursor: pointer;
-      flex: 1 1 45%; 
-      max-width: 280px;
+      width: 100%;
+      min-height: 52px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      box-sizing: border-box;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
@@ -394,8 +399,8 @@
     button.active-green { background-color: #48bb78; }
     button.active-green:hover { background-color: #38a169; }
     
-    button.night-active { background-color: #4c51bf; color: #fff; }
-    button.night-active:hover { background-color: #434190; }
+    button.night-active { background-color: #d69e2e; color: #fff; }
+    button.night-active:hover { background-color: #b7791f; }
 
     button.ringing { background-color: #f56565; animation: pulseRed 1s infinite; }
     @keyframes pulseRed {
@@ -412,8 +417,8 @@
       padding: 10px 16px;
       margin-bottom: 10px;
       border-radius: 12px;
-      flex: unset;
-      max-width: none;
+      width: auto;
+      min-height: auto;
     }
     button.back-btn:hover, button.icon-btn:hover {
       background-color: #fffaf0;
@@ -421,22 +426,29 @@
       border-color: #feebc8;
     }
 
-    /* Slider Container */
+    /* Slider Container Matched to Grid Column Size */
     .slider-container {
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       background: #ffffff;
-      padding: 12px 16px;
+      padding: 10px 16px;
       border-radius: 16px;
       font-size: 13px;
       font-weight: 700;
       border: 1px solid #edf2f7;
-      flex: 1 1 45%;
-      max-width: 280px;
+      width: 100%;
+      min-height: 52px;
+      box-sizing: border-box;
       box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-    .slider-container input { width: 100%; margin-top: 10px; cursor: pointer; accent-color: #f6ad55; }
+    .slider-container input { width: 100%; margin-top: 6px; cursor: pointer; accent-color: #f6ad55; }
+
+    /* Full Width Elements inside Control Grid */
+    .controls .full-width {
+      grid-column: span 2;
+    }
 
     /* Wizard Steps */
     .wizard-step {
@@ -525,9 +537,9 @@
       </div>
     </div>
 
-    <div class="controls" style="width: 100%;">
-      <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; max-width: none;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
-      <button onclick="startParentMode()" style="max-width: none;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
+    <div class="controls">
+      <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff;" class="full-width"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
+      <button onclick="startParentMode()" class="full-width"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
     </div>
 
     <div class="hero-image-container">
@@ -547,7 +559,7 @@
       <input type="checkbox" id="rememberCodeCheck" checked> Remember this room code on this device
     </label>
 
-    <button onclick="connectToBaby()" style="width: 100%; max-width: none; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px;"><span class="material-symbols-outlined">link</span> Connect to Monitor</button>
+    <button onclick="connectToBaby()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px;"><span class="material-symbols-outlined">link</span> Connect to Monitor</button>
   </div>
 
   <div id="videoScreen" class="screen">
@@ -591,12 +603,12 @@
 
     <audio id="parentAudioOut" autoplay></audio>
 
-    <div id="babyControls" style="display:none;">
+    <div id="babyControls" style="display:none; width: 100%;">
       
       <div id="babyStep1" class="wizard-step active">
          <h3><span class="material-symbols-outlined" style="color: #f6ad55;">center_focus_strong</span> Step 1: Position</h3>
          <p style="font-size: 15px; margin-bottom: 25px; color: #718096;">Prop your device up so the baby is perfectly in frame.</p>
-         <button onclick="nextBabyStep(2)" class="active-green" style="margin: 0 auto; padding: 14px 24px; max-width: none;">Looks Good <span class="material-symbols-outlined">arrow_forward</span></button>
+         <button onclick="nextBabyStep(2)" class="active-green" style="margin: 0 auto; padding: 14px 24px; width: auto;">Looks Good <span class="material-symbols-outlined">arrow_forward</span></button>
       </div>
 
       <div id="babyStep2" class="wizard-step">
@@ -614,10 +626,10 @@
          </div>
       </div>
 
-      <button onclick="goBack()" class="off" style="margin-top: 20px; margin-left: auto; margin-right: auto; max-width: none;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
+      <button onclick="goBack()" class="off" style="margin-top: 20px; margin-left: auto; margin-right: auto; width: auto;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
 
-    <!-- PARENT CONTROLS -->
+    <!-- PARENT CONTROLS - Perfectly Aligned 2-Column Grid -->
     <div class="controls" id="parentControls" style="display:none;">
       <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause Video</button>
       <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk to Baby</button>
@@ -626,14 +638,14 @@
       <button id="nightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night Mode OFF</button>
       <button onclick="togglePiP()"><span class="material-symbols-outlined">picture_in_picture_alt</span> PiP Mode</button>
       <button id="fsBtn" onclick="toggleFullScreen()"><span class="material-symbols-outlined">fullscreen</span> Full Screen</button>
+      <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm OFF</button>
       
-      <div class="slider-container">
+      <div class="slider-container full-width">
         <label for="alarmSensitivity">Alarm Sensitivity</label>
         <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
       </div>
-      <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm OFF</button>
       
-      <button onclick="goBack()" class="off" style="width: 100%; max-width: 100%; margin-top: 10px; background-color: #2d3748;"><span class="material-symbols-outlined">close</span> End Stream</button>
+      <button onclick="goBack()" class="off full-width" style="background-color: #2d3748; color: white;"><span class="material-symbols-outlined">close</span> End Stream</button>
     </div>
   </div>
 
