@@ -361,6 +361,7 @@
     var lastDrawTime = 0;
     var currentFpsInterval = 1000 / 15; // Hard-throttled to 15fps max to avoid OOM
     var canvasAnimFrame = null;
+    var currentFacingMode = "environment";
     
     var rawStream = null, activeStream = null, parentLocalStream = null, peer = null, currentCall = null, wakeLock = null; 
     var activeCalls = []; 
@@ -686,29 +687,44 @@
       } catch (err) {}
     }
 
+    // Robust Camera Switching / Flipping with proper track releasing and forced playback to eliminate black screen
     function switchCamera(callback) {
       if (isSwitchingCamera) return;
       isSwitchingCamera = true;
 
-      var deviceId = document.getElementById('cameraSelect').value;
-      var constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true };
-      if (deviceId) { constraints.video.deviceId = { exact: deviceId }; }
+      // Toggle facingMode between environment and user
+      currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+      var constraints = { 
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: { exact: currentFacingMode } }, 
+          audio: true 
+      };
       
       try {
         cleanupOldStream();
+        if (rawStream) {
+            var tracks = rawStream.getTracks();
+            for (var t = 0; t < tracks.length; t++) tracks[t].stop();
+            rawStream = null;
+        }
         
         setTimeout(function() {
             navigator.mediaDevices.getUserMedia(constraints).then(function(newStream) {
                 rawStream = newStream;
                 hiddenVideo.srcObject = rawStream;
+                hiddenVideo.play().catch(function(e){});
                 
                 hiddenVideo.onloadedmetadata = function() {
-                    hiddenVideo.play();
+                    hiddenVideo.play().catch(function(e){});
                     lastDrawTime = Date.now();
                     drawCanvasLoop();
                 };
 
-                document.getElementById('myCamera').srcObject = rawStream;
+                lastDrawTime = Date.now();
+                drawCanvasLoop();
+
+                videoBox.srcObject = rawStream;
+                videoBox.play().catch(function(e){});
+
                 var newVideoTrack = rawStream.getVideoTracks()[0];
                 
                 if (typeof proxyCanvas.captureStream !== 'function') {
@@ -736,12 +752,28 @@
                 isSwitchingCamera = false;
                 if (callback) callback();
             }).catch(function(err) {
-                // Phase 4: Silent auto-recovery instead of blocking alert popup
-                console.warn("Camera switch failed, attempting silent auto-recovery in 2s: " + err.message);
-                setTimeout(function() {
+                // Fallback without exact constraint if device lacks explicit facingMode exact match
+                var fallbackConstraints = { 
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: currentFacingMode }, 
+                    audio: true 
+                };
+                navigator.mediaDevices.getUserMedia(fallbackConstraints).then(function(newStream) {
+                    rawStream = newStream;
+                    hiddenVideo.srcObject = rawStream;
+                    hiddenVideo.play().catch(function(e){});
+                    videoBox.srcObject = rawStream;
+                    videoBox.play().catch(function(e){});
+                    lastDrawTime = Date.now();
+                    drawCanvasLoop();
                     isSwitchingCamera = false;
-                    switchCamera(callback);
-                }, 2000);
+                    if (callback) callback();
+                }).catch(function(err2) {
+                    console.warn("Camera flip failed, attempting silent auto-recovery in 2s: " + err2.message);
+                    setTimeout(function() {
+                        isSwitchingCamera = false;
+                        switchCamera(callback);
+                    }, 2000);
+                });
             });
         }, 500);
 
@@ -772,7 +804,17 @@
           screens[i].classList.remove('active');
       }
       document.getElementById(screenId).classList.add('active');
+      
+      // Push history state so back button returns to home cleanly
+      if (screenId !== 'selectionScreen') {
+          history.pushState({ screen: screenId }, "");
+      }
     }
+
+    // Intercept browser back button anywhere on the app to return to home screen
+    window.onpopstate = function(event) {
+      goBack();
+    };
 
     function initBabyPeer(forceNew) {
       if (forceNew === undefined) forceNew = false;
@@ -856,6 +898,7 @@
       try {
           isBaby = true;
           requestWakeLock();
+          currentFacingMode = "environment";
 
           showScreen('videoScreen');
           document.getElementById('babyControls').style.display = "block";
@@ -876,11 +919,10 @@
               return;
           }
 
-          var basicConstraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }, audio: true };
+          var basicConstraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: currentFacingMode }, audio: true };
           var cameraStarted = false;
           var fallbackTimeout = setTimeout(function() {
               if (!cameraStarted) {
-                  // Phase 4: Silent auto-recovery instead of crashing out
                   console.warn("Camera startup timeout, retrying...");
               }
           }, 8000);
@@ -892,17 +934,22 @@
               
               rawStream = stream;
               hiddenVideo.srcObject = rawStream;
+              hiddenVideo.play().catch(function(e){});
               
               hiddenVideo.onloadedmetadata = function() {
-                  hiddenVideo.play();
+                  hiddenVideo.play().catch(function(e){});
                   lastDrawTime = Date.now();
                   drawCanvasLoop();
               };
+
+              lastDrawTime = Date.now();
+              drawCanvasLoop();
 
               buildProxyStream();
               
               videoBox.srcObject = rawStream; 
               videoBox.muted = true; 
+              videoBox.play().catch(function(e){});
               setLiveStatus('waiting', 'Camera Ready');
 
               populateCameras();
@@ -931,7 +978,6 @@
             .catch(function(err) {
               cameraStarted = true;
               clearTimeout(fallbackTimeout);
-              // Phase 4: Silent auto-retry instead of hard alert trap
               console.warn("Camera Error, retrying in 2s: " + err.message);
               setTimeout(function() {
                   startBabyMode();
@@ -1063,6 +1109,7 @@
           
           videoBox.muted = true; 
           videoBox.srcObject = remoteStream;
+          videoBox.play().catch(function(e){});
 
           parentIsMuted = true;
           var slider = document.getElementById('audioBoostSlider');
@@ -1180,31 +1227,7 @@
       if (typeof data !== 'string') return;
       if (data === 'SWITCH_CAM') {
         if (isBaby) {
-          if (isSwitchingCamera) return;
-          var select = document.getElementById('cameraSelect');
-          if (select && select.options.length > 1) {
-            select.selectedIndex = (select.selectedIndex + 1) % select.options.length;
-            switchCamera(); 
-          } else {
-            // Even without multiple options, flip camera facingMode safely
-            isSwitchingCamera = true;
-            currentRotation = (currentRotation === 0) ? 0 : 0; // maintain rotation state
-            cleanupOldStream();
-            setTimeout(function() {
-                navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }, audio: true })
-                  .then(function(s) {
-                      rawStream = s;
-                      hiddenVideo.srcObject = rawStream;
-                      hiddenVideo.onloadedmetadata = function() {
-                          hiddenVideo.play();
-                          lastDrawTime = Date.now();
-                          drawCanvasLoop();
-                      };
-                      videoBox.srcObject = rawStream;
-                      isSwitchingCamera = false;
-                  }).catch(function(e) { isSwitchingCamera = false; });
-            }, 500);
-          }
+          switchCamera();
         }
       }
       else if (data === 'DIM_SCREEN') {
@@ -1478,9 +1501,17 @@
               connectBtn.disabled = false;
           }
 
-          showScreen('selectionScreen');
+          var screens = document.querySelectorAll('.screen');
+          for (var s = 0; s < screens.length; s++) {
+              screens[s].classList.remove('active');
+          }
+          document.getElementById('selectionScreen').classList.add('active');
       } catch(e) {
-          showScreen('selectionScreen');
+          var screens = document.querySelectorAll('.screen');
+          for (var s = 0; s < screens.length; s++) {
+              screens[s].classList.remove('active');
+          }
+          document.getElementById('selectionScreen').classList.add('active');
       }
     }
   </script>
