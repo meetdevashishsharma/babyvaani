@@ -687,15 +687,14 @@
       } catch (err) {}
     }
 
-    // Robust Camera Switching / Flipping with proper track releasing and forced playback to eliminate black screen
+    // Bulletproof Camera Switching / Flipping with 600ms hardware release buffer and forced playback
     function switchCamera(callback) {
       if (isSwitchingCamera) return;
       isSwitchingCamera = true;
 
-      // Toggle facingMode between environment and user
       currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
       var constraints = { 
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: { exact: currentFacingMode } }, 
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: currentFacingMode }, 
           audio: true 
       };
       
@@ -752,12 +751,8 @@
                 isSwitchingCamera = false;
                 if (callback) callback();
             }).catch(function(err) {
-                // Fallback without exact constraint if device lacks explicit facingMode exact match
-                var fallbackConstraints = { 
-                    video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: currentFacingMode }, 
-                    audio: true 
-                };
-                navigator.mediaDevices.getUserMedia(fallbackConstraints).then(function(newStream) {
+                // Fallback without facingMode constraint if device lacks explicit lens support
+                navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function(newStream) {
                     rawStream = newStream;
                     hiddenVideo.srcObject = rawStream;
                     hiddenVideo.play().catch(function(e){});
@@ -775,11 +770,10 @@
                     }, 2000);
                 });
             });
-        }, 500);
+        }, 600); // 600ms hardware release buffer for Samsung A50
 
       } catch (err) { 
           isSwitchingCamera = false;
-          console.warn("Camera switch exception, auto-recovering...");
       }
     }
 
