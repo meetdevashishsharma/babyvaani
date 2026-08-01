@@ -72,6 +72,7 @@
     .monitor-container { background: #000; border-radius: 20px; overflow: hidden; position: relative; height: 52vh; width: 100%; display: flex; align-items: center; justify-content: center; border: 3px solid #ffffff; margin-bottom: 10px; cursor: pointer; transform: translateZ(0); transition: border-color 0.3s ease; will-change: transform; }
     .live-status-banner { position: absolute; top: 15px; left: 15px; background: rgba(45, 55, 72, 0.8); color: #ffffff; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; z-index: 20; backdrop-filter: blur(8px); }
     .battery-indicator { display: none; align-items: center; gap: 4px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 12px; margin-left: 8px; font-size: 11px; }
+    .ping-indicator { display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 12px; margin-left: 8px; font-size: 11px; color: #48bb78; }
     
     .keep-open-overlay { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(220, 38, 38, 0.92); color: #ffffff; padding: 8px 18px; border-radius: 24px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; z-index: 25; white-space: nowrap; }
     .low-battery-alert { background: rgba(220, 38, 38, 0.95); bottom: 70px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4); }
@@ -164,7 +165,6 @@
       </div>
     </div>
 
-    <!-- NETWORK MODE BOX WITH CLEAR WARNING -->
     <div class="network-mode-box">
       <h4><span class="material-symbols-outlined" style="font-size: 18px;">router</span> Connection Speed Mode</h4>
       <div class="mode-options">
@@ -219,7 +219,12 @@
   <div id="videoScreen" class="screen">
     
     <div id="parentTopBar" style="display:none; flex-direction: column; align-items: center; width: 100%;">
-      <div id="activeCodeDisplay" class="room-code-box" style="font-size: 15px; padding: 10px 20px; margin-bottom: 8px; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: default;"></div>
+      <!-- Masked Room Code Toggle UI -->
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <div id="activeCodeDisplay" class="room-code-box" style="font-size: 15px; padding: 10px 20px; margin-bottom: 0; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: default;">••••••</div>
+        <button onclick="toggleCodeVisibility()" class="icon-btn" style="margin-bottom:0; min-height: 42px; padding: 8px 12px;"><span class="material-symbols-outlined" id="codeToggleIcon">visibility</span></button>
+      </div>
+
       <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
         <label style="font-size: 12px; font-weight: 600;">Stream Quality:</label>
         <select id="qualitySelect" onchange="requestQualityChange()" style="padding: 6px; font-size: 12px; border-radius: 8px; max-width: 150px;">
@@ -236,8 +241,13 @@
         
         <div id="remoteBattery" class="battery-indicator">
           <span class="material-symbols-outlined" style="font-size: 14px;">battery_full</span>
-          <span style="margin-left: 2px;">Baby Device:</span>
+          <span style="margin-left: 2px;">Baby:</span>
           <span id="battLevel" style="font-weight: 700;">--%</span>
+        </div>
+
+        <div id="pingIndicator" class="ping-indicator">
+          <span class="material-symbols-outlined" style="font-size: 14px;">signal_cellular_alt</span>
+          <span id="pingText" style="font-weight: 700;">--ms</span>
         </div>
       </div>
       
@@ -252,13 +262,14 @@
 
       <div id="disconnectOverlay" class="overlay" style="display:none;">
         <span class="material-symbols-outlined" style="font-size: 48px; color: #f56565; margin-bottom: 8px;">signal_disconnected</span>
-        <span style="color:#f56565; font-size: 20px;">Disconnected</span>
+        <span style="color:#f56565; font-size: 20px;" id="disconnectText">Disconnected - Reconnecting...</span>
       </div>
       
       <video id="myCamera" autoplay playsinline disableRemotePlayback></video>
     </div>
 
-    <div id="babyAudioContainer" style="display:none; visibility: hidden; position: absolute;"></div>
+    <!-- Zero-opacity background audio container for Baby mode multi-parent broadcasting -->
+    <div id="babyAudioContainer" style="opacity: 0; position: absolute; pointer-events: none; visibility: hidden;"></div>
 
     <div id="babyControls" style="display:none; width: 100%;">
       <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px; width:100%; max-width: 250px;"></select>
@@ -274,11 +285,6 @@
            <h4 style="color: #dd6b20; margin: 6px 0; font-size: 15px;">Keep This Window Open</h4>
            <p style="color: #4a5568; font-size: 13px; margin:0;">Do not lock device or switch apps.</p>
          </div>
-         
-         <!-- UPDATED DIM BUTTON TEXT -->
-         <button onclick="forceDim()" class="active-green" style="margin-top: 15px; flex-direction: row; width: auto; margin-left: auto; margin-right: auto; background-color: #2d3748;">
-           <span class="material-symbols-outlined">mode_night</span> Dim Screen (To reduce battery)
-         </button>
       </div>
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
@@ -294,7 +300,17 @@
       <button onclick="togglePiP()"><span class="material-symbols-outlined">picture_in_picture_alt</span> PiP</button>
       <button id="fsBtn" onclick="toggleFullScreen()"><span class="material-symbols-outlined">fullscreen</span> Full</button>
       <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm</button>
-      <div class="slider-container">
+      
+      <!-- Remote Dim Button (Parent Side) -->
+      <button id="remoteDimBtn" onclick="toggleRemoteDim()" class="off"><span class="material-symbols-outlined">mode_night</span> Dim Baby</button>
+
+      <!-- Audio Boost Slider (Parent Side) -->
+      <div class="slider-container" style="grid-column: span 2;">
+        <label for="audioBoostSlider">Audio Boost (<span id="boostVal">1.0</span>x)</label>
+        <input type="range" id="audioBoostSlider" min="1" max="4" step="0.5" value="1" oninput="updateAudioBoost()">
+      </div>
+
+      <div class="slider-container" style="grid-column: span 3;">
         <label for="alarmSensitivity">Sensitivity</label>
         <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
       </div>
@@ -312,10 +328,10 @@
     let activeCalls = []; 
     let dataConnections = []; 
     
-    let alarmActive = false, isAlarmRinging = false, alarmBeepInterval = null, batteryInterval = null;
-    let parentAudioCtx = null, parentAudioSource = null, parentAnalyser = null;
-    let currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false;
-    let selectedNetworkMode = 'internet', currentQuality = 'balanced';
+    let alarmActive = false, isAlarmRinging = false, alarmBeepInterval = null, batteryInterval = null, pingInterval = null;
+    let parentAudioCtx = null, parentAudioSource = null, parentAnalyser = null, parentGainNode = null;
+    let currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false, isCodeVisible = false;
+    let selectedNetworkMode = 'internet', currentQuality = 'balanced', isRemoteDimmed = false, reconnectAttempts = 0;
 
     function initNetworkMode() { setNetworkMode(localStorage.getItem('babyVaani_netMode') || 'internet', false); }
     function setNetworkMode(mode, save = true) {
@@ -376,17 +392,25 @@
       document.getElementById('savedDevicesSelect').value = ""; 
     }
 
+    function toggleCodeVisibility() {
+      isCodeVisible = !isCodeVisible;
+      const display = document.getElementById('activeCodeDisplay');
+      const icon = document.getElementById('codeToggleIcon');
+      if (isCodeVisible) {
+        display.innerText = activeRoomCode;
+        icon.innerText = 'visibility_off';
+      } else {
+        display.innerText = '••••••';
+        icon.innerText = 'visibility';
+      }
+    }
+
     function setLiveStatus(mode, text) {
       const banner = document.getElementById('liveStatusBanner');
       if (!mode) { banner.style.display = 'none'; return; }
       banner.style.display = 'flex';
       document.getElementById('liveStatusText').innerText = text;
       document.getElementById('statusDot').className = 'status-dot ' + mode;
-    }
-
-    function forceDim() {
-      if (!isBaby) return;
-      document.getElementById('dimOverlay').classList.add('active');
     }
 
     function wakeScreen() {
@@ -414,6 +438,30 @@
       }
     }
 
+    function startPingTracking() {
+      pingInterval = setInterval(() => {
+        if (currentCall && currentCall.peerConnection) {
+          const pc = currentCall.peerConnection;
+          pc.getStats().then(stats => {
+            stats.forEach(report => {
+              if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+                const rtt = Math.round(report.currentRoundTripTime * 1000);
+                document.getElementById('pingText').innerText = rtt + 'ms';
+              }
+            });
+          }).catch(e => {});
+        }
+      }, 3000);
+    }
+
+    function getVideoConstraints(quality) {
+      if (quality === 'fast') {
+        return { width: { max: 640 }, height: { max: 360 } };
+      } else {
+        return { width: { ideal: 1280 }, height: { ideal: 720 } };
+      }
+    }
+
     async function populateCameras() {
       const select = document.getElementById('cameraSelect');
       select.innerHTML = '';
@@ -436,8 +484,8 @@
     async function switchCamera() {
       const deviceId = document.getElementById('cameraSelect').value;
       const constraints = { 
-        video: deviceId ? { deviceId: { exact: deviceId } } : true, 
-        audio: false 
+        video: { ...getVideoConstraints(currentQuality), deviceId: deviceId ? { exact: deviceId } : undefined }, 
+        audio: true 
       };
       
       try {
@@ -469,7 +517,7 @@
           }
         });
 
-      } catch (err) { alert("Failed to open camera: " + err.message); }
+      } catch (err) { alert("Failed to switch camera: " + err.message); }
     }
 
     async function requestWakeLock() {
@@ -525,11 +573,13 @@
           parentAudioEl.playsInline = true;
           parentAudioEl.id = `audio-${conn.peer}`;
           document.getElementById('babyAudioContainer').appendChild(parentAudioEl);
+          parentAudioEl.play().catch(e => {});
 
           activeCalls.push({ peerId: conn.peer, call: call });
 
           call.on('stream', parentStream => { 
              parentAudioEl.srcObject = parentStream;
+             parentAudioEl.play().catch(e => {});
           });
 
           call.on('close', () => { cleanUpParent(conn.peer); });
@@ -563,7 +613,7 @@
 
       initBabyPeer();
 
-      const basicConstraints = { video: true, audio: true };
+      const basicConstraints = { video: getVideoConstraints('balanced'), audio: true };
 
       const cameraTimeout = new Promise((resolve, reject) => {
         setTimeout(() => reject(new Error("Camera request timed out. Please check permissions.")), 8000);
@@ -642,11 +692,17 @@
         call.answer(parentLocalStream || null); 
         
         call.on('stream', remoteStream => {
+          reconnectAttempts = 0;
+          document.getElementById('disconnectOverlay').style.display = 'none';
           showScreen('videoScreen');
           setLiveStatus('live', 'Live - Monitoring');
           activeStream = remoteStream;
           
-          document.getElementById('activeCodeDisplay').innerText = activeRoomCode;
+          if(!isCodeVisible) {
+            document.getElementById('activeCodeDisplay').innerText = '••••••';
+          } else {
+            document.getElementById('activeCodeDisplay').innerText = activeRoomCode;
+          }
           document.getElementById('parentTopBar').style.display = "flex";
           document.getElementById('parentControls').style.display = "grid";
           
@@ -657,9 +713,17 @@
             if (parentAudioSource) parentAudioSource.disconnect();
             parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
             parentAnalyser = parentAudioCtx.createAnalyser();
+            parentGainNode = parentAudioCtx.createGain();
+            
             parentAnalyser.fftSize = 256;
-            parentAudioSource.connect(parentAnalyser); 
+            parentGainNode.gain.value = parseFloat(document.getElementById('audioBoostSlider').value);
+
+            parentAudioSource.connect(parentAnalyser);
+            parentAnalyser.connect(parentGainNode);
+            parentGainNode.connect(parentAudioCtx.destination);
           } catch (e) {}
+
+          startPingTracking();
 
           const micBtn = document.getElementById('micBtn');
           if(micBtn) {
@@ -667,12 +731,53 @@
             micBtn.className = 'off';
           }
         });
+
+        call.on('close', () => {
+          handleParentDisconnect();
+        });
       });
 
       peer.on('error', err => {
-        alert("Connection Error: " + err.type + ". Check Room Code and Network Mode.");
-        goBack();
+        handleParentDisconnect();
       });
+    }
+
+    function handleParentDisconnect() {
+      if (isBaby) return;
+      document.getElementById('disconnectOverlay').style.display = 'flex';
+      setLiveStatus('offline', 'Disconnected');
+      
+      if (reconnectAttempts < 5) {
+        reconnectAttempts++;
+        document.getElementById('disconnectText').innerText = `Reconnecting (${reconnectAttempts}/5)...`;
+        setTimeout(() => {
+          connectToBaby();
+        }, 3000);
+      } else {
+        document.getElementById('disconnectText').innerText = 'Connection Lost. Please End Session.';
+      }
+    }
+
+    function updateAudioBoost() {
+      const val = document.getElementById('audioBoostSlider').value;
+      document.getElementById('boostVal').innerText = val;
+      if (parentGainNode) {
+        parentGainNode.gain.value = parseFloat(val);
+      }
+    }
+
+    function toggleRemoteDim() {
+      isRemoteDimmed = !isRemoteDimmed;
+      const b = document.getElementById('remoteDimBtn');
+      if (isRemoteDimmed) {
+        b.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Wake Baby';
+        b.className = 'active-green';
+        dataConnections.forEach(conn => { if(conn.open) conn.send('DIM_SCREEN'); });
+      } else {
+        b.innerHTML = '<span class="material-symbols-outlined">mode_night</span> Dim Baby';
+        b.className = 'off';
+        dataConnections.forEach(conn => { if(conn.open) conn.send('WAKE_SCREEN'); });
+      }
     }
 
     function requestCameraSwitch() {
@@ -690,6 +795,12 @@
             switchCamera(); 
           }
         }
+      }
+      else if (data === 'DIM_SCREEN') {
+        if (isBaby) document.getElementById('dimOverlay').classList.add('active');
+      }
+      else if (data === 'WAKE_SCREEN') {
+        if (isBaby) document.getElementById('dimOverlay').classList.remove('active');
       }
       else if (data === 'DISCONNECT') {
         if (isBaby && conn && conn.peer) {
@@ -768,15 +879,6 @@
 
     function rotateCamera() {
       currentRotation = (currentRotation + 90) % 360;
-      const isSideways = currentRotation === 90 || currentRotation === 270;
-      const container = document.getElementById('monitorContainer');
-      if (isSideways) {
-        videoBox.style.width = `${container.clientHeight}px`;
-        videoBox.style.height = `${container.clientWidth}px`;
-      } else {
-        videoBox.style.width = `100%`;
-        videoBox.style.height = `100%`;
-      }
       videoBox.style.transform = `rotate(${currentRotation}deg) translateZ(0)`;
     }
 
@@ -887,8 +989,10 @@
 
       clearInterval(batteryInterval);
       clearInterval(alarmBeepInterval);
+      clearInterval(pingInterval);
       alarmActive = false;
       isAlarmRinging = false;
+      reconnectAttempts = 0;
       document.getElementById('monitorContainer').style.borderColor = '#ffffff';
 
       if (activeStream) activeStream.getTracks().forEach(t => t.stop());
@@ -898,7 +1002,9 @@
       activeStream = parentLocalStream = peer = currentCall = null;
       activeCalls = []; dataConnections = [];
       document.getElementById('remoteBattery').style.display = 'none';
+      document.getElementById('pingIndicator').style.display = 'none';
       document.getElementById('lowBatteryAlert').style.display = 'none';
+      document.getElementById('disconnectOverlay').style.display = 'none';
       document.getElementById('babyAudioContainer').innerHTML = ''; 
       videoBox.srcObject = null;
       
