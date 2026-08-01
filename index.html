@@ -182,10 +182,6 @@
           <small style="font-size: 10px; font-weight: 400; color: #718096;">*Devices must share Wi-Fi</small>
         </button>
       </div>
-
-      <div style="background: #fffaf0; border: 1px dashed #feebc8; padding: 8px 12px; border-radius: 10px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #dd6b20; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
-        <span class="material-symbols-outlined" style="font-size: 16px;">warning</span> Warning: Choose the exact same mode as the baby cam!
-      </div>
     </div>
 
     <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
@@ -246,9 +242,14 @@
     </div>
 
     <div class="monitor-container" id="monitorContainer">
-      <div id="cctvClock" style="display:none; position:absolute; bottom:15px; left:15px; background: rgba(0,0,0,0.6); color: #f56565; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; z-index: 20; letter-spacing: 1px; font-family: monospace;"></div>
+      <!-- FIXED: Canvas proxy for hidden resolution scaling -->
+      <video id="hiddenBabyCam" autoplay playsinline muted style="display:none;"></video>
+      <canvas id="proxyCanvas" style="display:none;"></canvas>
 
-      <canvas id="audioVisualizer" style="position:absolute; bottom:15px; right:15px; width:100px; height:30px; z-index:25; pointer-events:none;"></canvas>
+      <!-- FIXED: CCTV Clock absolute locked with high z-index to prevent scrolling cut-offs -->
+      <div id="cctvClock" style="display:none; position:absolute; bottom:15px; left:15px; background: rgba(0,0,0,0.6); color: #f56565; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; z-index: 9999; letter-spacing: 1px; font-family: monospace;"></div>
+
+      <canvas id="audioVisualizer" style="position:absolute; bottom:15px; right:15px; width:100px; height:30px; z-index:9999; pointer-events:none;"></canvas>
       
       <div id="liveStatusBanner" class="live-status-banner" style="display:none;">
         <div id="statusDot" class="status-dot"></div>
@@ -306,7 +307,7 @@
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
 
-    <!-- PARENT CONTROLS GRID (Now maintaining a clean 5-column layout) -->
+    <!-- PARENT CONTROLS GRID -->
     <div class="controls" id="parentControls" style="display:none;">
       <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
       <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
@@ -320,7 +321,7 @@
       <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm</button>
       <button id="remoteDimBtn" onclick="toggleRemoteDim()" class="off"><span class="material-symbols-outlined">mode_night</span> Screen Off</button>
 
-      <button id="remoteTorchBtn" onclick="toggleRemoteTorch()" class="off"><span class="material-symbols-outlined">flashlight_on</span> Flash</button>
+      <button id="remoteTorchBtn" onclick="toggleRemoteTorch()" class="off" style="grid-column: span 1;"><span class="material-symbols-outlined">flashlight_on</span> Flash</button>
 
       <div class="slider-container" style="grid-column: span 2;">
         <label for="audioBoostSlider">Audio Boost (<span id="boostVal">1.0</span>x)</label>
@@ -350,8 +351,12 @@
     function removeSavedItem(key) { try { localStorage.removeItem(key); } catch(e) {} }
 
     var videoBox = document.getElementById('myCamera');
+    var hiddenVideo = document.getElementById('hiddenBabyCam');
+    var proxyCanvas = document.getElementById('proxyCanvas');
+    var proxyCtx = proxyCanvas.getContext('2d', { alpha: false });
+    var canvasInterval = null;
     
-    var activeStream = null, parentLocalStream = null, peer = null, currentCall = null, wakeLock = null; 
+    var rawStream = null, activeStream = null, parentLocalStream = null, peer = null, currentCall = null, wakeLock = null; 
     var activeCalls = []; 
     var dataConnections = []; 
     
@@ -525,65 +530,72 @@
       }, 3000);
     }
 
-    function applyQualityToSenders(quality) {
-      if (activeStream && activeStream.getVideoTracks) {
-          var tracks = activeStream.getVideoTracks();
-          if (tracks.length > 0) {
-              var track = tracks[0];
-              if (track.applyConstraints && typeof track.applyConstraints === 'function') {
-                  var trackConstraints;
-                  if (quality === 'ultra') {
-                      trackConstraints = { width: { ideal: 256 }, height: { ideal: 144 }, frameRate: { ideal: 10 } };
-                  } else if (quality === 'ultra_high_fps') {
-                      trackConstraints = { width: { ideal: 256 }, height: { ideal: 144 }, frameRate: { ideal: 30 } };
-                  } else if (quality === 'fast') {
-                      trackConstraints = { width: { ideal: 426 }, height: { ideal: 240 }, frameRate: { ideal: 15 } };
-                  } else {
-                      trackConstraints = { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } };
-                  }
-                  
-                  // Preserve torch state if active
-                  if (isRemoteTorchOn) {
-                      if (!trackConstraints.advanced) trackConstraints.advanced = [];
-                      trackConstraints.advanced.push({ torch: true });
-                  }
-                  
-                  track.applyConstraints(trackConstraints).catch(function(e){});
-              }
-          }
-      }
-
-      for (var i = 0; i < activeCalls.length; i++) {
-        var c = activeCalls[i];
-        if (c.call && c.call.peerConnection) {
-          var senders = c.call.peerConnection.getSenders ? c.call.peerConnection.getSenders() : [];
-          var videoSender = null;
-          for (var j = 0; j < senders.length; j++) {
-             if (senders[j].track && senders[j].track.kind === 'video') videoSender = senders[j];
-          }
-          if (videoSender) {
-            try {
-              if (videoSender.getParameters && typeof videoSender.getParameters === 'function') {
-                  var params = videoSender.getParameters();
-                  if (params.encodings && params.encodings.length > 0) {
-                      if (quality === 'ultra') {
-                        params.encodings[0].maxBitrate = 80000; 
-                      } else if (quality === 'ultra_high_fps') {
-                        params.encodings[0].maxBitrate = 150000; 
-                      } else if (quality === 'fast') {
-                        params.encodings[0].maxBitrate = 200000; 
-                      } else {
-                        delete params.encodings[0].maxBitrate;
-                      }
-                      if (videoSender.setParameters && typeof videoSender.setParameters === 'function') {
-                          videoSender.setParameters(params).catch(function(e){});
-                      }
-                  }
-              }
-            } catch (e) {}
-          }
+    // FIXED: CANVAS PROXY ENGINE FOR BULLETPROOF RESOLUTION SCALING
+    function setCanvasQuality(quality) {
+        if (!isBaby || !proxyCanvas) return;
+        var w = 1280, h = 720, fps = 30;
+        
+        if (quality === 'ultra') {
+            w = 256; h = 144; fps = 10;
+        } else if (quality === 'ultra_high_fps') {
+            w = 256; h = 144; fps = 30;
+        } else if (quality === 'fast') {
+            w = 426; h = 240; fps = 15;
         }
-      }
+        
+        proxyCanvas.width = w;
+        proxyCanvas.height = h;
+        
+        if (canvasInterval) clearInterval(canvasInterval);
+        var ms = Math.floor(1000 / fps);
+        canvasInterval = setInterval(function() {
+            if (hiddenVideo.readyState >= 2) {
+                proxyCtx.drawImage(hiddenVideo, 0, 0, proxyCanvas.width, proxyCanvas.height);
+            }
+        }, ms);
+
+        // Apply fallback bandwidth caps just in case
+        for (var i = 0; i < activeCalls.length; i++) {
+            var c = activeCalls[i];
+            if (c.call && c.call.peerConnection) {
+                var senders = c.call.peerConnection.getSenders ? c.call.peerConnection.getSenders() : [];
+                var videoSender = null;
+                for (var j = 0; j < senders.length; j++) {
+                   if (senders[j].track && senders[j].track.kind === 'video') videoSender = senders[j];
+                }
+                if (videoSender) {
+                    try {
+                        if (videoSender.getParameters && typeof videoSender.getParameters === 'function') {
+                            var params = videoSender.getParameters();
+                            if (params.encodings && params.encodings.length > 0) {
+                                if (quality === 'ultra') params.encodings[0].maxBitrate = 80000; 
+                                else if (quality === 'ultra_high_fps') params.encodings[0].maxBitrate = 150000; 
+                                else if (quality === 'fast') params.encodings[0].maxBitrate = 200000; 
+                                else delete params.encodings[0].maxBitrate;
+                                
+                                if (videoSender.setParameters && typeof videoSender.setParameters === 'function') {
+                                    videoSender.setParameters(params).catch(function(e){});
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    function buildProxyStream() {
+        if (!isBaby || !rawStream || typeof proxyCanvas.captureStream !== 'function') {
+            activeStream = rawStream;
+            return;
+        }
+        
+        var canvasStream = proxyCanvas.captureStream(30); 
+        if (rawStream.getAudioTracks().length > 0) {
+            canvasStream.addTrack(rawStream.getAudioTracks()[0]);
+        }
+        activeStream = canvasStream;
+        setCanvasQuality(currentQuality);
     }
 
     function populateCameras() {
@@ -598,13 +610,11 @@
             }
             
             var activeDeviceId = null;
-            if (activeStream && activeStream.getVideoTracks && activeStream.getVideoTracks().length > 0) {
-                var track = activeStream.getVideoTracks()[0];
+            if (rawStream && rawStream.getVideoTracks && rawStream.getVideoTracks().length > 0) {
+                var track = rawStream.getVideoTracks()[0];
                 if (track.getSettings && typeof track.getSettings === 'function') {
                     var settings = track.getSettings();
-                    if (settings && settings.deviceId) {
-                        activeDeviceId = settings.deviceId;
-                    }
+                    if (settings && settings.deviceId) activeDeviceId = settings.deviceId;
                 }
             }
             
@@ -622,50 +632,44 @@
 
     function switchCamera() {
       var deviceId = document.getElementById('cameraSelect').value;
-      var constraints = { 
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
-        audio: true 
-      };
-      if (deviceId) {
-          constraints.video.deviceId = { exact: deviceId };
-      }
+      var constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true };
+      if (deviceId) { constraints.video.deviceId = { exact: deviceId }; }
       
       try {
-        var oldTrack = null;
-        if (activeStream) {
-          oldTrack = activeStream.getVideoTracks()[0];
-          if (oldTrack) {
-            oldTrack.stop(); 
-          }
+        if (rawStream) {
+          var oldTrack = rawStream.getVideoTracks()[0];
+          if (oldTrack) oldTrack.stop(); 
         }
         
         setTimeout(function() {
             navigator.mediaDevices.getUserMedia(constraints).then(function(newStream) {
-                var newVideoTrack = newStream.getVideoTracks()[0];
+                rawStream = newStream;
+                hiddenVideo.srcObject = rawStream;
                 
-                if (activeStream) {
-                  if (oldTrack) activeStream.removeTrack(oldTrack);
-                  activeStream.addTrack(newVideoTrack);
-                } else {
-                  activeStream = newStream;
-                }
+                var newVideoTrack = rawStream.getVideoTracks()[0];
                 
-                videoBox.srcObject = activeStream;
-                
-                for (var i = 0; i < activeCalls.length; i++) {
-                    var c = activeCalls[i];
-                    if (c.call && c.call.peerConnection) {
-                        var senders = c.call.peerConnection.getSenders();
-                        for (var j = 0; j < senders.length; j++) {
-                            if (senders[j].track && senders[j].track.kind === 'video') {
-                                if (senders[j].replaceTrack && typeof senders[j].replaceTrack === 'function') {
-                                    senders[j].replaceTrack(newVideoTrack).catch(function(e){});
+                if (typeof proxyCanvas.captureStream !== 'function') {
+                    activeStream = rawStream;
+                    videoBox.srcObject = activeStream;
+                    for (var i = 0; i < activeCalls.length; i++) {
+                        var c = activeCalls[i];
+                        if (c.call && c.call.peerConnection) {
+                            var senders = c.call.peerConnection.getSenders();
+                            for (var j = 0; j < senders.length; j++) {
+                                if (senders[j].track && senders[j].track.kind === 'video') {
+                                    if (senders[j].replaceTrack) senders[j].replaceTrack(newVideoTrack).catch(function(e){});
                                 }
                             }
                         }
                     }
+                } else {
+                    if (activeStream && activeStream.getAudioTracks().length > 0) {
+                        activeStream.removeTrack(activeStream.getAudioTracks()[0]);
+                    }
+                    if (rawStream.getAudioTracks().length > 0) {
+                        activeStream.addTrack(rawStream.getAudioTracks()[0]);
+                    }
                 }
-                applyQualityToSenders(currentQuality);
             }).catch(function(err) {
                 alert("Failed to switch camera: " + err.message);
             });
@@ -747,7 +751,7 @@
           parentAudioEl.play().catch(function(e){});
 
           activeCalls.push({ peerId: conn.peer, call: call });
-          applyQualityToSenders(currentQuality);
+          setCanvasQuality(currentQuality); // Re-enforce quality on new connection
 
           call.on('stream', function(parentStream) { 
              parentAudioEl.srcObject = parentStream;
@@ -803,6 +807,7 @@
               return;
           }
 
+          // Force rear camera on startup
           var basicConstraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }, audio: true };
 
           var cameraStarted = false;
@@ -819,8 +824,11 @@
               cameraStarted = true;
               clearTimeout(fallbackTimeout);
               
-              activeStream = stream;
-              videoBox.srcObject = stream;
+              rawStream = stream;
+              hiddenVideo.srcObject = rawStream;
+              buildProxyStream();
+              
+              videoBox.srcObject = rawStream; // Show raw stream locally for clarity
               videoBox.muted = true; 
               setLiveStatus('waiting', 'Camera Ready');
 
@@ -969,7 +977,6 @@
           document.getElementById('disconnectOverlay').style.display = 'none';
           showScreen('videoScreen');
           setLiveStatus('live', 'Live - Monitoring');
-          activeStream = remoteStream;
           
           if(!isCodeVisible) {
             document.getElementById('activeCodeDisplay').innerText = '••••••';
@@ -982,6 +989,7 @@
           videoBox.muted = true; 
           videoBox.srcObject = remoteStream;
 
+          // FORCE MUTED ON STARTUP
           parentIsMuted = true;
           var slider = document.getElementById('audioBoostSlider');
           slider.disabled = true;
@@ -1117,13 +1125,15 @@
         if (isBaby) document.getElementById('dimOverlay').classList.remove('active');
       }
       else if (data === 'TORCH:ON' || data === 'TORCH:OFF') {
-        if (isBaby && activeStream) {
+        if (isBaby && rawStream) {
           isRemoteTorchOn = (data === 'TORCH:ON');
-          var tracks = activeStream.getVideoTracks();
+          var tracks = rawStream.getVideoTracks();
           if (tracks.length > 0) {
               var track = tracks[0];
               try {
-                  track.applyConstraints({ advanced: [{ torch: isRemoteTorchOn }] }).catch(function(e){});
+                  if (track.applyConstraints && typeof track.applyConstraints === 'function') {
+                      track.applyConstraints({ advanced: [{ torch: isRemoteTorchOn }] }).catch(function(e){});
+                  }
               } catch(e) {}
           }
         }
@@ -1156,7 +1166,7 @@
       else if (data.indexOf('QUALITY:') === 0) {
         if(isBaby) {
           currentQuality = data.split(':')[1];
-          applyQualityToSenders(currentQuality); 
+          setCanvasQuality(currentQuality); 
         }
       }
       else if (data.indexOf('TICK:') === 0) {
@@ -1174,8 +1184,8 @@
     }
 
     function toggleCamera() {
-      if (!activeStream) return;
-      var track = activeStream.getVideoTracks()[0];
+      if (!rawStream) return;
+      var track = rawStream.getVideoTracks()[0];
       if(track) {
         track.enabled = !track.enabled;
         var state = track.enabled ? ['videocam_off', 'Pause', ''] : ['videocam', 'Resume', 'off'];
@@ -1348,6 +1358,7 @@
           clearInterval(alarmBeepInterval);
           clearInterval(pingInterval);
           clearInterval(tickInterval);
+          if (canvasInterval) clearInterval(canvasInterval);
           if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
 
           alarmActive = false;
@@ -1358,8 +1369,8 @@
           document.getElementById('cctvClock').style.display = 'none';
           document.getElementById('remoteTorchBtn').className = 'off';
 
-          if (activeStream) {
-             var tracks = activeStream.getTracks();
+          if (rawStream) {
+             var tracks = rawStream.getTracks();
              for(var t=0; t<tracks.length; t++) tracks[t].stop();
           }
           if (parentLocalStream) {
@@ -1368,7 +1379,7 @@
           }
           if (peer) peer.destroy();
           
-          activeStream = parentLocalStream = peer = currentCall = null;
+          rawStream = activeStream = parentLocalStream = peer = currentCall = null;
           activeCalls = []; dataConnections = [];
           document.getElementById('remoteBattery').style.display = 'none';
           document.getElementById('pingIndicator').style.display = 'none';
@@ -1376,6 +1387,7 @@
           document.getElementById('disconnectOverlay').style.display = 'none';
           document.getElementById('babyAudioContainer').innerHTML = ''; 
           videoBox.srcObject = null;
+          hiddenVideo.srcObject = null;
           
           showScreen('selectionScreen');
       } catch(e) {
