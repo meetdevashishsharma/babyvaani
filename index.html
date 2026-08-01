@@ -47,6 +47,7 @@
         .parent-controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 10vh; max-height: 80px; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: space-around; padding: 0 10px; z-index: 20; }
         .ctrl-btn { background: none; border: none; color: white; font-size: 12px; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
         .ctrl-btn span { font-size: 20px; margin-bottom: 4px; }
+        .ctrl-btn:disabled { opacity: 0.4; pointer-events: none; }
         .slider-container { display: flex; flex-direction: column; align-items: center; width: 80px; }
         .slider-container label { font-size: 10px; margin-bottom: 2px; }
         input[type="range"] { width: 100%; }
@@ -159,7 +160,7 @@
                     <option value="ultra">144p</option>
                 </select>
             </div>
-            <button class="ctrl-btn" onclick="remoteFlipCam()">
+            <button class="ctrl-btn" id="flipBtn" onclick="remoteFlipCam()">
                 <span>🔄</span>Flip
             </button>
             <button class="ctrl-btn" onclick="endSession()" style="color: #ff3b30;">
@@ -175,20 +176,22 @@
     </div>
 
     <script>
-        // ES5 COMPATIBLE JAVASCRIPT ENGINE
+        // ES5 COMPATIBLE JAVASCRIPT ENGINE (PHASE 4 STABILIZED)
         
         var peer = null;
         var activeConnections = [];
         var activeCalls = [];
         var isBabyMode = false;
         var currentCameraFacingMode = "environment"; 
+        var isSwitchingCamera = false; // Concurrency lock on baby device
+        var isParentControlLocked = false; // Cooldown lock on parent device
         
         var proxyCanvas = document.getElementById('babyProxyCanvas');
         var proxyContext = proxyCanvas.getContext('2d');
         var hiddenVideo = document.getElementById('babyRawVideo');
         var isCanvasActive = false;
         var lastDrawTime = 0;
-        var currentFpsInterval = 1000 / 15; 
+        var currentFpsInterval = 1000 / 15; // Hard-throttled to 15fps max
         
         var parentAudioCtx = null;
         var parentGainNode = null;
@@ -216,6 +219,7 @@
             document.getElementById('disconnectOverlay').style.display = 'flex';
         }
 
+        // Aggressive Memory Cleanup & Zombie Track Removal
         function cleanupOldStream() {
             if (hiddenVideo.srcObject) {
                 var tracks = hiddenVideo.srcObject.getTracks();
@@ -229,6 +233,7 @@
             }
         }
 
+        // Hard-Throttled Draw Loop (Decoupled from 60fps to save RAM & CPU)
         function drawCanvas() {
             if (!isCanvasActive) return;
             requestAnimationFrame(drawCanvas);
@@ -305,7 +310,8 @@
             startHeartbeat();
         }
 
-        function startCameraHardware(qualityStr) {
+        // Camera Hardware with Silent Auto-Recovery Failsafe
+        function startCameraHardware(qualityStr, callback) {
             cleanupOldStream();
             
             var constraints = { audio: true, video: { facingMode: currentCameraFacingMode } };
@@ -318,12 +324,15 @@
                 currentFpsInterval = 1000 / 15; 
             } else {
                 proxyCanvas.width = 1280; proxyCanvas.height = 720;
-                currentFpsInterval = 1000 / 24; 
+                currentFpsInterval = 1000 / 15; 
             }
 
             var timeout = setTimeout(function() {
-                alert("Camera hardware is not responding. Please close other apps and try again.");
-                endSession();
+                // Silent Auto-Recovery instead of blocking alert popup
+                console.warn("Camera hardware timeout, attempting silent recovery...");
+                setTimeout(function() {
+                    startCameraHardware(qualityStr, callback);
+                }, 2000);
             }, 8000);
 
             navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
@@ -336,11 +345,14 @@
                     isCanvasActive = true;
                     lastDrawTime = Date.now();
                     drawCanvas();
+                    if (callback) callback();
                 };
             }).catch(function(err) {
                 clearTimeout(timeout);
-                alert("Camera access failed: " + err.message);
-                endSession();
+                console.warn("Camera access failed, silent auto-retry in 2s: " + err.message);
+                setTimeout(function() {
+                    startCameraHardware(qualityStr, callback);
+                }, 2000);
             });
         }
 
@@ -348,7 +360,6 @@
             var code = document.getElementById('joinRoomCode').value.toUpperCase().replace(/\s/g, '');
             if (code.length !== 6) return alert("Enter a valid 6-digit code.");
             
-            // Activate "Connecting..." State UI
             var connectBtn = document.getElementById('connectBtn');
             connectBtn.innerText = "Connecting...";
             connectBtn.disabled = true;
@@ -373,7 +384,6 @@
                         initParentAudioNode(remoteStream);
                     });
                     
-                    // Instant Disconnect Triggers
                     call.on('close', triggerDisconnect);
                     call.on('error', triggerDisconnect);
                 });
@@ -387,7 +397,6 @@
                     }
                 });
                 
-                // Instant Disconnect Triggers
                 conn.on('close', triggerDisconnect);
                 conn.on('error', triggerDisconnect);
                 peer.on('disconnected', triggerDisconnect);
@@ -460,23 +469,52 @@
             }
         });
 
+        // Parent Controls with 3.5s Cooldown Lock to Prevent Spam-Clicking
         function changeQuality() {
+            if (isParentControlLocked) return;
+            isParentControlLocked = true;
+            document.getElementById('qualitySelect').style.opacity = 0.5;
+            
             var q = document.getElementById('qualitySelect').value;
             broadcastCommand({ type: 'QUALITY', value: q });
+            
+            setTimeout(function() {
+                isParentControlLocked = false;
+                document.getElementById('qualitySelect').style.opacity = 1;
+            }, 3500);
         }
 
         function remoteFlipCam() {
+            if (isParentControlLocked) return;
+            isParentControlLocked = true;
+            var flipBtn = document.getElementById('flipBtn');
+            flipBtn.disabled = true;
+            
             broadcastCommand({ type: 'FLIP_CAM' });
+            
+            setTimeout(function() {
+                isParentControlLocked = false;
+                flipBtn.disabled = false;
+            }, 3500);
         }
         
+        // Baby-side command handler with isSwitchingCamera Concurrency Lock
         function handleParentCommand(data) {
             if (data.type === 'QUALITY') {
-                startCameraHardware(data.value);
+                if (isSwitchingCamera) return;
+                isSwitchingCamera = true;
+                startCameraHardware(data.value, function() {
+                    isSwitchingCamera = false;
+                });
             } else if (data.type === 'FLIP_CAM') {
+                if (isSwitchingCamera) return;
+                isSwitchingCamera = true;
                 isCanvasActive = false; 
                 setTimeout(function(){
                     currentCameraFacingMode = currentCameraFacingMode === "environment" ? "user" : "environment";
-                    startCameraHardware('balanced');
+                    startCameraHardware('balanced', function() {
+                        isSwitchingCamera = false;
+                    });
                 }, 500); 
             }
         }
@@ -558,7 +596,6 @@
         }
 
         function endSession() {
-            // Reset Connect Button State
             var connectBtn = document.getElementById('connectBtn');
             if(connectBtn) {
                 connectBtn.innerText = "Connect to Monitor";
