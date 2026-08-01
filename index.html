@@ -187,7 +187,7 @@
       </div>
     </div>
 
-    <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="controls" style="grid-template-columns: repeat(2, 1fr); position: relative; z-index: 10;">
       <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
       <button onclick="startParentMode()" style="flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
     </div>
@@ -237,7 +237,7 @@
         <label style="font-size: 12px; font-weight: 600;">Stream Quality:</label>
         <select id="qualitySelect" onchange="requestQualityChange()" style="padding: 6px; font-size: 12px; border-radius: 8px; max-width: 150px;">
           <option value="balanced" selected>Balanced (720p)</option>
-          <option value="fast">Fast & Low-Res (360p)</option>
+          <option value="fast">Fast & Low-Res (240p)</option>
         </select>
       </div>
     </div>
@@ -331,6 +331,13 @@
   </div>
 
   <script>
+    // Bulletproof Global Error Handler
+    window.onerror = function(msg, url, line) {
+        if (msg.indexOf("SyntaxError") !== -1) {
+            alert("Your device's browser is too old to run this monitor. Please update your system or use a newer device.");
+        }
+    };
+
     // Ultra-safe storage wrappers for mobile browsers
     function getSavedItem(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
     function setSavedItem(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
@@ -512,28 +519,48 @@
       }, 3000);
     }
 
+    // THE BULLETPROOF QUALITY ENFORCER
     function applyQualityToSenders(quality) {
+      // 1. Force Software Downscaling via Track Constraints (Works on almost everything post-2016)
+      if (activeStream && activeStream.getVideoTracks) {
+          var tracks = activeStream.getVideoTracks();
+          if (tracks.length > 0) {
+              var track = tracks[0];
+              if (track.applyConstraints && typeof track.applyConstraints === 'function') {
+                  var trackConstraints;
+                  if (quality === 'fast') {
+                      trackConstraints = { width: { ideal: 426 }, height: { ideal: 240 }, frameRate: { ideal: 15 } };
+                  } else {
+                      trackConstraints = { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } };
+                  }
+                  track.applyConstraints(trackConstraints).catch(function(e){});
+              }
+          }
+      }
+
+      // 2. Enforce Bandwidth Limit on WebRTC Senders
       for (var i = 0; i < activeCalls.length; i++) {
         var c = activeCalls[i];
         if (c.call && c.call.peerConnection) {
-          var senders = c.call.peerConnection.getSenders();
+          var senders = c.call.peerConnection.getSenders ? c.call.peerConnection.getSenders() : [];
           var videoSender = null;
           for (var j = 0; j < senders.length; j++) {
              if (senders[j].track && senders[j].track.kind === 'video') videoSender = senders[j];
           }
           if (videoSender) {
             try {
-              var params = videoSender.getParameters();
-              if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
-              if (quality === 'fast') {
-                params.encodings[0].scaleResolutionDownBy = 2.0;
-                params.encodings[0].maxBitrate = 400000;
-              } else {
-                delete params.encodings[0].scaleResolutionDownBy;
-                delete params.encodings[0].maxBitrate;
-              }
-              if (videoSender.setParameters && typeof videoSender.setParameters === 'function') {
-                  videoSender.setParameters(params).catch(function(e){});
+              if (videoSender.getParameters && typeof videoSender.getParameters === 'function') {
+                  var params = videoSender.getParameters();
+                  if (params.encodings && params.encodings.length > 0) {
+                      if (quality === 'fast') {
+                        params.encodings[0].maxBitrate = 200000; // 200kbps strict limit
+                      } else {
+                        delete params.encodings[0].maxBitrate;
+                      }
+                      if (videoSender.setParameters && typeof videoSender.setParameters === 'function') {
+                          videoSender.setParameters(params).catch(function(e){});
+                      }
+                  }
               }
             } catch (e) {}
           }
