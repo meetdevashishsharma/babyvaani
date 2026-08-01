@@ -182,6 +182,10 @@
           <small style="font-size: 10px; font-weight: 400; color: #718096;">*Devices must share Wi-Fi</small>
         </button>
       </div>
+
+      <div style="background: #fffaf0; border: 1px dashed #feebc8; padding: 8px 12px; border-radius: 10px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #dd6b20; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span class="material-symbols-outlined" style="font-size: 16px;">warning</span> Warning: Choose the exact same mode as the baby cam!
+      </div>
     </div>
 
     <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
@@ -242,12 +246,11 @@
     </div>
 
     <div class="monitor-container" id="monitorContainer">
-      <!-- FIXED: Canvas proxy for hidden resolution scaling -->
       <video id="hiddenBabyCam" autoplay playsinline muted style="display:none;"></video>
       <canvas id="proxyCanvas" style="display:none;"></canvas>
 
-      <!-- FIXED: CCTV Clock absolute locked with high z-index to prevent scrolling cut-offs -->
-      <div id="cctvClock" style="display:none; position:absolute; bottom:15px; left:15px; background: rgba(0,0,0,0.6); color: #f56565; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; z-index: 9999; letter-spacing: 1px; font-family: monospace;"></div>
+      <!-- LIVE CCTV Clock -->
+      <div id="cctvClock" style="display:none; position:absolute; bottom:15px; left:15px; background: rgba(0,0,0,0.6); color: #48bb78; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; z-index: 9999; letter-spacing: 1px; font-family: monospace;"></div>
 
       <canvas id="audioVisualizer" style="position:absolute; bottom:15px; right:15px; width:100px; height:30px; z-index:9999; pointer-events:none;"></canvas>
       
@@ -261,8 +264,9 @@
           <span id="battLevel" style="font-weight: 700;">--%</span>
         </div>
 
+        <!-- NEW Dynamic Ping/Connection Strength Indicator -->
         <div id="pingIndicator" class="ping-indicator">
-          <span class="material-symbols-outlined" style="font-size: 14px;">signal_cellular_alt</span>
+          <span id="connIcon" class="material-symbols-outlined" style="font-size: 14px;">signal_cellular_alt</span>
           <span id="pingText" style="font-weight: 700;">--ms</span>
         </div>
       </div>
@@ -307,7 +311,7 @@
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
 
-    <!-- PARENT CONTROLS GRID -->
+    <!-- 10 Buttons + 2 Sliders = Clean 5 Column Grid -->
     <div class="controls" id="parentControls" style="display:none;">
       <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
       <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
@@ -321,14 +325,12 @@
       <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm</button>
       <button id="remoteDimBtn" onclick="toggleRemoteDim()" class="off"><span class="material-symbols-outlined">mode_night</span> Screen Off</button>
 
-      <button id="remoteTorchBtn" onclick="toggleRemoteTorch()" class="off" style="grid-column: span 1;"><span class="material-symbols-outlined">flashlight_on</span> Flash</button>
-
       <div class="slider-container" style="grid-column: span 2;">
         <label for="audioBoostSlider">Audio Boost (<span id="boostVal">1.0</span>x)</label>
         <input type="range" id="audioBoostSlider" min="1" max="4" step="0.5" value="1" oninput="updateAudioBoost()" disabled style="opacity: 0.5;">
       </div>
 
-      <div class="slider-container" style="grid-column: span 2;">
+      <div class="slider-container" style="grid-column: span 3;">
         <label for="alarmSensitivity">Sensitivity</label>
         <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
       </div>
@@ -366,7 +368,7 @@
     var visualizerCtx = null, visualizerCanvas = null, visualizerAnimationFrame = null;
 
     var currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false, isCodeVisible = false, isBabyCodeVisible = false;
-    var selectedNetworkMode = 'internet', currentQuality = 'balanced', isRemoteDimmed = false, isRemoteTorchOn = false, reconnectAttempts = 0;
+    var selectedNetworkMode = 'internet', currentQuality = 'balanced', isRemoteDimmed = false, reconnectAttempts = 0;
 
     function initNetworkMode() { 
         setNetworkMode(getSavedItem('babyVaani_netMode') || 'internet', false); 
@@ -516,21 +518,50 @@
       pingInterval = setInterval(function() {
         if (currentCall && currentCall.peerConnection) {
           var pc = currentCall.peerConnection;
+          
+          if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+              document.getElementById('connIcon').innerText = 'signal_cellular_connected_no_internet_0_bar';
+              document.getElementById('connIcon').style.color = '#f56565';
+              document.getElementById('pingText').innerText = 'Offline';
+              return;
+          }
+          
           if (pc.getStats && typeof pc.getStats === 'function') {
               pc.getStats().then(function(stats) {
+                var pingFound = false;
                 stats.forEach(function(report) {
                   if (report.type === 'candidate-pair' && report.state === 'succeeded') {
-                    var rtt = Math.round(report.currentRoundTripTime * 1000);
-                    document.getElementById('pingText').innerText = rtt + 'ms';
+                    if (report.currentRoundTripTime !== undefined) {
+                        pingFound = true;
+                        var rtt = Math.round(report.currentRoundTripTime * 1000);
+                        document.getElementById('pingText').innerText = rtt + 'ms';
+                        
+                        var icon = document.getElementById('connIcon');
+                        if (rtt < 150) {
+                            icon.innerText = 'signal_cellular_alt'; 
+                            icon.style.color = '#48bb78';
+                        } else if (rtt < 400) {
+                            icon.innerText = 'signal_cellular_alt_2_bar'; 
+                            icon.style.color = '#ecc94b';
+                        } else {
+                            icon.innerText = 'signal_cellular_alt_1_bar'; 
+                            icon.style.color = '#f56565';
+                        }
+                    }
                   }
                 });
+                
+                if (!pingFound) {
+                    document.getElementById('connIcon').innerText = 'signal_cellular_alt';
+                    document.getElementById('connIcon').style.color = '#48bb78';
+                    document.getElementById('pingText').innerText = 'Online';
+                }
               }).catch(function(e) {});
           }
         }
       }, 3000);
     }
 
-    // FIXED: CANVAS PROXY ENGINE FOR BULLETPROOF RESOLUTION SCALING
     function setCanvasQuality(quality) {
         if (!isBaby || !proxyCanvas) return;
         var w = 1280, h = 720, fps = 30;
@@ -554,7 +585,6 @@
             }
         }, ms);
 
-        // Apply fallback bandwidth caps just in case
         for (var i = 0; i < activeCalls.length; i++) {
             var c = activeCalls[i];
             if (c.call && c.call.peerConnection) {
@@ -751,7 +781,7 @@
           parentAudioEl.play().catch(function(e){});
 
           activeCalls.push({ peerId: conn.peer, call: call });
-          setCanvasQuality(currentQuality); // Re-enforce quality on new connection
+          setCanvasQuality(currentQuality); 
 
           call.on('stream', function(parentStream) { 
              parentAudioEl.srcObject = parentStream;
@@ -807,7 +837,6 @@
               return;
           }
 
-          // Force rear camera on startup
           var basicConstraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }, audio: true };
 
           var cameraStarted = false;
@@ -828,7 +857,7 @@
               hiddenVideo.srcObject = rawStream;
               buildProxyStream();
               
-              videoBox.srcObject = rawStream; // Show raw stream locally for clarity
+              videoBox.srcObject = rawStream; 
               videoBox.muted = true; 
               setLiveStatus('waiting', 'Camera Ready');
 
@@ -989,7 +1018,6 @@
           videoBox.muted = true; 
           videoBox.srcObject = remoteStream;
 
-          // FORCE MUTED ON STARTUP
           parentIsMuted = true;
           var slider = document.getElementById('audioBoostSlider');
           slider.disabled = true;
@@ -1084,22 +1112,6 @@
       }
     }
 
-    function toggleRemoteTorch() {
-      isRemoteTorchOn = !isRemoteTorchOn;
-      var b = document.getElementById('remoteTorchBtn');
-      if (isRemoteTorchOn) {
-        b.className = 'active-green';
-        for(var i=0; i<dataConnections.length; i++) {
-           if(dataConnections[i].open) dataConnections[i].send('TORCH:ON');
-        }
-      } else {
-        b.className = 'off';
-        for(var i=0; i<dataConnections.length; i++) {
-           if(dataConnections[i].open) dataConnections[i].send('TORCH:OFF');
-        }
-      }
-    }
-
     function requestCameraSwitch() {
       for(var i=0; i<dataConnections.length; i++) {
          if(dataConnections[i].open) dataConnections[i].send('SWITCH_CAM');
@@ -1123,20 +1135,6 @@
       }
       else if (data === 'WAKE_SCREEN') {
         if (isBaby) document.getElementById('dimOverlay').classList.remove('active');
-      }
-      else if (data === 'TORCH:ON' || data === 'TORCH:OFF') {
-        if (isBaby && rawStream) {
-          isRemoteTorchOn = (data === 'TORCH:ON');
-          var tracks = rawStream.getVideoTracks();
-          if (tracks.length > 0) {
-              var track = tracks[0];
-              try {
-                  if (track.applyConstraints && typeof track.applyConstraints === 'function') {
-                      track.applyConstraints({ advanced: [{ torch: isRemoteTorchOn }] }).catch(function(e){});
-                  }
-              } catch(e) {}
-          }
-        }
       }
       else if (data === 'DISCONNECT') {
         if (isBaby && conn && conn.peer) {
@@ -1172,7 +1170,7 @@
       else if (data.indexOf('TICK:') === 0) {
         var clockEl = document.getElementById('cctvClock');
         if (clockEl.style.display !== 'block') clockEl.style.display = 'block';
-        clockEl.innerText = "REC 🔴 " + data.substring(5);
+        clockEl.innerText = "LIVE 🟢 " + data.substring(5);
       }
     }
 
@@ -1363,11 +1361,9 @@
 
           alarmActive = false;
           isAlarmRinging = false;
-          isRemoteTorchOn = false;
           reconnectAttempts = 0;
           document.getElementById('monitorContainer').style.borderColor = '#ffffff';
           document.getElementById('cctvClock').style.display = 'none';
-          document.getElementById('remoteTorchBtn').className = 'off';
 
           if (rawStream) {
              var tracks = rawStream.getTracks();
