@@ -188,7 +188,7 @@
       </div>
     </div>
 
-    <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="controls" style="grid-template-columns: repeat(2, 1fr); position: relative; z-index: 10;">
       <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
       <button onclick="startParentMode()" style="flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
     </div>
@@ -238,14 +238,18 @@
         <label style="font-size: 12px; font-weight: 600;">Stream Quality:</label>
         <select id="qualitySelect" onchange="requestQualityChange()" style="padding: 6px; font-size: 12px; border-radius: 8px; max-width: 150px;">
           <option value="balanced" selected>Balanced (720p)</option>
-          <option value="fast">Fast & Low-Res (240p)</option>
+          <option value="fast">Fast (240p)</option>
+          <option value="ultra">Ultra-Low Data (144p)</option>
         </select>
       </div>
     </div>
 
     <div class="monitor-container" id="monitorContainer">
-      <!-- Fixed Visualizer: Restrained to a 100px widget on the top-right corner to prevent overlap -->
-      <canvas id="audioVisualizer" style="position:absolute; top:15px; right:15px; width:100px; height:30px; z-index:25; pointer-events:none;"></canvas>
+      <!-- FIXED: CCTV Live Timestamp sent directly from baby device heartbeat -->
+      <div id="cctvClock" style="display:none; position:absolute; top:15px; right:15px; background: rgba(0,0,0,0.6); color: #f56565; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; z-index: 20; letter-spacing: 1px; font-family: monospace;"></div>
+
+      <!-- FIXED: Visualizer moved to bottom right corner -->
+      <canvas id="audioVisualizer" style="position:absolute; bottom:15px; right:15px; width:100px; height:30px; z-index:25; pointer-events:none;"></canvas>
       
       <div id="liveStatusBanner" class="live-status-banner" style="display:none;">
         <div id="statusDot" class="status-dot"></div>
@@ -351,7 +355,7 @@
     var activeCalls = []; 
     var dataConnections = []; 
     
-    var alarmActive = false, isAlarmRinging = false, alarmBeepInterval = null, batteryInterval = null, pingInterval = null;
+    var alarmActive = false, isAlarmRinging = false, alarmBeepInterval = null, batteryInterval = null, pingInterval = null, tickInterval = null;
     var parentAudioCtx = null, parentAudioSource = null, parentAnalyser = null, parentGainNode = null;
     var parentIsMuted = false;
     var visualizerCtx = null, visualizerCanvas = null, visualizerAnimationFrame = null;
@@ -521,14 +525,18 @@
       }, 3000);
     }
 
+    // THE BULLETPROOF QUALITY ENFORCER (Now includes Ultra-Low)
     function applyQualityToSenders(quality) {
+      // 1. Force Software Downscaling via Track Constraints
       if (activeStream && activeStream.getVideoTracks) {
           var tracks = activeStream.getVideoTracks();
           if (tracks.length > 0) {
               var track = tracks[0];
               if (track.applyConstraints && typeof track.applyConstraints === 'function') {
                   var trackConstraints;
-                  if (quality === 'fast') {
+                  if (quality === 'ultra') {
+                      trackConstraints = { width: { ideal: 256 }, height: { ideal: 144 }, frameRate: { ideal: 10 } };
+                  } else if (quality === 'fast') {
                       trackConstraints = { width: { ideal: 426 }, height: { ideal: 240 }, frameRate: { ideal: 15 } };
                   } else {
                       trackConstraints = { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } };
@@ -538,6 +546,7 @@
           }
       }
 
+      // 2. Enforce Bandwidth Limit on WebRTC Senders
       for (var i = 0; i < activeCalls.length; i++) {
         var c = activeCalls[i];
         if (c.call && c.call.peerConnection) {
@@ -551,8 +560,10 @@
               if (videoSender.getParameters && typeof videoSender.getParameters === 'function') {
                   var params = videoSender.getParameters();
                   if (params.encodings && params.encodings.length > 0) {
-                      if (quality === 'fast') {
-                        params.encodings[0].maxBitrate = 200000; 
+                      if (quality === 'ultra') {
+                        params.encodings[0].maxBitrate = 80000; // Ultra low: 80kbps
+                      } else if (quality === 'fast') {
+                        params.encodings[0].maxBitrate = 200000; // Fast: 200kbps 
                       } else {
                         delete params.encodings[0].maxBitrate;
                       }
@@ -810,6 +821,25 @@
                  navigator.mediaDevices.ondevicechange = populateCameras;
               }
               startBatteryTracking();
+              
+              // Start CCTV Heartbeat
+              tickInterval = setInterval(function() {
+                  if (!isBaby) return;
+                  var d = new Date();
+                  var h = d.getHours();
+                  var m = d.getMinutes();
+                  var s = d.getSeconds();
+                  var ampm = h >= 12 ? 'PM' : 'AM';
+                  h = h % 12;
+                  h = h ? h : 12;
+                  m = m < 10 ? '0' + m : m;
+                  s = s < 10 ? '0' + s : s;
+                  var timeStr = h + ":" + m + ":" + s + " " + ampm;
+                  for(var i=0; i<dataConnections.length; i++) {
+                      if(dataConnections[i].open) dataConnections[i].send("TICK:" + timeStr);
+                  }
+              }, 1000);
+
             })
             .catch(function(err) {
               cameraStarted = true;
@@ -1000,6 +1030,7 @@
       if (isBaby) return;
       document.getElementById('disconnectOverlay').style.display = 'flex';
       setLiveStatus('offline', 'Disconnected');
+      document.getElementById('cctvClock').style.display = 'none';
       
       if (reconnectAttempts < 5) {
         reconnectAttempts++;
@@ -1092,6 +1123,11 @@
           currentQuality = data.split(':')[1];
           applyQualityToSenders(currentQuality); 
         }
+      }
+      else if (data.indexOf('TICK:') === 0) {
+        var clockEl = document.getElementById('cctvClock');
+        if (clockEl.style.display !== 'block') clockEl.style.display = 'block';
+        clockEl.innerText = "REC 🔴 " + data.substring(5);
       }
     }
 
@@ -1276,12 +1312,14 @@
           clearInterval(batteryInterval);
           clearInterval(alarmBeepInterval);
           clearInterval(pingInterval);
+          clearInterval(tickInterval);
           if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
 
           alarmActive = false;
           isAlarmRinging = false;
           reconnectAttempts = 0;
           document.getElementById('monitorContainer').style.borderColor = '#ffffff';
+          document.getElementById('cctvClock').style.display = 'none';
 
           if (activeStream) {
              var tracks = activeStream.getTracks();
