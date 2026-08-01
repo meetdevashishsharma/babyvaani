@@ -359,9 +359,11 @@
     var isSwitchingCamera = false;
     var isParentControlLocked = false;
     var lastDrawTime = 0;
-    var currentFpsInterval = 1000 / 15; // Hard-throttled to 15fps max to avoid OOM
+    var currentFpsInterval = 1000 / 15; 
     var canvasAnimFrame = null;
     var currentFacingMode = "environment";
+    var videoDeviceIds = [];
+    var currentDeviceIndex = 0;
     
     var rawStream = null, activeStream = null, parentLocalStream = null, peer = null, currentCall = null, wakeLock = null; 
     var activeCalls = []; 
@@ -581,7 +583,7 @@
         }
     }
 
-    // Phase 4: Hard-Throttled Draw Loop (Decoupled from native 60fps to save RAM & CPU)
+    // Phase 4: Hard-Throttled Draw Loop
     function drawCanvasLoop() {
         if (!isBaby) return;
         canvasAnimFrame = requestAnimationFrame(drawCanvasLoop);
@@ -601,13 +603,13 @@
         if (!isBaby || !proxyCanvas) return;
         var w = 1280, h = 720;
         if (quality === 'ultra') {
-            w = 256; h = 144; currentFpsInterval = 1000 / 10; // 10fps
+            w = 256; h = 144; currentFpsInterval = 1000 / 10; 
         } else if (quality === 'ultra_high_fps') {
-            w = 256; h = 144; currentFpsInterval = 1000 / 30; // 30fps
+            w = 256; h = 144; currentFpsInterval = 1000 / 30; 
         } else if (quality === 'fast') {
-            w = 426; h = 240; currentFpsInterval = 1000 / 15; // 15fps
+            w = 426; h = 240; currentFpsInterval = 1000 / 15; 
         } else {
-            currentFpsInterval = 1000 / 15; // 15fps balanced cap for Samsung A50 stability
+            currentFpsInterval = 1000 / 15; 
         }
         
         proxyCanvas.width = w;
@@ -656,14 +658,16 @@
     }
 
     function populateCameras() {
-      var select = document.getElementById('cameraSelect');
-      select.innerHTML = '';
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
         navigator.mediaDevices.enumerateDevices().then(function(devices) {
+            videoDeviceIds = [];
             var videoDevices = [];
             for (var i = 0; i < devices.length; i++) {
-                if (devices[i].kind === 'videoinput') videoDevices.push(devices[i]);
+                if (devices[i].kind === 'videoinput') {
+                    videoDevices.push(devices[i]);
+                    videoDeviceIds.push(devices[i].deviceId);
+                }
             }
             
             var activeDeviceId = null;
@@ -675,28 +679,39 @@
                 }
             }
             
-            for (var j = 0; j < videoDevices.length; j++) {
-              var option = document.createElement('option');
-              option.value = videoDevices[j].deviceId;
-              option.text = "Camera " + (j + 1);
-              if (videoDevices[j].deviceId === activeDeviceId) option.selected = true;
-              select.appendChild(option);
+            var select = document.getElementById('cameraSelect');
+            if (select) {
+                select.innerHTML = '';
+                for (var j = 0; j < videoDevices.length; j++) {
+                  var option = document.createElement('option');
+                  option.value = videoDevices[j].deviceId;
+                  option.text = videoDevices[j].label || ("Camera " + (j + 1));
+                  if (videoDevices[j].deviceId === activeDeviceId) {
+                      option.selected = true;
+                      currentDeviceIndex = j;
+                  }
+                  select.appendChild(option);
+                }
+                if (videoDevices.length > 0) select.style.display = "inline-block";
             }
-            if (videoDevices.length > 0) select.style.display = "inline-block";
         }).catch(function(e) {});
       } catch (err) {}
     }
 
-    // Bulletproof Camera Switching / Flipping with 600ms hardware release buffer and forced playback
+    // Bulletproof Camera Switching / Flipping with Device ID Enumeration & Hardware Release Buffer
     function switchCamera(callback) {
       if (isSwitchingCamera) return;
       isSwitchingCamera = true;
 
-      currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
-      var constraints = { 
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: currentFacingMode }, 
-          audio: true 
-      };
+      var constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true };
+      
+      if (videoDeviceIds.length > 1) {
+          currentDeviceIndex = (currentDeviceIndex + 1) % videoDeviceIds.length;
+          constraints.video.deviceId = { exact: videoDeviceIds[currentDeviceIndex] };
+      } else {
+          currentFacingMode = (currentFacingMode === "environment") ? "user" : "environment";
+          constraints.video.facingMode = currentFacingMode;
+      }
       
       try {
         cleanupOldStream();
@@ -751,7 +766,7 @@
                 isSwitchingCamera = false;
                 if (callback) callback();
             }).catch(function(err) {
-                // Fallback without facingMode constraint if device lacks explicit lens support
+                // Fallback to basic video/audio if deviceId constraint fails
                 navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function(newStream) {
                     rawStream = newStream;
                     hiddenVideo.srcObject = rawStream;
@@ -792,20 +807,22 @@
       } catch (err) {}
     }
 
-    function showScreen(screenId) {
+    function navigateToScreen(screenId, pushHistory) {
+      if (pushHistory === undefined) pushHistory = true;
       var screens = document.querySelectorAll('.screen');
       for (var i = 0; i < screens.length; i++) {
           screens[i].classList.remove('active');
       }
       document.getElementById(screenId).classList.add('active');
       
-      // Push history state so back button returns to home cleanly
-      if (screenId !== 'selectionScreen') {
-          history.pushState({ screen: screenId }, "");
+      if (pushHistory && screenId !== 'selectionScreen') {
+          try {
+              history.pushState({ screen: screenId }, "");
+          } catch(e) {}
       }
     }
 
-    // Intercept browser back button anywhere on the app to return to home screen
+    // Universal browser back button handler
     window.onpopstate = function(event) {
       goBack();
     };
@@ -894,7 +911,7 @@
           requestWakeLock();
           currentFacingMode = "environment";
 
-          showScreen('videoScreen');
+          navigateToScreen('videoScreen');
           document.getElementById('babyControls').style.display = "block";
           document.getElementById('parentControls').style.display = "none";
           document.getElementById('parentTopBar').style.display = "none";
@@ -995,7 +1012,7 @@
           var savedCode = getSavedItem('babyVaani_parentCode');
           if (savedCode) document.getElementById('joinCode').value = savedCode;
           
-          showScreen('parentScreen');
+          navigateToScreen('parentScreen');
           if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
               navigator.mediaDevices.getUserMedia({ audio: true, video: false })
                 .then(function(stream) {
@@ -1090,7 +1107,7 @@
         call.on('stream', function(remoteStream) {
           reconnectAttempts = 0;
           document.getElementById('disconnectOverlay').style.display = 'none';
-          showScreen('videoScreen');
+          navigateToScreen('videoScreen');
           setLiveStatus('live', 'Live - Monitoring');
           
           if(!isCodeVisible) {
@@ -1198,316 +1215,3 @@
            if(dataConnections[i].open) dataConnections[i].send('WAKE_SCREEN');
         }
       }
-    }
-
-    // Phase 4: Parent Cooldown Lock for Flip Cam
-    function requestCameraSwitch() {
-      if (isParentControlLocked) return;
-      isParentControlLocked = true;
-      var flipBtn = document.getElementById('flipBtn');
-      if (flipBtn) flipBtn.disabled = true;
-
-      for(var i=0; i<dataConnections.length; i++) {
-         if(dataConnections[i].open) dataConnections[i].send('SWITCH_CAM');
-      }
-
-      setTimeout(function() {
-          isParentControlLocked = false;
-          if (flipBtn) flipBtn.disabled = false;
-      }, 3500);
-    }
-
-    function handleDataChannelMessage(data, conn) {
-      if (typeof data !== 'string') return;
-      if (data === 'SWITCH_CAM') {
-        if (isBaby) {
-          switchCamera();
-        }
-      }
-      else if (data === 'DIM_SCREEN') {
-        if (isBaby) document.getElementById('dimOverlay').classList.add('active');
-      }
-      else if (data === 'WAKE_SCREEN') {
-        if (isBaby) document.getElementById('dimOverlay').classList.remove('active');
-      }
-      else if (data === 'DISCONNECT') {
-        if (isBaby && conn && conn.peer) {
-          cleanUpParent(conn.peer);
-        }
-      }
-      else if (data.indexOf('BAT:') === 0) {
-        var parts = data.split(':');
-        var level = parseInt(parts[1]);
-        var isCharging = parts[2] === 'true';
-
-        var battUI = document.getElementById('remoteBattery');
-        battUI.style.display = 'flex';
-        document.getElementById('battLevel').innerText = level + '%';
-        var icon = battUI.querySelector('.material-symbols-outlined');
-        icon.innerText = isCharging ? 'battery_charging_full' : 'battery_full';
-        icon.style.color = level <= 20 ? '#f56565' : '#48bb78';
-
-        var lowBattAlert = document.getElementById('lowBatteryAlert');
-        if (level <= 20 && !isCharging) {
-          lowBattAlert.style.display = 'flex';
-          document.getElementById('lowBattText').innerText = level + '%';
-        } else {
-          lowBattAlert.style.display = 'none';
-        }
-      } 
-      else if (data.indexOf('QUALITY:') === 0) {
-        if(isBaby) {
-          if (isSwitchingCamera) return;
-          isSwitchingCamera = true;
-          currentQuality = data.split(':')[1];
-          setCanvasQuality(currentQuality);
-          setTimeout(function() { isSwitchingCamera = false; }, 500);
-        }
-      }
-      else if (data.indexOf('TICK:') === 0) {
-        var clockEl = document.getElementById('cctvClock');
-        if (clockEl.style.display !== 'block') clockEl.style.display = 'block';
-        clockEl.innerText = "LIVE 🟢 " + data.substring(5);
-      }
-    }
-
-    // Phase 4: Parent Cooldown Lock for Quality Change
-    function requestQualityChange() {
-      if (isParentControlLocked) return;
-      isParentControlLocked = true;
-      var qualitySelect = document.getElementById('qualitySelect');
-      if (qualitySelect) qualitySelect.style.opacity = 0.5;
-
-      var q = qualitySelect.value;
-      for(var i=0; i<dataConnections.length; i++) {
-         if(dataConnections[i].open) dataConnections[i].send("QUALITY:" + q);
-      }
-
-      setTimeout(function() {
-          isParentControlLocked = false;
-          if (qualitySelect) qualitySelect.style.opacity = 1;
-      }, 3500);
-    }
-
-    function toggleCamera() {
-      if (!rawStream) return;
-      var track = rawStream.getVideoTracks()[0];
-      if(track) {
-        track.enabled = !track.enabled;
-        var state = track.enabled ? ['videocam_off', 'Pause', ''] : ['videocam', 'Resume', 'off'];
-        var b = document.getElementById('camBtn');
-        b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-        b.className = state[2];
-      }
-    }
-
-    function toggleTalk() {
-      if (!parentLocalStream) {
-         alert("Microphone access is not available. Check permissions.");
-         return;
-      }
-      var track = parentLocalStream.getAudioTracks()[0];
-      if (!track) return;
-      
-      track.enabled = !track.enabled;
-      var state = track.enabled ? ['mic_off', 'Unmic', 'active-green'] : ['mic', 'Talk', ''];
-      var b = document.getElementById('talkBtn');
-      b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-      b.className = state[2];
-    }
-
-    function toggleParentListening() {
-      parentIsMuted = !parentIsMuted;
-      
-      var slider = document.getElementById('audioBoostSlider');
-      if (parentIsMuted) {
-         if (parentGainNode) parentGainNode.gain.value = 0;
-         slider.disabled = true;
-         slider.style.opacity = '0.5';
-      } else {
-         if (parentGainNode) parentGainNode.gain.value = parseFloat(slider.value);
-         slider.disabled = false;
-         slider.style.opacity = '1';
-      }
-      
-      var state = parentIsMuted ? ['volume_off', 'Unmute', ''] : ['volume_up', 'Mute', 'active-green'];
-      var b = document.getElementById('micBtn');
-      b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-      b.className = state[2];
-    }
-
-    function rotateCamera() {
-      currentRotation = (currentRotation + 90) % 360;
-      videoBox.style.transform = "rotate(" + currentRotation + "deg) translateZ(0)";
-    }
-
-    function toggleNightMode() {
-      isNightMode = !isNightMode;
-      if (isNightMode) {
-          videoBox.classList.add('night-mode');
-      } else {
-          videoBox.classList.remove('night-mode');
-      }
-      var state = isNightMode ? ['light_mode', 'Day', 'night-active'] : ['nightlight', 'Night', 'off'];
-      var b = document.getElementById('nightModeBtn');
-      b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-      b.className = state[2];
-    }
-
-    function toggleAlarm() {
-      alarmActive = !alarmActive;
-      var state = alarmActive ? ['notifications_active', 'On', 'active-green'] : ['notifications_off', 'Alarm', 'off'];
-      var b = document.getElementById('alarmBtn');
-      b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-      b.className = state[2];
-      if (alarmActive) {
-        startAudioAnalysis();
-      } else {
-        isAlarmRinging = false;
-        clearInterval(alarmBeepInterval);
-        document.getElementById('monitorContainer').style.borderColor = '#ffffff';
-      }
-    }
-
-    function startAudioAnalysis() {
-      if (!alarmActive || !parentAnalyser || !parentAudioCtx) return;
-      if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
-      
-      var dataArray = new Uint8Array(parentAnalyser.frequencyBinCount);
-      function checkAudioLevel() {
-        if (!alarmActive) return;
-        parentAnalyser.getByteFrequencyData(dataArray);
-        
-        var sum = 0;
-        for (var i = 0; i < dataArray.length; i++) sum += dataArray[i];
-        var average = sum / dataArray.length;
-        var sens = document.getElementById('alarmSensitivity').value;
-        var threshold = 100 - sens;
-        if (average > threshold && !isAlarmRinging) {
-          triggerAlarmUI();
-        }
-        requestAnimationFrame(checkAudioLevel);
-      }
-      checkAudioLevel();
-    }
-
-    function triggerAlarmUI() {
-      isAlarmRinging = true;
-      var toggle = false;
-      alarmBeepInterval = setInterval(function() {
-        if (!alarmActive) return clearInterval(alarmBeepInterval);
-        document.getElementById('monitorContainer').style.borderColor = toggle ? '#f56565' : '#ffffff';
-        
-        if (parentAudioCtx && toggle && !parentIsMuted) {
-          var osc = parentAudioCtx.createOscillator();
-          var gain = parentAudioCtx.createGain();
-          osc.connect(gain);
-          gain.connect(parentAudioCtx.destination);
-          osc.frequency.value = 800;
-          gain.gain.value = 0.5;
-          osc.start();
-          osc.stop(parentAudioCtx.currentTime + 0.2);
-        }
-        toggle = !toggle;
-      }, 500);
-    }
-
-    function toggleFullScreen() {
-      var c = document.getElementById('monitorContainer');
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        if (c.requestFullscreen) {
-          c.requestFullscreen();
-        } else if (c.webkitRequestFullscreen) {
-          c.webkitRequestFullscreen();
-        } else if (videoBox.webkitEnterFullscreen) {
-          videoBox.webkitEnterFullscreen();
-        }
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        }
-      }
-    }
-
-    function togglePiP() {
-      try {
-        if (document.pictureInPictureElement) {
-          var exitPromise = document.exitPictureInPicture();
-          if (exitPromise && typeof exitPromise.catch === 'function') exitPromise.catch(function(e){});
-        } else {
-          var pipPromise = videoBox.requestPictureInPicture();
-          if (pipPromise && typeof pipPromise.catch === 'function') {
-              pipPromise.catch(function(e){
-                 alert("Picture-in-Picture is not supported or was blocked by this device's browser.");
-              });
-          }
-        }
-      } catch (err) {
-        alert("Picture-in-Picture is not supported or was blocked by this device's browser.");
-      }
-    }
-
-    function goBack() {
-      try {
-          for(var i=0; i<dataConnections.length; i++) {
-             if(dataConnections[i].open) dataConnections[i].send('DISCONNECT');
-          }
-
-          clearInterval(batteryInterval);
-          clearInterval(alarmBeepInterval);
-          clearInterval(pingInterval);
-          clearInterval(tickInterval);
-          
-          cleanupOldStream();
-          if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
-
-          alarmActive = false;
-          isAlarmRinging = false;
-          reconnectAttempts = 0;
-          document.getElementById('monitorContainer').style.borderColor = '#ffffff';
-          document.getElementById('cctvClock').style.display = 'none';
-
-          if (rawStream) {
-             var tracks = rawStream.getTracks();
-             for(var t=0; t<tracks.length; t++) tracks[t].stop();
-          }
-          if (parentLocalStream) {
-             var pTracks = parentLocalStream.getTracks();
-             for(var pt=0; pt<pTracks.length; pt++) pTracks[pt].stop();
-          }
-          if (peer) peer.destroy();
-          
-          rawStream = activeStream = parentLocalStream = peer = currentCall = null;
-          activeCalls = []; dataConnections = [];
-          document.getElementById('remoteBattery').style.display = 'none';
-          document.getElementById('pingIndicator').style.display = 'none';
-          document.getElementById('lowBatteryAlert').style.display = 'none';
-          document.getElementById('disconnectOverlay').style.display = 'none';
-          document.getElementById('babyAudioContainer').innerHTML = ''; 
-          videoBox.srcObject = null;
-          hiddenVideo.srcObject = null;
-          
-          var connectBtn = document.getElementById('connectBtn');
-          if(connectBtn) {
-              connectBtn.innerText = "Connect Now";
-              connectBtn.disabled = false;
-          }
-
-          var screens = document.querySelectorAll('.screen');
-          for (var s = 0; s < screens.length; s++) {
-              screens[s].classList.remove('active');
-          }
-          document.getElementById('selectionScreen').classList.add('active');
-      } catch(e) {
-          var screens = document.querySelectorAll('.screen');
-          for (var s = 0; s < screens.length; s++) {
-              screens[s].classList.remove('active');
-          }
-          document.getElementById('selectionScreen').classList.add('active');
-      }
-    }
-  </script>
-</body>
-</html>
