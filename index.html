@@ -113,6 +113,7 @@
     button.active-green { background-color: #48bb78; }
     button.night-active { background-color: #d69e2e; color: #fff; }
     button.back-btn, button.icon-btn { background-color: #ffffff; color: #2d3748; border: 1px solid #e2e8f0; padding: 8px 14px; margin-bottom: 8px; border-radius: 10px; flex-direction: row; font-size: 12px; width: auto; min-height: auto; }
+    button:disabled { cursor: not-allowed; opacity: 0.7; }
 
     .slider-container { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ffffff; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; border: 2px solid #e2e8f0; width: 100%; min-height: 46px; color: #2d3748; transition: opacity 0.3s ease; }
     .slider-container input { width: 100%; margin-top: 2px; cursor: pointer; accent-color: #f6ad55; height: 14px; }
@@ -127,3 +128,908 @@
 <body>
 
   <div id="dimOverlay" onclick="wakeScreen()"></div>
+  
+  <div id="selectionScreen" class="screen active">
+    
+    <div class="brand-header">
+      <h1 class="brand-title">
+        <span class="material-symbols-outlined logo-icon">child_care</span> 
+        <span class="brand-baby">Baby</span><span class="brand-vaani">Vaani</span>
+      </h1>
+      <span class="brand-subtitle">Turn any device into baby monitor</span>
+      <div class="context-lineart-banner">
+        <span class="material-symbols-outlined" style="font-size: 16px; color: #f6ad55;">smartphone</span>
+        <span style="color: #cbd5e0; font-size: 11px;">⇄</span>
+        <span class="material-symbols-outlined" style="font-size: 16px; color: #f6ad55;">child_care</span>
+        <span id="activeModeBannerText" style="font-size: 11px; font-weight: 600; color: #dd6b20;">Secure P2P Stream</span>
+      </div>
+    </div>
+
+    <div class="usp-banner">
+      <span class="material-symbols-outlined">family_restroom</span>
+      <div class="usp-text">
+        <h3>Turn any device into baby monitor</h3>
+        <p>Secure baby monitor from any device.</p>
+      </div>
+    </div>
+    
+    <div class="onboarding-grid">
+      <div class="onboard-step">
+        <span class="material-symbols-outlined onboard-icon">videocam</span>
+        <h4 class="onboard-title">1. Setup</h4>
+        <p class="onboard-text">Leave one device in the room.</p>
+      </div>
+      <div class="onboard-step">
+        <span class="material-symbols-outlined onboard-icon">vpn_key</span>
+        <h4 class="onboard-title">2. Connect</h4>
+        <p class="onboard-text">Share the secure 6-digit code.</p>
+      </div>
+      <div class="onboard-step">
+        <span class="material-symbols-outlined onboard-icon">visibility</span>
+        <h4 class="onboard-title">3. Monitor</h4>
+        <p class="onboard-text">Watch and talk from anywhere.</p>
+      </div>
+    </div>
+
+    <div class="network-mode-box">
+      <h4><span class="material-symbols-outlined" style="font-size: 18px;">router</span> Connection Settings</h4>
+      <div class="mode-options">
+        <button type="button" id="modeInternet" class="mode-option-btn selected" onclick="setNetworkMode('internet')">
+          <span class="material-symbols-outlined">public</span> Internet P2P
+          <small style="font-size: 10px; font-weight: 400; color: #718096;">Works anywhere</small>
+        </button>
+        <button type="button" id="modeWifi" class="mode-option-btn" onclick="setNetworkMode('wifi')">
+          <span class="material-symbols-outlined">wifi</span> Local Wi-Fi (LAN)
+          <small style="font-size: 10px; font-weight: 400; color: #718096;">*Devices must share Wi-Fi</small>
+        </button>
+      </div>
+
+      <div style="background: #fffaf0; border: 1px dashed #feebc8; padding: 8px 12px; border-radius: 10px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #dd6b20; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span class="material-symbols-outlined" style="font-size: 16px;">warning</span> Warning: Choose the exact same mode as the baby cam!
+      </div>
+    </div>
+
+    <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
+      <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
+      <button onclick="startParentMode()" style="flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
+    </div>
+
+    <div class="hero-image-container" style="margin-top: 15px;">
+      <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Baby Monitor Setup">
+    </div>
+
+    <div style="margin-top: 15px; margin-bottom: 25px; width: 100%;">
+      <button onclick="factoryResetApp()" style="background: none; color: #a0aec0; border: none; font-size: 12px; text-decoration: underline; font-weight: 600; min-height: auto; width: auto; margin: 0 auto; padding: 8px;">Clear all app data & reset</button>
+    </div>
+  </div>
+
+  <div id="parentScreen" class="screen" style="align-items: flex-start; padding-top: 10px;">
+    <button class="back-btn" onclick="goBack()"><span class="material-symbols-outlined">arrow_back</span> Back</button>
+    
+    <div style="width: 100%; max-width: 400px; margin: 20px auto; background: #ffffff; padding: 24px; border-radius: 20px; border: 1px solid #edf2f7; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      
+      <p style="font-size: 16px; margin: 0 0 15px 0; font-weight: 700; width: 100%; text-align: center; color: #2d3748;">Connect to Baby Camera</p>
+      
+      <div class="saved-devices-container" id="savedDevicesWrapper" style="display:none;">
+        <label for="savedDevicesSelect">Select a previously saved room:</label>
+        <select id="savedDevicesSelect" onchange="onSelectSavedDevice()"></select>
+      </div>
+
+      <div class="input-group">
+        <input type="text" id="joinCode" placeholder="ENTER CODE" maxlength="6" oninput="onCustomCodeInput()">
+      </div>
+      
+      <label class="checkbox-container" style="width: 100%; margin-bottom: 24px;">
+        <input type="checkbox" id="rememberCodeCheck" checked> Remember code on this device
+      </label>
+      
+      <button id="connectBtn" onclick="connectToBaby()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px; flex-direction: row; border-radius: 14px; transition: all 0.3s ease;"><span class="material-symbols-outlined">link</span> Connect Now</button>
+    </div>
+  </div>
+
+  <div id="videoScreen" class="screen">
+    
+    <div id="parentTopBar" style="display:none; flex-direction: column; align-items: center; width: 100%;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <div id="activeCodeDisplay" class="room-code-box" style="font-size: 15px; padding: 10px 20px; margin-bottom: 0; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: default;">••••••</div>
+        <button onclick="toggleCodeVisibility()" class="icon-btn" style="margin-bottom:0; min-height: 42px; padding: 8px 12px;"><span class="material-symbols-outlined" id="codeToggleIcon">visibility</span></button>
+      </div>
+
+      <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+        <label style="font-size: 12px; font-weight: 600;">Stream Quality:</label>
+        <select id="qualitySelect" onchange="requestQualityChange()" style="padding: 6px; font-size: 12px; border-radius: 8px; max-width: 150px;">
+          <option value="balanced" selected>Balanced (720p)</option>
+          <option value="fast">Fast (240p)</option>
+          <option value="ultra_high_fps">Smooth Ultra (144p 30fps)</option>
+          <option value="ultra">Ultra-Low Data (144p)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="monitor-container" id="monitorContainer">
+      <video id="hiddenBabyCam" autoplay playsinline muted style="display:none;"></video>
+      <canvas id="proxyCanvas" style="display:none;"></canvas>
+
+      <div id="cctvClock" style="display:none; position:absolute; bottom:15px; left:15px; background: rgba(0,0,0,0.6); color: #48bb78; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; z-index: 9999; letter-spacing: 1px; font-family: monospace;"></div>
+
+      <canvas id="audioVisualizer" style="position:absolute; bottom:15px; right:15px; width:100px; height:30px; z-index:9999; pointer-events:none;"></canvas>
+      
+      <div id="liveStatusBanner" class="live-status-banner" style="display:none;">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="liveStatusText">Waiting...</span>
+        
+        <div id="remoteBattery" class="battery-indicator">
+          <span class="material-symbols-outlined" style="font-size: 14px;">battery_full</span>
+          <span style="margin-left: 2px;">Baby:</span>
+          <span id="battLevel" style="font-weight: 700;">--%</span>
+        </div>
+
+        <div id="pingIndicator" class="ping-indicator">
+          <span id="connIcon" class="material-symbols-outlined" style="font-size: 14px;">signal_cellular_alt</span>
+          <span id="pingText" style="font-weight: 700;">--ms</span>
+        </div>
+      </div>
+      
+      <div id="babyKeepOpenOverlay" class="keep-open-overlay" style="display:none;">
+        <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span> Keep Screen Open
+      </div>
+
+      <div id="lowBatteryAlert" class="keep-open-overlay low-battery-alert" style="display:none;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">battery_alert</span>
+        Baby Monitor Battery Low! (<span id="lowBattText"></span>)
+      </div>
+
+      <div id="disconnectOverlay" class="overlay" style="display:none;">
+        <span class="material-symbols-outlined" style="font-size: 48px; color: #f56565; margin-bottom: 8px;">signal_disconnected</span>
+        <span style="color:#f56565; font-size: 20px;" id="disconnectText">Disconnected - Reconnecting...</span>
+      </div>
+      
+      <video id="myCamera" autoplay playsinline disableRemotePlayback></video>
+    </div>
+
+    <div id="babyAudioContainer" style="opacity: 0; position: absolute; pointer-events: none; visibility: hidden;"></div>
+
+    <div id="babyControls" style="display:none; width: 100%;">
+      <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px; width:100%; max-width: 250px;"></select>
+
+      <div class="wizard-step active">
+         <h3><span class="material-symbols-outlined" style="color: #f6ad55;">smartphone</span> Baby Camera Active</h3>
+         <p style="font-size: 14px; font-weight: 600; color: #718096; margin-bottom: 12px;">Enter code on parent device(s):</p>
+         
+         <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px;">
+           <div class="room-code-box" id="wizardCodeDisplay" style="margin-bottom: 0; cursor: default;">••••••</div>
+           <button onclick="toggleBabyCodeVisibility()" class="icon-btn" style="margin-bottom:0; min-height: 42px; padding: 8px 12px;"><span class="material-symbols-outlined" id="babyCodeToggleIcon">visibility</span></button>
+         </div>
+         
+         <div style="background: #fffaf0; border: 1px solid #feebc8; border-radius: 14px; padding: 16px;">
+           <span class="material-symbols-outlined" style="font-size: 28px; color: #dd6b20;">verified</span>
+           <h4 style="color: #dd6b20; margin: 6px 0; font-size: 15px;">Keep This Window Open</h4>
+           <p style="color: #4a5568; font-size: 13px; margin:0;">Do not lock device or switch apps.</p>
+         </div>
+      </div>
+      <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
+    </div>
+
+    <div class="controls" id="parentControls" style="display:none;">
+      <button id="camBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">videocam_off</span> Pause</button>
+      <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
+      <button id="micBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_off</span> Unmute</button>
+      <button onclick="rotateCamera()"><span class="material-symbols-outlined">screen_rotation</span> Rotate</button>
+      <button onclick="requestCameraSwitch()"><span class="material-symbols-outlined">flip_camera_ios</span> Flip Cam</button>
+      
+      <button id="nightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night</button>
+      <button onclick="togglePiP()"><span class="material-symbols-outlined">picture_in_picture_alt</span> PiP</button>
+      <button id="fsBtn" onclick="toggleFullScreen()"><span class="material-symbols-outlined">fullscreen</span> Full</button>
+      <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm</button>
+      <button id="remoteDimBtn" onclick="toggleRemoteDim()" class="off"><span class="material-symbols-outlined">mode_night</span> Screen Off</button>
+
+      <div class="slider-container" style="grid-column: span 2;">
+        <label for="audioBoostSlider">Audio Boost (<span id="boostVal">1.0</span>x)</label>
+        <input type="range" id="audioBoostSlider" min="1" max="4" step="0.5" value="1" oninput="updateAudioBoost()" disabled style="opacity: 0.5;">
+      </div>
+
+      <div class="slider-container" style="grid-column: span 3;">
+        <label for="alarmSensitivity">Sensitivity</label>
+        <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
+      </div>
+      
+      <button onclick="goBack()" class="off" style="grid-column: 1 / -1; background-color: #2d3748; color: white; min-height: 40px; flex-direction: row; gap: 8px;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">close</span> End Session
+      </button>
+    </div>
+  </div>
+
+  <script>
+    window.onerror = function(msg, url, line) {
+        if (msg.indexOf("SyntaxError") !== -1) {
+            alert("Your device's browser is too old to run this monitor. Please update your system or use a newer device.");
+        }
+    };
+
+    function getSavedItem(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
+    function setSavedItem(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
+    function removeSavedItem(key) { try { localStorage.removeItem(key); } catch(e) {} }
+
+    var videoBox = document.getElementById('myCamera');
+    var hiddenVideo = document.getElementById('hiddenBabyCam');
+    var proxyCanvas = document.getElementById('proxyCanvas');
+    var proxyCtx = proxyCanvas.getContext('2d', { alpha: false });
+    var canvasInterval = null;
+    
+    var rawStream = null, activeStream = null, parentLocalStream = null, peer = null, currentCall = null, wakeLock = null; 
+    var activeCalls = []; 
+    var dataConnections = []; 
+    
+    var alarmActive = false, isAlarmRinging = false, alarmBeepInterval = null, batteryInterval = null, pingInterval = null, tickInterval = null;
+    var parentAudioCtx = null, parentAudioSource = null, parentAnalyser = null, parentGainNode = null;
+    var parentIsMuted = true;
+    var visualizerCtx = null, visualizerCanvas = null, visualizerAnimationFrame = null;
+
+    var currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false, isCodeVisible = false, isBabyCodeVisible = false;
+    var selectedNetworkMode = 'internet', currentQuality = 'balanced', isRemoteDimmed = false, reconnectAttempts = 0;
+
+    function initNetworkMode() { 
+        setNetworkMode(getSavedItem('babyVaani_netMode') || 'internet', false); 
+    }
+    
+    function setNetworkMode(mode, save) {
+      if (save === undefined) save = true;
+      selectedNetworkMode = mode;
+      if (save) setSavedItem('babyVaani_netMode', mode);
+      var btnInternet = document.getElementById('modeInternet');
+      var btnWifi = document.getElementById('modeWifi');
+      var bannerText = document.getElementById('activeModeBannerText');
+      
+      if (mode === 'wifi') {
+        if (btnWifi) btnWifi.className = 'mode-option-btn selected';
+        if (btnInternet) btnInternet.className = 'mode-option-btn';
+        if (bannerText) bannerText.innerText = 'Local Wi-Fi LAN Stream (Zero Latency)';
+      } else {
+        if (btnInternet) btnInternet.className = 'mode-option-btn selected';
+        if (btnWifi) btnWifi.className = 'mode-option-btn';
+        if (bannerText) bannerText.innerText = 'Secure P2P Stream';
+      }
+    }
+    initNetworkMode();
+
+    function factoryResetApp() {
+      if (confirm("Clear all saved devices, network modes, and room codes? This will completely reset the app.")) {
+        removeSavedItem('babyVaani_netMode');
+        removeSavedItem('babyVaani_roomCode');
+        removeSavedItem('babyVaani_parentCode');
+        removeSavedItem('babyVaani_savedDevices');
+        window.location.reload();
+      }
+    }
+
+    function getPeerConfig() {
+      return selectedNetworkMode === 'wifi' 
+        ? { config: { iceServers: [] } } 
+        : { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
+    }
+
+    function getSavedParentDevices() { 
+      try { 
+        var data = getSavedItem('babyVaani_savedDevices');
+        return data ? JSON.parse(data) : []; 
+      } catch(e) { return []; } 
+    }
+    
+    function saveParentDevice(code) {
+      if (!code || code.length !== 6) return;
+      var list = getSavedParentDevices();
+      if (list.indexOf(code) === -1) {
+        list.unshift(code);
+        if (list.length > 10) list.pop();
+        setSavedItem('babyVaani_savedDevices', JSON.stringify(list));
+      }
+    }
+    
+    function populateSavedDevicesDropdown() {
+      var list = getSavedParentDevices();
+      var wrapper = document.getElementById('savedDevicesWrapper');
+      var select = document.getElementById('savedDevicesSelect');
+      if (list.length === 0) { wrapper.style.display = 'none'; return; }
+      wrapper.style.display = 'block';
+      select.innerHTML = '<option value="">-- Select a saved device or type new --</option>';
+      for (var i = 0; i < list.length; i++) {
+        var opt = document.createElement('option');
+        opt.value = list[i]; 
+        opt.text = "Device Room Code: " + list[i];
+        select.appendChild(opt);
+      }
+    }
+    
+    function onSelectSavedDevice() {
+      var select = document.getElementById('savedDevicesSelect');
+      if (select.value) document.getElementById('joinCode').value = select.value;
+    }
+    
+    function onCustomCodeInput() { 
+      var input = document.getElementById('joinCode');
+      input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      document.getElementById('savedDevicesSelect').value = ""; 
+    }
+
+    function toggleCodeVisibility() {
+      isCodeVisible = !isCodeVisible;
+      var display = document.getElementById('activeCodeDisplay');
+      var icon = document.getElementById('codeToggleIcon');
+      if (isCodeVisible) {
+        display.innerText = activeRoomCode;
+        icon.innerText = 'visibility_off';
+      } else {
+        display.innerText = '••••••';
+        icon.innerText = 'visibility';
+      }
+    }
+
+    function toggleBabyCodeVisibility() {
+      isBabyCodeVisible = !isBabyCodeVisible;
+      var display = document.getElementById('wizardCodeDisplay');
+      var icon = document.getElementById('babyCodeToggleIcon');
+      if (isBabyCodeVisible) {
+        display.innerText = activeRoomCode;
+        icon.innerText = 'visibility_off';
+      } else {
+        display.innerText = '••••••';
+        icon.innerText = 'visibility';
+      }
+    }
+
+    function setLiveStatus(mode, text) {
+      var banner = document.getElementById('liveStatusBanner');
+      if (!mode) { banner.style.display = 'none'; return; }
+      banner.style.display = 'flex';
+      document.getElementById('liveStatusText').innerText = text;
+      document.getElementById('statusDot').className = 'status-dot ' + mode;
+    }
+
+    function wakeScreen() {
+      document.getElementById('dimOverlay').classList.remove('active');
+    }
+
+    document.getElementById('dimOverlay').addEventListener('touchstart', function(e) {
+      e.preventDefault();
+      wakeScreen();
+    }, {passive: false});
+
+    function startBatteryTracking() {
+      if ('getBattery' in navigator && typeof navigator.getBattery === 'function') {
+        navigator.getBattery().then(function(battery) {
+          function updateBattery() {
+            var level = Math.round(battery.level * 100);
+            var charging = battery.charging;
+            for (var i = 0; i < dataConnections.length; i++) {
+                if (dataConnections[i].open) dataConnections[i].send("BAT:" + level + ":" + charging);
+            }
+          }
+          updateBattery();
+          battery.addEventListener('levelchange', updateBattery);
+          battery.addEventListener('chargingchange', updateBattery);
+          batteryInterval = setInterval(updateBattery, 60000); 
+        }).catch(function(e) {});
+      }
+    }
+
+    function startPingTracking() {
+      pingInterval = setInterval(function() {
+        if (currentCall && currentCall.peerConnection) {
+          var pc = currentCall.peerConnection;
+          
+          if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+              document.getElementById('connIcon').innerText = 'signal_cellular_connected_no_internet_0_bar';
+              document.getElementById('connIcon').style.color = '#f56565';
+              document.getElementById('pingText').innerText = 'Offline';
+              handleParentDisconnect(); // INSTANT DISCONNECT TRIGGER
+              return;
+          }
+          
+          if (pc.getStats && typeof pc.getStats === 'function') {
+              pc.getStats().then(function(stats) {
+                var pingFound = false;
+                stats.forEach(function(report) {
+                  if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+                    if (report.currentRoundTripTime !== undefined) {
+                        pingFound = true;
+                        var rtt = Math.round(report.currentRoundTripTime * 1000);
+                        document.getElementById('pingText').innerText = rtt + 'ms';
+                        
+                        var icon = document.getElementById('connIcon');
+                        if (rtt < 150) {
+                            icon.innerText = 'signal_cellular_alt'; 
+                            icon.style.color = '#48bb78';
+                        } else if (rtt < 400) {
+                            icon.innerText = 'signal_cellular_alt_2_bar'; 
+                            icon.style.color = '#ecc94b';
+                        } else {
+                            icon.innerText = 'signal_cellular_alt_1_bar'; 
+                            icon.style.color = '#f56565';
+                        }
+                    }
+                  }
+                });
+                
+                if (!pingFound) {
+                    document.getElementById('connIcon').innerText = 'signal_cellular_alt';
+                    document.getElementById('connIcon').style.color = '#48bb78';
+                    document.getElementById('pingText').innerText = 'Online';
+                }
+              }).catch(function(e) {});
+          }
+        }
+      }, 3000);
+    }
+
+    function setCanvasQuality(quality) {
+        if (!isBaby || !proxyCanvas) return;
+        var w = 1280, h = 720, fps = 30;
+        
+        if (quality === 'ultra') {
+            w = 256; h = 144; fps = 10;
+        } else if (quality === 'ultra_high_fps') {
+            w = 256; h = 144; fps = 30;
+        } else if (quality === 'fast') {
+            w = 426; h = 240; fps = 15;
+        }
+
+        // --- NEW: PORTRAIT PROPORTION PATCH ---
+        if (window.innerHeight > window.innerWidth) {
+            var temp = w;
+            w = h;
+            h = temp;
+        }
+        
+        proxyCanvas.width = w;
+        proxyCanvas.height = h;
+        
+        if (canvasInterval) clearInterval(canvasInterval);
+        var ms = Math.floor(1000 / fps);
+        canvasInterval = setInterval(function() {
+            if (hiddenVideo.readyState >= 2) {
+                proxyCtx.clearRect(0, 0, proxyCanvas.width, proxyCanvas.height); 
+                proxyCtx.drawImage(hiddenVideo, 0, 0, proxyCanvas.width, proxyCanvas.height);
+            }
+        }, ms);
+
+        for (var i = 0; i < activeCalls.length; i++) {
+            var c = activeCalls[i];
+            if (c.call && c.call.peerConnection) {
+                var senders = c.call.peerConnection.getSenders ? c.call.peerConnection.getSenders() : [];
+                var videoSender = null;
+                for (var j = 0; j < senders.length; j++) {
+                   if (senders[j].track && senders[j].track.kind === 'video') videoSender = senders[j];
+                }
+                if (videoSender) {
+                    try {
+                        if (videoSender.getParameters && typeof videoSender.getParameters === 'function') {
+                            var params = videoSender.getParameters();
+                            if (params.encodings && params.encodings.length > 0) {
+                                if (quality === 'ultra') params.encodings[0].maxBitrate = 80000; 
+                                else if (quality === 'ultra_high_fps') params.encodings[0].maxBitrate = 150000; 
+                                else if (quality === 'fast') params.encodings[0].maxBitrate = 200000; 
+                                else delete params.encodings[0].maxBitrate;
+                                
+                                if (videoSender.setParameters && typeof videoSender.setParameters === 'function') {
+                                    videoSender.setParameters(params).catch(function(e){});
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    function buildProxyStream() {
+        if (!isBaby || !rawStream || typeof proxyCanvas.captureStream !== 'function') {
+            activeStream = rawStream;
+            return;
+        }
+        
+        var canvasStream = proxyCanvas.captureStream(30); 
+        if (rawStream.getAudioTracks().length > 0) {
+            canvasStream.addTrack(rawStream.getAudioTracks()[0]);
+        }
+        activeStream = canvasStream;
+        setCanvasQuality(currentQuality);
+    }
+
+    function populateCameras() {
+      var select = document.getElementById('cameraSelect');
+      select.innerHTML = '';
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+        navigator.mediaDevices.enumerateDevices().then(function(devices) {
+            var videoDevices = [];
+            for (var i = 0; i < devices.length; i++) {
+                if (devices[i].kind === 'videoinput') videoDevices.push(devices[i]);
+            }
+            
+            var activeDeviceId = null;
+            if (rawStream && rawStream.getVideoTracks && rawStream.getVideoTracks().length > 0) {
+                var track = rawStream.getVideoTracks()[0];
+                if (track.getSettings && typeof track.getSettings === 'function') {
+                    var settings = track.getSettings();
+                    if (settings && settings.deviceId) activeDeviceId = settings.deviceId;
+                }
+            }
+            
+            for (var j = 0; j < videoDevices.length; j++) {
+              var option = document.createElement('option');
+              option.value = videoDevices[j].deviceId;
+              option.text = "Camera " + (j + 1);
+              if (videoDevices[j].deviceId === activeDeviceId) option.selected = true;
+              select.appendChild(option);
+            }
+            if (videoDevices.length > 0) select.style.display = "inline-block";
+        }).catch(function(e) {});
+      } catch (err) {}
+    }
+
+    function switchCamera() {
+      if (window.cameraSwitchingLock) return;
+      window.cameraSwitchingLock = true;
+      
+      var deviceId = document.getElementById('cameraSelect').value;
+      var constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true };
+      if (deviceId) { constraints.video.deviceId = { exact: deviceId }; }
+      
+      try {
+        if (rawStream) {
+          var tracks = rawStream.getTracks();
+          for (var t = 0; t < tracks.length; t++) {
+              tracks[t].stop(); 
+          }
+        }
+        
+        setTimeout(function() {
+            navigator.mediaDevices.getUserMedia(constraints).then(function(newStream) {
+                rawStream = newStream;
+                hiddenVideo.srcObject = rawStream;
+                hiddenVideo.play().catch(function(e){}); 
+                
+                var newVideoTrack = rawStream.getVideoTracks()[0];
+                
+                videoBox.srcObject = rawStream;
+                videoBox.play().catch(function(e){}); 
+                
+                if (typeof proxyCanvas.captureStream !== 'function') {
+                    activeStream = rawStream;
+                    for (var i = 0; i < activeCalls.length; i++) {
+                        var c = activeCalls[i];
+                        if (c.call && c.call.peerConnection) {
+                            var senders = c.call.peerConnection.getSenders();
+                            for (var j = 0; j < senders.length; j++) {
+                                if (senders[j].track && senders[j].track.kind === 'video') {
+                                    if (senders[j].replaceTrack) senders[j].replaceTrack(newVideoTrack).catch(function(e){});
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if (activeStream && activeStream.getAudioTracks().length > 0) {
+                        activeStream.removeTrack(activeStream.getAudioTracks()[0]);
+                    }
+                    if (rawStream.getAudioTracks().length > 0) {
+                        activeStream.addTrack(rawStream.getAudioTracks()[0]);
+                    }
+                }
+                setTimeout(function() { window.cameraSwitchingLock = false; }, 1000);
+            }).catch(function(err) {
+                alert("Failed to switch camera: " + err.message);
+                window.cameraSwitchingLock = false;
+            });
+        }, 600);
+
+      } catch (err) { 
+          alert("Failed to switch camera: " + err.message); 
+          window.cameraSwitchingLock = false;
+      }
+    }
+
+    function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator && navigator.wakeLock) {
+          navigator.wakeLock.request('screen').then(function(lock) {
+              wakeLock = lock;
+              document.addEventListener('visibilitychange', function() {
+                  if (wakeLock !== null && document.visibilityState === 'visible') {
+                      navigator.wakeLock.request('screen').then(function(l){ wakeLock = l; }).catch(function(e){});
+                  }
+              });
+          }).catch(function(e){});
+        }
+      } catch (err) {}
+    }
+
+    function showScreen(screenId) {
+      var screens = document.querySelectorAll('.screen');
+      for (var i = 0; i < screens.length; i++) {
+          screens[i].classList.remove('active');
+      }
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function initBabyPeer(forceNew) {
+      if (forceNew === undefined) forceNew = false;
+      var code = getSavedItem('babyVaani_roomCode');
+      if (forceNew || !code || code.length !== 6) {
+        var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        code = "";
+        for(var i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        setSavedItem('babyVaani_roomCode', code);
+      }
+      activeRoomCode = code;
+      
+      if(isBabyCodeVisible) {
+        document.getElementById('wizardCodeDisplay').innerText = activeRoomCode;
+      } else {
+        document.getElementById('wizardCodeDisplay').innerText = '••••••';
+      }
+
+      if (peer) peer.destroy();
+      peer = new Peer(activeRoomCode, getPeerConfig());
+      
+      peer.on('error', function(err) {
+        if (err.type === 'unavailable-id') {
+          initBabyPeer(true);
+        }
+      });
+
+      peer.on('connection', function(conn) {
+        dataConnections.push(conn);
+        conn.on('data', function(data) { handleDataChannelMessage(data, conn); });
+        conn.on('close', function() { cleanUpParent(conn.peer); });
+        
+        if ('getBattery' in navigator && typeof navigator.getBattery === 'function') {
+          navigator.getBattery().then(function(battery) {
+            conn.send("BAT:" + Math.round(battery.level * 100) + ":" + battery.charging);
+          }).catch(function(e){});
+        }
+        
+        if (activeStream) {
+          var call = peer.call(conn.peer, activeStream); 
+          
+          // INSTANT DISCONNECT HOOK - BABY SIDE
+          if (call) {
+             var checkPC = setInterval(function() {
+                 if (call.peerConnection) {
+                     clearInterval(checkPC);
+                     call.peerConnection.addEventListener('iceconnectionstatechange', function() {
+                         var state = call.peerConnection.iceConnectionState;
+                         if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+                             cleanUpParent(conn.peer);
+                         }
+                     });
+                 }
+             }, 500);
+          }
+
+          var parentAudioEl = document.createElement('audio');
+          parentAudioEl.autoplay = true;
+          parentAudioEl.playsInline = true;
+          parentAudioEl.id = "audio-" + conn.peer;
+          document.getElementById('babyAudioContainer').appendChild(parentAudioEl);
+          parentAudioEl.play().catch(function(e){});
+
+          activeCalls.push({ peerId: conn.peer, call: call });
+          setCanvasQuality(currentQuality); 
+
+          call.on('stream', function(parentStream) { 
+             parentAudioEl.srcObject = parentStream;
+             parentAudioEl.play().catch(function(e){});
+          });
+
+          call.on('close', function() { cleanUpParent(conn.peer); });
+        }
+      });
+    }
+
+    function cleanUpParent(peerId) {
+       var newDataConn = [];
+       for (var i = 0; i < dataConnections.length; i++) {
+           if (dataConnections[i].peer !== peerId) newDataConn.push(dataConnections[i]);
+       }
+       dataConnections = newDataConn;
+       
+       var newActiveCalls = [];
+       for (var j = 0; j < activeCalls.length; j++) {
+           if (activeCalls[j].peerId !== peerId) newActiveCalls.push(activeCalls[j]);
+       }
+       activeCalls = newActiveCalls;
+
+       var audioEl = document.getElementById("audio-" + peerId);
+       if (audioEl) {
+         audioEl.srcObject = null;
+         audioEl.remove();
+       }
+    }
+
+    function startBabyMode() {
+      try {
+          isBaby = true;
+          requestWakeLock();
+
+          showScreen('videoScreen');
+          document.getElementById('babyControls').style.display = "block";
+          document.getElementById('parentControls').style.display = "none";
+          document.getElementById('parentTopBar').style.display = "none";
+          document.getElementById('babyKeepOpenOverlay').style.display = "flex";
+          setLiveStatus('waiting', 'Opening Camera...');
+
+          videoBox.classList.add('baby-locked');
+          if ('disablePictureInPicture' in videoBox) videoBox.disablePictureInPicture = true;
+
+          initBabyPeer();
+
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+              setLiveStatus('offline', 'Camera Offline');
+              alert("Camera access is not supported. Ensure you are not in Incognito mode and have granted permissions.");
+              goBack();
+              return;
+          }
+
+          var basicConstraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }, audio: true };
+
+          var cameraStarted = false;
+          var fallbackTimeout = setTimeout(function() {
+              if (!cameraStarted) {
+                  setLiveStatus('offline', 'Camera Offline');
+                  alert("Camera request timed out. Please check permissions.");
+                  goBack();
+              }
+          }, 8000);
+
+          navigator.mediaDevices.getUserMedia(basicConstraints)
+            .then(function(stream) {
+              cameraStarted = true;
+              clearTimeout(fallbackTimeout);
+              
+              rawStream = stream;
+              hiddenVideo.srcObject = rawStream;
+              hiddenVideo.play().catch(function(e){}); 
+
+              buildProxyStream();
+              
+              videoBox.srcObject = rawStream; 
+              videoBox.muted = true; 
+              videoBox.play().catch(function(e){}); 
+              
+              setLiveStatus('waiting', 'Camera Ready');
+
+              populateCameras();
+              if(navigator.mediaDevices.ondevicechange !== undefined) {
+                 navigator.mediaDevices.ondevicechange = populateCameras;
+              }
+              startBatteryTracking();
+              
+              tickInterval = setInterval(function() {
+                  if (!isBaby) return;
+                  var d = new Date();
+                  var h = d.getHours();
+                  var m = d.getMinutes();
+                  var s = d.getSeconds();
+                  var ampm = h >= 12 ? 'PM' : 'AM';
+                  h = h % 12;
+                  h = h ? h : 12;
+                  m = m < 10 ? '0' + m : m;
+                  s = s < 10 ? '0' + s : s;
+                  var timeStr = h + ":" + m + ":" + s + " " + ampm;
+                  for(var i=0; i<dataConnections.length; i++) {
+                      if(dataConnections[i].open) dataConnections[i].send("TICK:" + timeStr);
+                  }
+              }, 1000);
+
+            })
+            .catch(function(err) {
+              cameraStarted = true;
+              clearTimeout(fallbackTimeout);
+              setLiveStatus('offline', 'Camera Offline');
+              alert("Camera Error: " + err.message);
+              goBack();
+            });
+
+      } catch (error) {
+          alert("Error starting baby monitor: " + error.message);
+          goBack();
+      }
+    }
+
+    function startParentMode() {
+      try {
+          isBaby = false;
+          requestWakeLock(); 
+          populateSavedDevicesDropdown();
+
+          videoBox.classList.remove('baby-locked');
+          if ('disablePictureInPicture' in videoBox) videoBox.disablePictureInPicture = false;
+
+          var savedCode = getSavedItem('babyVaani_parentCode');
+          if (savedCode) document.getElementById('joinCode').value = savedCode;
+          
+          showScreen('parentScreen');
+
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+              navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+                .then(function(stream) {
+                  parentLocalStream = stream;
+                  if (parentLocalStream.getAudioTracks().length > 0) {
+                     parentLocalStream.getAudioTracks()[0].enabled = false; 
+                  }
+                }).catch(function(err) { parentLocalStream = null; });
+          }
+      } catch (error) {
+          alert("Error starting parent monitor: " + error.message);
+          goBack();
+      }
+    }
+
+    function drawWaveform() {
+      if (!visualizerCtx || !visualizerCanvas) return;
+      visualizerAnimationFrame = requestAnimationFrame(drawWaveform);
+      
+      visualizerCtx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+      
+      if (!parentAnalyser || parentIsMuted) {
+         visualizerCtx.beginPath();
+         visualizerCtx.moveTo(0, visualizerCanvas.height / 2);
+         visualizerCtx.lineTo(visualizerCanvas.width, visualizerCanvas.height / 2);
+         visualizerCtx.lineWidth = 2;
+         visualizerCtx.strokeStyle = 'rgba(246, 173, 85, 0.3)'; 
+         visualizerCtx.stroke();
+         return;
+      }
+
+      var bufferLength = parentAnalyser.frequencyBinCount;
+      var dataArray = new Uint8Array(bufferLength);
+      parentAnalyser.getByteTimeDomainData(dataArray);
+
+      visualizerCtx.lineWidth = 2;
+      visualizerCtx.strokeStyle = '#f6ad55'; 
+      visualizerCtx.beginPath();
+
+      var sliceWidth = visualizerCanvas.width * 1.0 / bufferLength;
+      var x = 0;
+
+      for (var i = 0; i < bufferLength; i++) {
+        var v = dataArray[i] / 128.0; 
+        var y = v * (visualizerCanvas.height / 2);
+
+        if (i === 0) {
+          visualizerCtx.moveTo(x, y);
+        } else {
+          visualizerCtx.lineTo(x, y);
+        }
+        x += sliceWidth;
+      }
+      visualizerCtx.lineTo(visualizerCanvas.width, visualizerCanvas.height / 2);
+      visualizerCtx.stroke();
+    }
+
+    function connectToBaby() {
+      var targetCode = document.getElementById('joinCode').value.toUpperCase().trim();
+      if (targetCode.length !== 6) { alert("Enter a 6-character code."); return; }
+      
+      // UI SPAM LOCK - Disable button and show connecting state
+      var connectBtn = document.getElementById('connectBtn');
+      if (connectBtn) {
+          connectBtn.disabled = true;
+          connectBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> Connecting...';
+      }
+
+      if (!parentAudioCtx) {
+        parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
+
+      if (document.getElementById('rememberCodeCheck').checked) {
+        setSavedItem('babyVaani_parentCode', targetCode);
+        saveParentDevice(targetCode);
+      }
+      
+      activeRoomCode = targetCode; 
+      
+      if (peer) peer.destroy();
