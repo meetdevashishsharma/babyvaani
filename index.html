@@ -1533,4 +1533,83 @@
       try {
         if (document.pictureInPictureElement) {
           var exitPromise = document.exitPictureInPicture();
-          if (exitPromise && typeof exitPromise.catch ===
+          if (exitPromise && typeof exitPromise.catch === 'function') exitPromise.catch(function(e){});
+        } else {
+          var pipPromise = videoBox.requestPictureInPicture();
+          if (pipPromise && typeof pipPromise.catch === 'function') {
+              pipPromise.catch(function(e){
+                 alert("Picture-in-Picture is not supported or was blocked by this device's browser.");
+              });
+          }
+        }
+      } catch (err) {
+        alert("Picture-in-Picture is not supported or was blocked by this device's browser.");
+      }
+    }
+
+    function goBack() {
+      try {
+          for(var i=0; i<dataConnections.length; i++) {
+             if(dataConnections[i].open) dataConnections[i].send('DISCONNECT');
+          }
+
+          clearInterval(batteryInterval);
+          clearInterval(alarmBeepInterval);
+          clearInterval(pingInterval);
+          clearInterval(tickInterval);
+          if (canvasInterval) clearInterval(canvasInterval);
+          if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
+          if (parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
+
+          alarmActive = false;
+          isAlarmRinging = false;
+          reconnectAttempts = 0;
+          
+          var mCont = document.getElementById('monitorContainer');
+          if(mCont) mCont.style.borderColor = '#ffffff';
+          
+          var connectBtn = document.getElementById('connectBtn');
+          if (connectBtn) {
+              connectBtn.disabled = false;
+              connectBtn.innerHTML = '<span class="material-symbols-outlined">link</span> Connect Now';
+          }
+
+          if (rawStream) {
+             var tracks = rawStream.getTracks();
+             for(var t=0; t<tracks.length; t++) tracks[t].stop();
+          }
+          if (parentLocalStream) {
+             var pTracks = parentLocalStream.getTracks();
+             for(var pt=0; pt<pTracks.length; pt++) pTracks[pt].stop();
+          }
+          if (peer) peer.destroy();
+          
+          rawStream = activeStream = parentLocalStream = peer = currentCall = null;
+          activeCalls = []; dataConnections = [];
+          
+          var rBatt = document.getElementById('remoteBattery');
+          if(rBatt) rBatt.style.display = 'none';
+          
+          var pInd = document.getElementById('pingIndicator');
+          if(pInd) pInd.style.display = 'none';
+          
+          var lBatt = document.getElementById('lowBatteryAlert');
+          if(lBatt) lBatt.style.display = 'none';
+          
+          var dOver = document.getElementById('disconnectOverlay');
+          if(dOver) dOver.style.display = 'none';
+          
+          var bAud = document.getElementById('babyAudioContainer');
+          if(bAud) bAud.innerHTML = ''; 
+          
+          if(videoBox) videoBox.srcObject = null;
+          if(hiddenVideo) hiddenVideo.srcObject = null;
+          
+          showScreen('selectionScreen');
+      } catch(e) {
+          showScreen('selectionScreen');
+      }
+    }
+  </script>
+</body>
+</html>
