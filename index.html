@@ -102,11 +102,12 @@
       background-color: #000000; z-index: 2147483647; 
       opacity: 0; transition: opacity 0.5s ease-in-out; 
       display: none; 
+      pointer-events: none;
     }
     #dimOverlay.active { display: block; opacity: 1; pointer-events: auto; cursor: pointer; } 
 
     .controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 5px; width: 100%; }
-    button { font-family: inherit; background-color: #2d3748; color: white; border: none; padding: 8px 4px; font-size: 11px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: all 0.15s ease; }
+    button { font-family: inherit; background-color: #2d3748; color: white; border: none; padding: 8px 4px; font-size: 11px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: all 0.15s ease; position: relative; z-index: 5; }
     button .material-symbols-outlined { font-size: 20px; }
     button:active { transform: scale(0.95); }
     button.off { background-color: #cbd5e0; color: #4a5568; }
@@ -122,7 +123,7 @@
     .wizard-step.active { display: block; animation: fadeIn 0.4s ease-out; }
     .wizard-step h3 { margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; }
 
-    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(45, 55, 72, 0.9); backdrop-filter: blur(4px); color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 10; font-weight: 800; font-size: 24px; }
+    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(45, 55, 72, 0.9); backdrop-filter: blur(4px); color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 10; font-weight: 800; font-size: 24px; pointer-events: auto; }
   </style>
 </head>
 <body>
@@ -315,7 +316,7 @@
       <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
       <button id="micBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_off</span> Unmute</button>
       <button onclick="rotateCamera()"><span class="material-symbols-outlined">screen_rotation</span> Rotate</button>
-      <button onclick="requestCameraSwitch()"><span class="material-symbols-outlined">flip_camera_ios</span> Flip Cam</button>
+      <button id="flipCamBtn" onclick="requestCameraSwitch()"><span class="material-symbols-outlined">flip_camera_ios</span> Flip Cam</button>
       
       <button id="nightModeBtn" onclick="toggleNightMode()" class="off"><span class="material-symbols-outlined">nightlight</span> Night</button>
       <button onclick="togglePiP()"><span class="material-symbols-outlined">picture_in_picture_alt</span> PiP</button>
@@ -341,7 +342,8 @@
 
   <script>
     window.onerror = function(msg, url, line) {
-        if (msg.indexOf("SyntaxError") !== -1) {
+        console.error("App Error: " + msg + " at line " + line);
+        if (msg && msg.indexOf && msg.indexOf("SyntaxError") !== -1) {
             alert("Your device's browser is too old to run this monitor. Please update your system or use a newer device.");
         }
     };
@@ -353,7 +355,7 @@
     var videoBox = document.getElementById('myCamera');
     var hiddenVideo = document.getElementById('hiddenBabyCam');
     var proxyCanvas = document.getElementById('proxyCanvas');
-    var proxyCtx = proxyCanvas.getContext('2d', { alpha: false });
+    var proxyCtx = proxyCanvas ? proxyCanvas.getContext('2d', { alpha: false }) : null;
     var canvasInterval = null;
     
     var rawStream = null, activeStream = null, parentLocalStream = null, peer = null, currentCall = null, wakeLock = null; 
@@ -486,13 +488,17 @@
     }
 
     function wakeScreen() {
-      document.getElementById('dimOverlay').classList.remove('active');
+      var dim = document.getElementById('dimOverlay');
+      if(dim) dim.classList.remove('active');
     }
 
-    document.getElementById('dimOverlay').addEventListener('touchstart', function(e) {
-      e.preventDefault();
-      wakeScreen();
-    }, {passive: false});
+    var dimOverlayEl = document.getElementById('dimOverlay');
+    if(dimOverlayEl) {
+        dimOverlayEl.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          wakeScreen();
+        }, {passive: false});
+    }
 
     function startBatteryTracking() {
       if ('getBattery' in navigator && typeof navigator.getBattery === 'function') {
@@ -518,10 +524,14 @@
           var pc = currentCall.peerConnection;
           
           if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
-              document.getElementById('connIcon').innerText = 'signal_cellular_connected_no_internet_0_bar';
-              document.getElementById('connIcon').style.color = '#f56565';
-              document.getElementById('pingText').innerText = 'Offline';
-              handleParentDisconnect(); // INSTANT DISCONNECT TRIGGER
+              var iconEl = document.getElementById('connIcon');
+              var textEl = document.getElementById('pingText');
+              if(iconEl) {
+                  iconEl.innerText = 'signal_cellular_connected_no_internet_0_bar';
+                  iconEl.style.color = '#f56565';
+              }
+              if(textEl) textEl.innerText = 'Offline';
+              handleParentDisconnect();
               return;
           }
           
@@ -533,27 +543,34 @@
                     if (report.currentRoundTripTime !== undefined) {
                         pingFound = true;
                         var rtt = Math.round(report.currentRoundTripTime * 1000);
-                        document.getElementById('pingText').innerText = rtt + 'ms';
+                        var pText = document.getElementById('pingText');
+                        if(pText) pText.innerText = rtt + 'ms';
                         
                         var icon = document.getElementById('connIcon');
-                        if (rtt < 150) {
-                            icon.innerText = 'signal_cellular_alt'; 
-                            icon.style.color = '#48bb78';
-                        } else if (rtt < 400) {
-                            icon.innerText = 'signal_cellular_alt_2_bar'; 
-                            icon.style.color = '#ecc94b';
-                        } else {
-                            icon.innerText = 'signal_cellular_alt_1_bar'; 
-                            icon.style.color = '#f56565';
+                        if(icon) {
+                            if (rtt < 150) {
+                                icon.innerText = 'signal_cellular_alt'; 
+                                icon.style.color = '#48bb78';
+                            } else if (rtt < 400) {
+                                icon.innerText = 'signal_cellular_alt_2_bar'; 
+                                icon.style.color = '#ecc94b';
+                            } else {
+                                icon.innerText = 'signal_cellular_alt_1_bar'; 
+                                icon.style.color = '#f56565';
+                            }
                         }
                     }
                   }
                 });
                 
                 if (!pingFound) {
-                    document.getElementById('connIcon').innerText = 'signal_cellular_alt';
-                    document.getElementById('connIcon').style.color = '#48bb78';
-                    document.getElementById('pingText').innerText = 'Online';
+                    var iconE = document.getElementById('connIcon');
+                    var textE = document.getElementById('pingText');
+                    if(iconE) {
+                        iconE.innerText = 'signal_cellular_alt';
+                        iconE.style.color = '#48bb78';
+                    }
+                    if(textE) textE.innerText = 'Online';
                 }
               }).catch(function(e) {});
           }
@@ -562,7 +579,7 @@
     }
 
     function setCanvasQuality(quality) {
-        if (!isBaby || !proxyCanvas) return;
+        if (!isBaby || !proxyCanvas || !proxyCtx) return;
         var w = 1280, h = 720, fps = 30;
         
         if (quality === 'ultra') {
@@ -573,7 +590,6 @@
             w = 426; h = 240; fps = 15;
         }
 
-        // --- NEW: PORTRAIT PROPORTION PATCH ---
         if (window.innerHeight > window.innerWidth) {
             var temp = w;
             w = h;
@@ -586,7 +602,7 @@
         if (canvasInterval) clearInterval(canvasInterval);
         var ms = Math.floor(1000 / fps);
         canvasInterval = setInterval(function() {
-            if (hiddenVideo.readyState >= 2) {
+            if (hiddenVideo && hiddenVideo.readyState >= 2) {
                 proxyCtx.clearRect(0, 0, proxyCanvas.width, proxyCanvas.height); 
                 proxyCtx.drawImage(hiddenVideo, 0, 0, proxyCanvas.width, proxyCanvas.height);
             }
@@ -622,7 +638,7 @@
     }
 
     function buildProxyStream() {
-        if (!isBaby || !rawStream || typeof proxyCanvas.captureStream !== 'function') {
+        if (!isBaby || !rawStream || !proxyCanvas || typeof proxyCanvas.captureStream !== 'function') {
             activeStream = rawStream;
             return;
         }
@@ -637,6 +653,7 @@
 
     function populateCameras() {
       var select = document.getElementById('cameraSelect');
+      if(!select) return;
       select.innerHTML = '';
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
@@ -671,7 +688,8 @@
       if (window.cameraSwitchingLock) return;
       window.cameraSwitchingLock = true;
       
-      var deviceId = document.getElementById('cameraSelect').value;
+      var select = document.getElementById('cameraSelect');
+      var deviceId = select ? select.value : null;
       var constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true };
       if (deviceId) { constraints.video.deviceId = { exact: deviceId }; }
       
@@ -686,15 +704,19 @@
         setTimeout(function() {
             navigator.mediaDevices.getUserMedia(constraints).then(function(newStream) {
                 rawStream = newStream;
-                hiddenVideo.srcObject = rawStream;
-                hiddenVideo.play().catch(function(e){}); 
+                if(hiddenVideo) {
+                    hiddenVideo.srcObject = rawStream;
+                    hiddenVideo.play().catch(function(e){}); 
+                }
                 
                 var newVideoTrack = rawStream.getVideoTracks()[0];
                 
-                videoBox.srcObject = rawStream;
-                videoBox.play().catch(function(e){}); 
+                if(videoBox) {
+                    videoBox.srcObject = rawStream;
+                    videoBox.play().catch(function(e){}); 
+                }
                 
-                if (typeof proxyCanvas.captureStream !== 'function') {
+                if (!proxyCanvas || typeof proxyCanvas.captureStream !== 'function') {
                     activeStream = rawStream;
                     for (var i = 0; i < activeCalls.length; i++) {
                         var c = activeCalls[i];
@@ -748,7 +770,8 @@
       for (var i = 0; i < screens.length; i++) {
           screens[i].classList.remove('active');
       }
-      document.getElementById(screenId).classList.add('active');
+      var target = document.getElementById(screenId);
+      if(target) target.classList.add('active');
     }
 
     function initBabyPeer(forceNew) {
@@ -764,10 +787,13 @@
       }
       activeRoomCode = code;
       
-      if(isBabyCodeVisible) {
-        document.getElementById('wizardCodeDisplay').innerText = activeRoomCode;
-      } else {
-        document.getElementById('wizardCodeDisplay').innerText = '••••••';
+      var wDisplay = document.getElementById('wizardCodeDisplay');
+      if(wDisplay) {
+          if(isBabyCodeVisible) {
+            wDisplay.innerText = activeRoomCode;
+          } else {
+            wDisplay.innerText = '••••••';
+          }
       }
 
       if (peer) peer.destroy();
@@ -793,26 +819,28 @@
         if (activeStream) {
           var call = peer.call(conn.peer, activeStream); 
           
-          // INSTANT DISCONNECT HOOK - BABY SIDE
           if (call) {
-             var checkPC = setInterval(function() {
-                 if (call.peerConnection) {
-                     clearInterval(checkPC);
-                     call.peerConnection.addEventListener('iceconnectionstatechange', function() {
-                         var state = call.peerConnection.iceConnectionState;
-                         if (state === 'disconnected' || state === 'failed' || state === 'closed') {
-                             cleanUpParent(conn.peer);
-                         }
-                     });
-                 }
-             }, 500);
+             try {
+                 var checkPC = setInterval(function() {
+                     if (call.peerConnection) {
+                         clearInterval(checkPC);
+                         call.peerConnection.addEventListener('iceconnectionstatechange', function() {
+                             var state = call.peerConnection.iceConnectionState;
+                             if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+                                 cleanUpParent(conn.peer);
+                             }
+                         });
+                     }
+                 }, 500);
+             } catch(e) {}
           }
 
           var parentAudioEl = document.createElement('audio');
           parentAudioEl.autoplay = true;
           parentAudioEl.playsInline = true;
           parentAudioEl.id = "audio-" + conn.peer;
-          document.getElementById('babyAudioContainer').appendChild(parentAudioEl);
+          var audioCont = document.getElementById('babyAudioContainer');
+          if(audioCont) audioCont.appendChild(parentAudioEl);
           parentAudioEl.play().catch(function(e){});
 
           activeCalls.push({ peerId: conn.peer, call: call });
@@ -854,14 +882,22 @@
           requestWakeLock();
 
           showScreen('videoScreen');
-          document.getElementById('babyControls').style.display = "block";
-          document.getElementById('parentControls').style.display = "none";
-          document.getElementById('parentTopBar').style.display = "none";
-          document.getElementById('babyKeepOpenOverlay').style.display = "flex";
+          var bControls = document.getElementById('babyControls');
+          var pControls = document.getElementById('parentControls');
+          var pTop = document.getElementById('parentTopBar');
+          var keepOpen = document.getElementById('babyKeepOpenOverlay');
+          
+          if(bControls) bControls.style.display = "block";
+          if(pControls) pControls.style.display = "none";
+          if(pTop) pTop.style.display = "none";
+          if(keepOpen) keepOpen.style.display = "flex";
+          
           setLiveStatus('waiting', 'Opening Camera...');
 
-          videoBox.classList.add('baby-locked');
-          if ('disablePictureInPicture' in videoBox) videoBox.disablePictureInPicture = true;
+          if(videoBox) {
+              videoBox.classList.add('baby-locked');
+              if ('disablePictureInPicture' in videoBox) videoBox.disablePictureInPicture = true;
+          }
 
           initBabyPeer();
 
@@ -889,14 +925,18 @@
               clearTimeout(fallbackTimeout);
               
               rawStream = stream;
-              hiddenVideo.srcObject = rawStream;
-              hiddenVideo.play().catch(function(e){}); 
+              if(hiddenVideo) {
+                  hiddenVideo.srcObject = rawStream;
+                  hiddenVideo.play().catch(function(e){}); 
+              }
 
               buildProxyStream();
               
-              videoBox.srcObject = rawStream; 
-              videoBox.muted = true; 
-              videoBox.play().catch(function(e){}); 
+              if(videoBox) {
+                  videoBox.srcObject = rawStream; 
+                  videoBox.muted = true; 
+                  videoBox.play().catch(function(e){}); 
+              }
               
               setLiveStatus('waiting', 'Camera Ready');
 
@@ -944,11 +984,14 @@
           requestWakeLock(); 
           populateSavedDevicesDropdown();
 
-          videoBox.classList.remove('baby-locked');
-          if ('disablePictureInPicture' in videoBox) videoBox.disablePictureInPicture = false;
+          if(videoBox) {
+              videoBox.classList.remove('baby-locked');
+              if ('disablePictureInPicture' in videoBox) videoBox.disablePictureInPicture = false;
+          }
 
           var savedCode = getSavedItem('babyVaani_parentCode');
-          if (savedCode) document.getElementById('joinCode').value = savedCode;
+          var joinInp = document.getElementById('joinCode');
+          if (savedCode && joinInp) joinInp.value = savedCode;
           
           showScreen('parentScreen');
 
@@ -1010,10 +1053,12 @@
     }
 
     function connectToBaby() {
-      var targetCode = document.getElementById('joinCode').value.toUpperCase().trim();
+      var joinInp = document.getElementById('joinCode');
+      if(!joinInp) return;
+      
+      var targetCode = joinInp.value.toUpperCase().trim();
       if (targetCode.length !== 6) { alert("Enter a 6-character code."); return; }
       
-      // UI SPAM LOCK - Disable button and show connecting state
       var connectBtn = document.getElementById('connectBtn');
       if (connectBtn) {
           connectBtn.disabled = true;
@@ -1025,7 +1070,8 @@
       }
       if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
 
-      if (document.getElementById('rememberCodeCheck').checked) {
+      var remCheck = document.getElementById('rememberCodeCheck');
+      if (remCheck && remCheck.checked) {
         setSavedItem('babyVaani_parentCode', targetCode);
         saveParentDevice(targetCode);
       }
@@ -1047,41 +1093,54 @@
         currentCall = call;
         call.answer(parentLocalStream || null); 
         
-        // INSTANT DISCONNECT HOOK - PARENT SIDE
-        var checkPC = setInterval(function() {
-            if (call.peerConnection) {
-                clearInterval(checkPC);
-                call.peerConnection.addEventListener('iceconnectionstatechange', function() {
-                    var state = call.peerConnection.iceConnectionState;
-                    if (state === 'disconnected' || state === 'failed' || state === 'closed') {
-                        handleParentDisconnect();
-                    }
-                });
-            }
-        }, 500);
+        try {
+            var checkPC = setInterval(function() {
+                if (call.peerConnection) {
+                    clearInterval(checkPC);
+                    call.peerConnection.addEventListener('iceconnectionstatechange', function() {
+                        var state = call.peerConnection.iceConnectionState;
+                        if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+                            handleParentDisconnect();
+                        }
+                    });
+                }
+            }, 500);
+        } catch(e) {}
 
         call.on('stream', function(remoteStream) {
           reconnectAttempts = 0;
-          document.getElementById('disconnectOverlay').style.display = 'none';
+          var disc = document.getElementById('disconnectOverlay');
+          if(disc) disc.style.display = 'none';
+          
           showScreen('videoScreen');
           setLiveStatus('live', 'Live - Monitoring');
           
-          if(!isCodeVisible) {
-            document.getElementById('activeCodeDisplay').innerText = '••••••';
-          } else {
-            document.getElementById('activeCodeDisplay').innerText = activeRoomCode;
+          var aCode = document.getElementById('activeCodeDisplay');
+          if(aCode) {
+              if(!isCodeVisible) {
+                aCode.innerText = '••••••';
+              } else {
+                aCode.innerText = activeRoomCode;
+              }
           }
-          document.getElementById('parentTopBar').style.display = "flex";
-          document.getElementById('parentControls').style.display = "grid";
           
-          videoBox.muted = true; 
-          videoBox.srcObject = remoteStream;
-          videoBox.play().catch(function(e){}); 
+          var pTop = document.getElementById('parentTopBar');
+          var pCont = document.getElementById('parentControls');
+          if(pTop) pTop.style.display = "flex";
+          if(pCont) pCont.style.display = "grid";
+          
+          if(videoBox) {
+              videoBox.muted = true; 
+              videoBox.srcObject = remoteStream;
+              videoBox.play().catch(function(e){}); 
+          }
 
           parentIsMuted = true;
           var slider = document.getElementById('audioBoostSlider');
-          slider.disabled = true;
-          slider.style.opacity = '0.5';
+          if(slider) {
+              slider.disabled = true;
+              slider.style.opacity = '0.5';
+          }
           
           var micBtn = document.getElementById('micBtn');
           if(micBtn) {
@@ -1103,11 +1162,13 @@
             parentGainNode.connect(parentAudioCtx.destination);
 
             visualizerCanvas = document.getElementById('audioVisualizer');
-            visualizerCtx = visualizerCanvas.getContext('2d');
-            visualizerCanvas.width = visualizerCanvas.offsetWidth;
-            visualizerCanvas.height = visualizerCanvas.offsetHeight;
-            if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
-            drawWaveform();
+            if(visualizerCanvas) {
+                visualizerCtx = visualizerCanvas.getContext('2d');
+                visualizerCanvas.width = visualizerCanvas.offsetWidth;
+                visualizerCanvas.height = visualizerCanvas.offsetHeight;
+                if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
+                drawWaveform();
+            }
 
           } catch (e) {}
 
@@ -1131,19 +1192,22 @@
 
     function handleParentDisconnect() {
       if (isBaby) return;
-      document.getElementById('disconnectOverlay').style.display = 'flex';
-      setLiveStatus('offline', 'Disconnected');
-      document.getElementById('cctvClock').style.display = 'none';
+      var discOverlay = document.getElementById('disconnectOverlay');
+      if(discOverlay) discOverlay.style.display = 'flex';
       
+      setLiveStatus('offline', 'Disconnected');
+      var cClock = document.getElementById('cctvClock');
+      if(cClock) cClock.style.display = 'none';
+      
+      var discText = document.getElementById('disconnectText');
       if (reconnectAttempts < 5) {
         reconnectAttempts++;
-        document.getElementById('disconnectText').innerText = "Reconnecting (" + reconnectAttempts + "/5)...";
+        if(discText) discText.innerText = "Reconnecting (" + reconnectAttempts + "/5)...";
         setTimeout(function() {
           connectToBaby();
         }, 3000);
       } else {
-        document.getElementById('disconnectText').innerText = 'Connection Lost. Please End Session.';
-        // Reset Connect Button UI
+        if(discText) discText.innerText = 'Connection Lost. Please End Session.';
         var connectBtn = document.getElementById('connectBtn');
         if (connectBtn) {
             connectBtn.disabled = false;
@@ -1153,8 +1217,11 @@
     }
 
     function updateAudioBoost() {
-      var val = document.getElementById('audioBoostSlider').value;
-      document.getElementById('boostVal').innerText = val;
+      var slider = document.getElementById('audioBoostSlider');
+      var boostV = document.getElementById('boostVal');
+      if(!slider || !boostV) return;
+      var val = slider.value;
+      boostV.innerText = val;
       if (parentGainNode && !parentIsMuted) {
         parentGainNode.gain.value = parseFloat(val);
       }
@@ -1163,6 +1230,8 @@
     function toggleRemoteDim() {
       isRemoteDimmed = !isRemoteDimmed;
       var b = document.getElementById('remoteDimBtn');
+      if(!b) return;
+      
       if (isRemoteDimmed) {
         b.innerHTML = '<span class="material-symbols-outlined">light_mode</span> Wake Screen';
         b.className = 'active-green';
@@ -1179,6 +1248,24 @@
     }
 
     function requestCameraSwitch() {
+      // 1. Parent-Side UI Cooldown Lock (Anti-Spam)
+      var flipBtn = document.getElementById('flipCamBtn');
+      if (flipBtn) {
+          if (flipBtn.disabled) return; // Prevent firing if already locked
+          
+          flipBtn.disabled = true;
+          flipBtn.style.opacity = '0.5';
+          flipBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> Flipping...';
+          
+          // Unlock after 3.5 seconds
+          setTimeout(function() {
+              flipBtn.disabled = false;
+              flipBtn.style.opacity = '1';
+              flipBtn.innerHTML = '<span class="material-symbols-outlined">flip_camera_ios</span> Flip Cam';
+          }, 3500); 
+      }
+
+      // 2. Send the command to the Baby Device
       for(var i=0; i<dataConnections.length; i++) {
          if(dataConnections[i].open) dataConnections[i].send('SWITCH_CAM');
       }
@@ -1197,10 +1284,16 @@
         }
       }
       else if (data === 'DIM_SCREEN') {
-        if (isBaby) document.getElementById('dimOverlay').classList.add('active');
+        if (isBaby) {
+            var d = document.getElementById('dimOverlay');
+            if(d) d.classList.add('active');
+        }
       }
       else if (data === 'WAKE_SCREEN') {
-        if (isBaby) document.getElementById('dimOverlay').classList.remove('active');
+        if (isBaby) {
+            var d = document.getElementById('dimOverlay');
+            if(d) d.classList.remove('active');
+        }
       }
       else if (data === 'DISCONNECT') {
         if (isBaby && conn && conn.peer) {
@@ -1213,18 +1306,27 @@
         var isCharging = parts[2] === 'true';
 
         var battUI = document.getElementById('remoteBattery');
-        battUI.style.display = 'flex';
-        document.getElementById('battLevel').innerText = level + '%';
-        var icon = battUI.querySelector('.material-symbols-outlined');
-        icon.innerText = isCharging ? 'battery_charging_full' : 'battery_full';
-        icon.style.color = level <= 20 ? '#f56565' : '#48bb78';
+        if(battUI) {
+            battUI.style.display = 'flex';
+            var bLevel = document.getElementById('battLevel');
+            if(bLevel) bLevel.innerText = level + '%';
+            
+            var icon = battUI.querySelector('.material-symbols-outlined');
+            if(icon) {
+                icon.innerText = isCharging ? 'battery_charging_full' : 'battery_full';
+                icon.style.color = level <= 20 ? '#f56565' : '#48bb78';
+            }
+        }
 
         var lowBattAlert = document.getElementById('lowBatteryAlert');
-        if (level <= 20 && !isCharging) {
-          lowBattAlert.style.display = 'flex';
-          document.getElementById('lowBattText').innerText = level + '%';
-        } else {
-          lowBattAlert.style.display = 'none';
+        if (lowBattAlert) {
+            if (level <= 20 && !isCharging) {
+              lowBattAlert.style.display = 'flex';
+              var lbText = document.getElementById('lowBattText');
+              if(lbText) lbText.innerText = level + '%';
+            } else {
+              lowBattAlert.style.display = 'none';
+            }
         }
       } 
       else if (data.indexOf('QUALITY:') === 0) {
@@ -1235,13 +1337,17 @@
       }
       else if (data.indexOf('TICK:') === 0) {
         var clockEl = document.getElementById('cctvClock');
-        if (clockEl.style.display !== 'block') clockEl.style.display = 'block';
-        clockEl.innerText = "LIVE 🟢 " + data.substring(5);
+        if (clockEl) {
+            if (clockEl.style.display !== 'block') clockEl.style.display = 'block';
+            clockEl.innerText = "LIVE 🟢 " + data.substring(5);
+        }
       }
     }
 
     function requestQualityChange() {
-      var q = document.getElementById('qualitySelect').value;
+      var sel = document.getElementById('qualitySelect');
+      if(!sel) return;
+      var q = sel.value;
       for(var i=0; i<dataConnections.length; i++) {
          if(dataConnections[i].open) dataConnections[i].send("QUALITY:" + q);
       }
@@ -1254,8 +1360,10 @@
         track.enabled = !track.enabled;
         var state = track.enabled ? ['videocam_off', 'Pause', ''] : ['videocam', 'Resume', 'off'];
         var b = document.getElementById('camBtn');
-        b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-        b.className = state[2];
+        if(b) {
+            b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
+            b.className = state[2];
+        }
       }
     }
 
@@ -1271,8 +1379,10 @@
       
       var state = track.enabled ? ['mic_off', 'Unmic', 'active-green'] : ['mic', 'Talk', ''];
       var b = document.getElementById('talkBtn');
-      b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-      b.className = state[2];
+      if(b) {
+          b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
+          b.className = state[2];
+      }
     }
 
     function toggleParentListening() {
@@ -1281,51 +1391,64 @@
       var slider = document.getElementById('audioBoostSlider');
       if (parentIsMuted) {
          if (parentGainNode) parentGainNode.gain.value = 0;
-         slider.disabled = true;
-         slider.style.opacity = '0.5';
+         if(slider) {
+             slider.disabled = true;
+             slider.style.opacity = '0.5';
+         }
       } else {
-         if (parentGainNode) parentGainNode.gain.value = parseFloat(slider.value);
-         slider.disabled = false;
-         slider.style.opacity = '1';
+         if (parentGainNode && slider) parentGainNode.gain.value = parseFloat(slider.value);
+         if(slider) {
+             slider.disabled = false;
+             slider.style.opacity = '1';
+         }
       }
       
       var state = parentIsMuted ? ['volume_off', 'Unmute', ''] : ['volume_up', 'Mute', 'active-green'];
       var b = document.getElementById('micBtn');
-      b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-      b.className = state[2];
+      if(b) {
+          b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
+          b.className = state[2];
+      }
     }
 
     function rotateCamera() {
       currentRotation = (currentRotation + 90) % 360;
-      videoBox.style.transform = "rotate(" + currentRotation + "deg) translateZ(0)";
+      if(videoBox) videoBox.style.transform = "rotate(" + currentRotation + "deg) translateZ(0)";
     }
 
     function toggleNightMode() {
       isNightMode = !isNightMode;
-      if (isNightMode) {
-          videoBox.classList.add('night-mode');
-      } else {
-          videoBox.classList.remove('night-mode');
+      if(videoBox) {
+          if (isNightMode) {
+              videoBox.classList.add('night-mode');
+          } else {
+              videoBox.classList.remove('night-mode');
+          }
       }
       var state = isNightMode ? ['light_mode', 'Day', 'night-active'] : ['nightlight', 'Night', 'off'];
       var b = document.getElementById('nightModeBtn');
-      b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-      b.className = state[2];
+      if(b) {
+          b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
+          b.className = state[2];
+      }
     }
 
     function toggleAlarm() {
       alarmActive = !alarmActive;
       var state = alarmActive ? ['notifications_active', 'On', 'active-green'] : ['notifications_off', 'Alarm', 'off'];
       var b = document.getElementById('alarmBtn');
-      b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-      b.className = state[2];
+      if(b) {
+          b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
+          b.className = state[2];
+      }
 
       if (alarmActive) {
         startAudioAnalysis();
       } else {
         isAlarmRinging = false;
         clearInterval(alarmBeepInterval);
-        document.getElementById('monitorContainer').style.borderColor = '#ffffff';
+        var mCont = document.getElementById('monitorContainer');
+        if(mCont) mCont.style.borderColor = '#ffffff';
       }
     }
 
@@ -1343,7 +1466,8 @@
         for (var i = 0; i < dataArray.length; i++) sum += dataArray[i];
         var average = sum / dataArray.length;
         
-        var sens = document.getElementById('alarmSensitivity').value;
+        var sensInp = document.getElementById('alarmSensitivity');
+        var sens = sensInp ? sensInp.value : 80;
         var threshold = 100 - sens; 
 
         if (average > threshold && !isAlarmRinging) {
@@ -1359,7 +1483,9 @@
       var toggle = false;
       alarmBeepInterval = setInterval(function() {
         if (!alarmActive) return clearInterval(alarmBeepInterval);
-        document.getElementById('monitorContainer').style.borderColor = toggle ? '#f56565' : '#ffffff';
+        
+        var mCont = document.getElementById('monitorContainer');
+        if(mCont) mCont.style.borderColor = toggle ? '#f56565' : '#ffffff';
         
         if (parentAudioCtx && toggle && !parentIsMuted) {
           var osc = parentAudioCtx.createOscillator();
@@ -1377,12 +1503,13 @@
 
     function toggleFullScreen() {
       var c = document.getElementById('monitorContainer'); 
+      if(!c) return;
       if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         if (c.requestFullscreen) {
           c.requestFullscreen();
         } else if (c.webkitRequestFullscreen) {
           c.webkitRequestFullscreen();
-        } else if (videoBox.webkitEnterFullscreen) {
+        } else if (videoBox && videoBox.webkitEnterFullscreen) {
           videoBox.webkitEnterFullscreen();
         }
       } else {
@@ -1395,6 +1522,7 @@
     }
 
     function togglePiP() {
+      if(!videoBox) return;
       try {
         if (document.pictureInPictureElement) {
           var exitPromise = document.exitPictureInPicture();
@@ -1428,10 +1556,13 @@
           alarmActive = false;
           isAlarmRinging = false;
           reconnectAttempts = 0;
-          document.getElementById('monitorContainer').style.borderColor = '#ffffff';
-          document.getElementById('cctvClock').style.display = 'none';
           
-          // Reset Connect Button UI
+          var mCont = document.getElementById('monitorContainer');
+          if(mCont) mCont.style.borderColor = '#ffffff';
+          
+          var cClock = document.getElementById('cctvClock');
+          if(cClock) cClock.style.display = 'none';
+          
           var connectBtn = document.getElementById('connectBtn');
           if (connectBtn) {
               connectBtn.disabled = false;
@@ -1450,13 +1581,24 @@
           
           rawStream = activeStream = parentLocalStream = peer = currentCall = null;
           activeCalls = []; dataConnections = [];
-          document.getElementById('remoteBattery').style.display = 'none';
-          document.getElementById('pingIndicator').style.display = 'none';
-          document.getElementById('lowBatteryAlert').style.display = 'none';
-          document.getElementById('disconnectOverlay').style.display = 'none';
-          document.getElementById('babyAudioContainer').innerHTML = ''; 
-          videoBox.srcObject = null;
-          hiddenVideo.srcObject = null;
+          
+          var rBatt = document.getElementById('remoteBattery');
+          if(rBatt) rBatt.style.display = 'none';
+          
+          var pInd = document.getElementById('pingIndicator');
+          if(pInd) pInd.style.display = 'none';
+          
+          var lBatt = document.getElementById('lowBatteryAlert');
+          if(lBatt) lBatt.style.display = 'none';
+          
+          var dOver = document.getElementById('disconnectOverlay');
+          if(dOver) dOver.style.display = 'none';
+          
+          var bAud = document.getElementById('babyAudioContainer');
+          if(bAud) bAud.innerHTML = ''; 
+          
+          if(videoBox) videoBox.srcObject = null;
+          if(hiddenVideo) hiddenVideo.srcObject = null;
           
           showScreen('selectionScreen');
       } catch(e) {
