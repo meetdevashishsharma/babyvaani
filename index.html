@@ -323,7 +323,7 @@
 
       <div class="slider-container" style="grid-column: span 2;">
         <label for="audioBoostSlider">Audio Boost (<span id="boostVal">1.0</span>x)</label>
-        <input type="range" id="audioBoostSlider" min="1" max="4" step="0.5" value="1" oninput="updateAudioBoost()" disabled style="opacity: 0.5;">
+        <input type="range" id="audioBoostSlider" min="1" max="15" step="0.5" value="1" oninput="updateAudioBoost()" disabled style="opacity: 0.5;">
       </div>
 
       <div class="slider-container" style="grid-column: span 3;">
@@ -338,7 +338,6 @@
   </div>
 
   <script>
-    // Completely silent error handling - no more native alert boxes blocking the thread
     window.onerror = function(msg, url, line) {
         console.error("App Error: " + msg + " at line " + line);
     };
@@ -363,8 +362,6 @@
     var visualizerCtx = null, visualizerCanvas = null, visualizerAnimationFrame = null;
 
     var currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false, isCodeVisible = false, isBabyCodeVisible = false;
-    
-    // DEFAULT TO ULTRA-LOW (144p @ 10fps) TO SAVE MASSIVE BATTERY
     var selectedNetworkMode = 'internet', currentQuality = 'ultra', isRemoteDimmed = false, reconnectAttempts = 0;
 
     var parentHeartbeatInterval = null;
@@ -608,7 +605,6 @@
                 proxyCtx.clearRect(0, 0, proxyCanvas.width, proxyCanvas.height); 
                 proxyCtx.drawImage(hiddenVideo, 0, 0, proxyCanvas.width, proxyCanvas.height);
 
-                // --- BURNED-IN CCTV CLOCK (SMALLER & OPTIMIZED) ---
                 var d = new Date();
                 var hStr = d.getHours() % 12 || 12;
                 var mStr = d.getMinutes().toString().padStart(2, '0');
@@ -616,17 +612,14 @@
                 var ampm = d.getHours() >= 12 ? 'PM' : 'AM';
                 var timeStr = "● LIVE " + hStr + ":" + mStr + ":" + sStr + " " + ampm;
                 
-                // Divisor changed from 20 to 30 to make the font smaller and cleaner
                 var fontSize = Math.max(10, Math.floor(proxyCanvas.height / 30));
                 proxyCtx.font = "bold " + fontSize + "px monospace";
                 
                 var textWidth = proxyCtx.measureText(timeStr).width;
                 proxyCtx.fillStyle = "rgba(0, 0, 0, 0.6)"; 
-                
-                // Adjusted background box to wrap tightly around the smaller text
                 proxyCtx.fillRect(10, proxyCanvas.height - fontSize - 12, textWidth + 10, fontSize + 8);
                 
-                proxyCtx.fillStyle = "#48bb78"; // Live Green
+                proxyCtx.fillStyle = "#48bb78"; 
                 proxyCtx.fillText(timeStr, 15, proxyCanvas.height - 10);
             }
         }, ms);
@@ -714,10 +707,10 @@
       var select = document.getElementById('cameraSelect');
       var deviceId = select ? select.value : null;
       
-      // HARDWARE AUDIO BYPASS: Force echoCancellation and noiseSuppression OFF to save CPU
+      // AUDIO FIX: autoGainControl restored so mic sensitivity turns up in a quiet room
       var constraints = { 
           video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
-          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } 
       };
       if (deviceId) { constraints.video.deviceId = { exact: deviceId }; }
       
@@ -823,7 +816,11 @@
       }
 
       if (peer) peer.destroy();
-      peer = new Peer(activeRoomCode, getPeerConfig());
+      
+      // NETWORK ISOLATION FIX: The selected network mode is hard-baked into the room ID. 
+      // If a parent on Wi-Fi tries to join a baby on Internet, it will safely reject them.
+      var isolatedPeerId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + activeRoomCode;
+      peer = new Peer(isolatedPeerId, getPeerConfig());
       
       peer.on('error', function(err) {
         if (err.type === 'unavailable-id') {
@@ -934,10 +931,10 @@
               return;
           }
 
-          // HARDWARE AUDIO BYPASS: Force echoCancellation and noiseSuppression OFF to save CPU
+          // AUDIO FIX: autoGainControl restored so mic sensitivity turns up in a quiet room
           var basicConstraints = { 
               video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }, 
-              audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+              audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } 
           };
 
           var cameraStarted = false;
@@ -1100,7 +1097,10 @@
       setLiveStatus('waiting', 'Connecting...');
 
       peer.on('open', function(id) {
-        var conn = peer.connect(targetCode);
+        // NETWORK ISOLATION FIX: Format target request exactly like the Baby formats its ID.
+        var targetIsolatedId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + targetCode;
+        var conn = peer.connect(targetIsolatedId);
+        
         dataConnections.push(conn);
         conn.on('data', function(data) { handleDataChannelMessage(data, conn); });
       });
@@ -1151,6 +1151,10 @@
                 aCode.innerText = activeRoomCode;
               }
           }
+          
+          // QUALITY SYNC FIX: Force Parent UI dropdown to match Current Quality state
+          var sel = document.getElementById('qualitySelect');
+          if(sel) sel.value = currentQuality;
           
           var pTop = document.getElementById('parentTopBar');
           var pCont = document.getElementById('parentControls');
