@@ -223,7 +223,7 @@
         <input type="checkbox" id="rememberCodeCheck" checked> Remember code on this device
       </label>
       
-      <button id="connectBtn" onclick="connectToBaby()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px; flex-direction: row; border-radius: 14px; transition: all 0.3s ease;"><span class="material-symbols-outlined">link</span> Connect Now</button>
+      <button id="connectBtn" onclick="initiateParentConnection()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px; flex-direction: row; border-radius: 14px; transition: all 0.3s ease;"><span class="material-symbols-outlined">link</span> Connect Now</button>
     </div>
   </div>
 
@@ -282,10 +282,10 @@
         <span style="color:#f56565; font-size: 20px;" id="disconnectText">Disconnected - Reconnecting...</span>
       </div>
       
+      <audio id="parentAudio" autoplay playsinline style="display:none;"></audio>
+      
       <video id="myCamera" autoplay playsinline disableRemotePlayback></video>
     </div>
-
-    <div id="babyAudioContainer" style="opacity: 0; position: absolute; pointer-events: none; visibility: hidden;"></div>
 
     <div id="babyControls" style="display:none; width: 100%;">
       <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px; width:100%; max-width: 250px;"></select>
@@ -367,6 +367,20 @@
 
     var parentHeartbeatInterval = null;
     var lastHeartbeatReceived = 0;
+    
+    // Flag to manage Auto-Fallback Logic
+    var networkFallbackAttempted = false;
+
+    // FIX: Force PiP when App goes to Background (Parent Side)
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'hidden' && !isBaby && videoBox && videoBox.readyState >= 2) {
+            try {
+                if (document.pictureInPictureEnabled && !document.pictureInPictureElement) {
+                    videoBox.requestPictureInPicture().catch(function(e) { console.log("PiP Blocked", e); });
+                }
+            } catch(e) {}
+        }
+    });
 
     function initNetworkMode() { 
         setNetworkMode(getSavedItem('babyVaani_netMode') || 'internet', false); 
@@ -749,7 +763,6 @@
                     }
                 }
 
-                // CRITICAL FIX: Push the NEW Audio & Video tracks to the LIVE WebRTC Senders
                 for (var i = 0; i < activeCalls.length; i++) {
                     var c = activeCalls[i];
                     if (c.call && c.call.peerConnection) {
@@ -865,20 +878,20 @@
              } catch(e) {}
           }
 
-          var parentAudioEl = document.createElement('audio');
-          parentAudioEl.autoplay = true;
-          parentAudioEl.playsInline = true;
-          parentAudioEl.id = "audio-" + conn.peer;
-          var audioCont = document.getElementById('babyAudioContainer');
-          if(audioCont) audioCont.appendChild(parentAudioEl);
-          parentAudioEl.play().catch(function(e){});
+          var parentAudioEl = document.getElementById('parentAudio');
+          if(parentAudioEl) {
+              parentAudioEl.srcObject = null;
+              parentAudioEl.play().catch(function(e){});
+          }
 
           activeCalls.push({ peerId: conn.peer, call: call });
           setCanvasQuality(currentQuality); 
 
           call.on('stream', function(parentStream) { 
-             parentAudioEl.srcObject = parentStream;
-             parentAudioEl.play().catch(function(e){});
+             if(parentAudioEl) {
+                 parentAudioEl.srcObject = parentStream;
+                 parentAudioEl.play().catch(function(e){});
+             }
           });
 
           call.on('close', function() { cleanUpParent(conn.peer); });
@@ -899,10 +912,9 @@
        }
        activeCalls = newActiveCalls;
 
-       var audioEl = document.getElementById("audio-" + peerId);
+       var audioEl = document.getElementById("parentAudio");
        if (audioEl) {
          audioEl.srcObject = null;
-         audioEl.remove();
        }
     }
 
@@ -921,6 +933,10 @@
           if(pControls) pControls.style.display = "none";
           if(pTop) pTop.style.display = "none";
           if(keepOpen) keepOpen.style.display = "flex";
+          
+          // FIX: Pre-wake the parent's audio element with user interaction to bypass Autoplay blocks
+          var pAudio = document.getElementById('parentAudio');
+          if(pAudio) pAudio.play().catch(function(e){});
           
           setLiveStatus('waiting', 'Opening Camera...');
 
@@ -1070,154 +1086,175 @@
       visualizerCtx.stroke();
     }
 
-    function connectToBaby() {
-      var joinInp = document.getElementById('joinCode');
-      if(!joinInp) return;
-      
-      var targetCode = joinInp.value.toUpperCase().trim();
-      if (targetCode.length !== 6) return;
-      
-      var connectBtn = document.getElementById('connectBtn');
-      if (connectBtn) {
-          connectBtn.disabled = true;
-          connectBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> Connecting...';
-      }
-
-      if (!parentAudioCtx) {
-        parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
-
-      var remCheck = document.getElementById('rememberCodeCheck');
-      if (remCheck && remCheck.checked) {
-        setSavedItem('babyVaani_parentCode', targetCode);
-        saveParentDevice(targetCode);
-      }
-      
-      activeRoomCode = targetCode; 
-      
-      if (peer) peer.destroy();
-      peer = new Peer(getPeerConfig());
-      
-      setLiveStatus('waiting', 'Connecting...');
-
-      peer.on('open', function(id) {
-        var targetIsolatedId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + targetCode;
-        var conn = peer.connect(targetIsolatedId);
+    // FIX: Extracted connection logic to allow seamless auto-fallback
+    function initiateParentConnection() {
+        var joinInp = document.getElementById('joinCode');
+        if(!joinInp) return;
         
-        dataConnections.push(conn);
-        conn.on('data', function(data) { handleDataChannelMessage(data, conn); });
-      });
-
-      peer.on('call', function(call) {
-        currentCall = call;
-        call.answer(parentLocalStream || null); 
+        var targetCode = joinInp.value.toUpperCase().trim();
+        if (targetCode.length !== 6) return;
         
-        try {
-            var checkPC = setInterval(function() {
-                if (!currentCall) return clearInterval(checkPC);
-                if (call.peerConnection) {
-                    clearInterval(checkPC);
-                    call.peerConnection.addEventListener('iceconnectionstatechange', function() {
-                        var state = call.peerConnection.iceConnectionState;
-                        if (state === 'disconnected' || state === 'failed' || state === 'closed') {
-                            handleParentDisconnect();
-                        }
-                    });
-                }
-            }, 500);
-        } catch(e) {}
+        var connectBtn = document.getElementById('connectBtn');
+        if (connectBtn) {
+            connectBtn.disabled = true;
+            connectBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> Connecting...';
+        }
 
-        call.on('stream', function(remoteStream) {
-          reconnectAttempts = 0;
-          var disc = document.getElementById('disconnectOverlay');
-          if(disc) disc.style.display = 'none';
-          
-          showScreen('videoScreen');
-          setLiveStatus('live', 'Live - Monitoring');
-          
-          lastHeartbeatReceived = Date.now();
-          if(parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
-          parentHeartbeatInterval = setInterval(function() {
-              if (!isBaby && currentCall) {
-                   if (Date.now() - lastHeartbeatReceived > 4000) { 
-                       clearInterval(parentHeartbeatInterval);
-                       handleParentDisconnect();
-                   }
-              }
-          }, 2000);
+        if (!parentAudioCtx) {
+            parentAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
 
-          var aCode = document.getElementById('activeCodeDisplay');
-          if(aCode) {
-              if(!isCodeVisible) {
-                aCode.innerText = '••••••';
-              } else {
-                aCode.innerText = activeRoomCode;
-              }
-          }
-          
-          var sel = document.getElementById('qualitySelect');
-          if(sel) sel.value = currentQuality;
-          
-          var pTop = document.getElementById('parentTopBar');
-          var pCont = document.getElementById('parentControls');
-          if(pTop) pTop.style.display = "flex";
-          if(pCont) pCont.style.display = "grid";
-          
-          if(videoBox) {
-              videoBox.muted = true; 
-              videoBox.srcObject = remoteStream;
-              videoBox.play().catch(function(e){}); 
-          }
+        var remCheck = document.getElementById('rememberCodeCheck');
+        if (remCheck && remCheck.checked) {
+            setSavedItem('babyVaani_parentCode', targetCode);
+            saveParentDevice(targetCode);
+        }
+        
+        activeRoomCode = targetCode; 
+        networkFallbackAttempted = false; // Reset fallback state on manual connect
+        
+        executePeerConnection(targetCode, false);
+    }
 
-          parentIsMuted = true;
-          var slider = document.getElementById('audioBoostSlider');
-          if(slider) {
-              slider.disabled = true;
-              slider.style.opacity = '0.5';
-          }
-          
-          var micBtn = document.getElementById('micBtn');
-          if(micBtn) {
-            micBtn.innerHTML = '<span class="material-symbols-outlined">volume_off</span> Unmute';
-            micBtn.className = '';
-          }
+    function executePeerConnection(targetCode, isFallback) {
+        if (peer) peer.destroy();
+        peer = new Peer(getPeerConfig());
+        
+        setLiveStatus('waiting', isFallback ? 'Auto-Switching...' : 'Connecting...');
 
-          try {
-            if (parentAudioSource) parentAudioSource.disconnect();
-            parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
-            parentAnalyser = parentAudioCtx.createAnalyser();
-            parentGainNode = parentAudioCtx.createGain();
+        peer.on('open', function(id) {
+            var targetIsolatedId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + targetCode;
+            var conn = peer.connect(targetIsolatedId);
             
-            parentAnalyser.fftSize = 256; 
-            parentGainNode.gain.value = 0; 
+            dataConnections.push(conn);
+            conn.on('data', function(data) { handleDataChannelMessage(data, conn); });
+        });
 
-            parentAudioSource.connect(parentAnalyser);
-            parentAnalyser.connect(parentGainNode);
-            parentGainNode.connect(parentAudioCtx.destination);
+        peer.on('call', function(call) {
+            currentCall = call;
+            call.answer(parentLocalStream || null); 
+            
+            try {
+                var checkPC = setInterval(function() {
+                    if (!currentCall) return clearInterval(checkPC);
+                    if (call.peerConnection) {
+                        clearInterval(checkPC);
+                        call.peerConnection.addEventListener('iceconnectionstatechange', function() {
+                            var state = call.peerConnection.iceConnectionState;
+                            if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+                                handleParentDisconnect();
+                            }
+                        });
+                    }
+                }, 500);
+            } catch(e) {}
 
-            visualizerCanvas = document.getElementById('audioVisualizer');
-            if(visualizerCanvas) {
-                visualizerCtx = visualizerCanvas.getContext('2d');
-                visualizerCanvas.width = visualizerCanvas.offsetWidth;
-                visualizerCanvas.height = visualizerCanvas.offsetHeight;
-                if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
-                drawWaveform();
+            call.on('stream', function(remoteStream) {
+              reconnectAttempts = 0;
+              networkFallbackAttempted = false;
+              
+              var disc = document.getElementById('disconnectOverlay');
+              if(disc) disc.style.display = 'none';
+              
+              showScreen('videoScreen');
+              setLiveStatus('live', 'Live - Monitoring');
+              
+              lastHeartbeatReceived = Date.now();
+              if(parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
+              parentHeartbeatInterval = setInterval(function() {
+                  if (!isBaby && currentCall) {
+                       if (Date.now() - lastHeartbeatReceived > 4000) { 
+                           clearInterval(parentHeartbeatInterval);
+                           handleParentDisconnect();
+                       }
+                  }
+              }, 2000);
+
+              var aCode = document.getElementById('activeCodeDisplay');
+              if(aCode) {
+                  if(!isCodeVisible) {
+                    aCode.innerText = '••••••';
+                  } else {
+                    aCode.innerText = activeRoomCode;
+                  }
+              }
+              
+              var sel = document.getElementById('qualitySelect');
+              if(sel) sel.value = currentQuality;
+              
+              var pTop = document.getElementById('parentTopBar');
+              var pCont = document.getElementById('parentControls');
+              if(pTop) pTop.style.display = "flex";
+              if(pCont) pCont.style.display = "grid";
+              
+              if(videoBox) {
+                  videoBox.muted = true; 
+                  videoBox.srcObject = remoteStream;
+                  videoBox.play().catch(function(e){}); 
+              }
+
+              parentIsMuted = true;
+              var slider = document.getElementById('audioBoostSlider');
+              if(slider) {
+                  slider.disabled = true;
+                  slider.style.opacity = '0.5';
+              }
+              
+              var micBtn = document.getElementById('micBtn');
+              if(micBtn) {
+                micBtn.innerHTML = '<span class="material-symbols-outlined">volume_off</span> Unmute';
+                micBtn.className = '';
+              }
+
+              try {
+                if (parentAudioSource) parentAudioSource.disconnect();
+                parentAudioSource = parentAudioCtx.createMediaStreamSource(remoteStream);
+                parentAnalyser = parentAudioCtx.createAnalyser();
+                parentGainNode = parentAudioCtx.createGain();
+                
+                parentAnalyser.fftSize = 256; 
+                parentGainNode.gain.value = 0; 
+
+                parentAudioSource.connect(parentAnalyser);
+                parentAnalyser.connect(parentGainNode);
+                parentGainNode.connect(parentAudioCtx.destination);
+
+                visualizerCanvas = document.getElementById('audioVisualizer');
+                if(visualizerCanvas) {
+                    visualizerCtx = visualizerCanvas.getContext('2d');
+                    visualizerCanvas.width = visualizerCanvas.offsetWidth;
+                    visualizerCanvas.height = visualizerCanvas.offsetHeight;
+                    if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
+                    drawWaveform();
+                }
+
+              } catch (e) {}
+
+              startPingTracking();
+            });
+
+            call.on('close', function() {
+              handleParentDisconnect();
+            });
+        });
+
+        peer.on('error', function(err) {
+            // FIX: Auto-Fallback Network Mode
+            if (err.type === 'peer-unavailable' && !networkFallbackAttempted) {
+                networkFallbackAttempted = true;
+                selectedNetworkMode = (selectedNetworkMode === 'wifi') ? 'internet' : 'wifi';
+                
+                var connectBtn = document.getElementById('connectBtn');
+                if (connectBtn) connectBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> Trying ' + selectedNetworkMode.toUpperCase() + '...';
+                
+                setTimeout(function() {
+                    executePeerConnection(targetCode, true);
+                }, 1000);
+            } else {
+                handleParentDisconnect();
             }
-
-          } catch (e) {}
-
-          startPingTracking();
         });
-
-        call.on('close', function() {
-          handleParentDisconnect();
-        });
-      });
-
-      peer.on('error', function(err) {
-        handleParentDisconnect();
-      });
     }
 
     function handleParentDisconnect() {
@@ -1238,7 +1275,7 @@
       if(discText) discText.innerText = "Reconnecting (Attempt " + reconnectAttempts + ")...";
       
       setTimeout(function() {
-        connectToBaby();
+        executePeerConnection(activeRoomCode, false);
       }, 3000);
     }
 
@@ -1295,7 +1332,7 @@
     }
 
     function toggleCamera() {
-      // FIX: Parent sends a PAUSE command to the baby to cut data & battery usage
+      // Parent sends a PAUSE command to the baby to cut data
       if (!isBaby) {
           for(var i=0; i<dataConnections.length; i++) {
              if(dataConnections[i].open) dataConnections[i].send('TOGGLE_CAM');
@@ -1314,7 +1351,6 @@
           return;
       }
       
-      // Fallback for baby side
       if (!rawStream) return;
       var track = rawStream.getVideoTracks()[0];
       if(track) track.enabled = !track.enabled;
@@ -1338,7 +1374,6 @@
         }
       }
       else if (data === 'TOGGLE_CAM') {
-        // FIX: Receive PAUSE command from Parent
         if (isBaby && rawStream) {
             var track = rawStream.getVideoTracks()[0];
             if(track) track.enabled = !track.enabled;
@@ -1590,6 +1625,7 @@
           alarmActive = false;
           isAlarmRinging = false;
           reconnectAttempts = 0;
+          networkFallbackAttempted = false;
           
           var mCont = document.getElementById('monitorContainer');
           if(mCont) mCont.style.borderColor = '#ffffff';
@@ -1625,8 +1661,8 @@
           var dOver = document.getElementById('disconnectOverlay');
           if(dOver) dOver.style.display = 'none';
           
-          var bAud = document.getElementById('babyAudioContainer');
-          if(bAud) bAud.innerHTML = ''; 
+          var bAud = document.getElementById('parentAudio');
+          if(bAud) { bAud.srcObject = null; }
           
           if(videoBox) videoBox.srcObject = null;
           if(hiddenVideo) hiddenVideo.srcObject = null;
