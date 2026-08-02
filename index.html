@@ -338,6 +338,7 @@
   </div>
 
   <script>
+    // Completely silent error handling
     window.onerror = function(msg, url, line) {
         console.error("App Error: " + msg + " at line " + line);
     };
@@ -707,7 +708,6 @@
       var select = document.getElementById('cameraSelect');
       var deviceId = select ? select.value : null;
       
-      // AUDIO FIX: autoGainControl restored so mic sensitivity turns up in a quiet room
       var constraints = { 
           video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
           audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } 
@@ -731,6 +731,7 @@
                 }
                 
                 var newVideoTrack = rawStream.getVideoTracks()[0];
+                var newAudioTrack = rawStream.getAudioTracks().length > 0 ? rawStream.getAudioTracks()[0] : null;
                 
                 if(videoBox) {
                     videoBox.srcObject = rawStream;
@@ -739,23 +740,30 @@
                 
                 if (!proxyCanvas || typeof proxyCanvas.captureStream !== 'function') {
                     activeStream = rawStream;
-                    for (var i = 0; i < activeCalls.length; i++) {
-                        var c = activeCalls[i];
-                        if (c.call && c.call.peerConnection) {
-                            var senders = c.call.peerConnection.getSenders();
-                            for (var j = 0; j < senders.length; j++) {
-                                if (senders[j].track && senders[j].track.kind === 'video') {
-                                    if (senders[j].replaceTrack) senders[j].replaceTrack(newVideoTrack).catch(function(e){});
-                                }
-                            }
-                        }
-                    }
                 } else {
                     if (activeStream && activeStream.getAudioTracks().length > 0) {
                         activeStream.removeTrack(activeStream.getAudioTracks()[0]);
                     }
-                    if (rawStream.getAudioTracks().length > 0) {
-                        activeStream.addTrack(rawStream.getAudioTracks()[0]);
+                    if (newAudioTrack) {
+                        activeStream.addTrack(newAudioTrack);
+                    }
+                }
+
+                // CRITICAL FIX: Push the NEW Audio & Video tracks to the LIVE WebRTC Senders
+                for (var i = 0; i < activeCalls.length; i++) {
+                    var c = activeCalls[i];
+                    if (c.call && c.call.peerConnection) {
+                        var senders = c.call.peerConnection.getSenders();
+                        for (var j = 0; j < senders.length; j++) {
+                            if (senders[j].track) {
+                                if (senders[j].track.kind === 'video' && (!proxyCanvas || typeof proxyCanvas.captureStream !== 'function')) {
+                                    if (senders[j].replaceTrack) senders[j].replaceTrack(newVideoTrack).catch(function(e){});
+                                }
+                                if (senders[j].track.kind === 'audio' && newAudioTrack) {
+                                    if (senders[j].replaceTrack) senders[j].replaceTrack(newAudioTrack).catch(function(e){});
+                                }
+                            }
+                        }
                     }
                 }
                 setTimeout(function() { window.cameraSwitchingLock = false; }, 1000);
@@ -817,8 +825,6 @@
 
       if (peer) peer.destroy();
       
-      // NETWORK ISOLATION FIX: The selected network mode is hard-baked into the room ID. 
-      // If a parent on Wi-Fi tries to join a baby on Internet, it will safely reject them.
       var isolatedPeerId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + activeRoomCode;
       peer = new Peer(isolatedPeerId, getPeerConfig());
       
@@ -931,7 +937,6 @@
               return;
           }
 
-          // AUDIO FIX: autoGainControl restored so mic sensitivity turns up in a quiet room
           var basicConstraints = { 
               video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }, 
               audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } 
@@ -1097,7 +1102,6 @@
       setLiveStatus('waiting', 'Connecting...');
 
       peer.on('open', function(id) {
-        // NETWORK ISOLATION FIX: Format target request exactly like the Baby formats its ID.
         var targetIsolatedId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + targetCode;
         var conn = peer.connect(targetIsolatedId);
         
@@ -1152,7 +1156,6 @@
               }
           }
           
-          // QUALITY SYNC FIX: Force Parent UI dropdown to match Current Quality state
           var sel = document.getElementById('qualitySelect');
           if(sel) sel.value = currentQuality;
           
@@ -1291,6 +1294,32 @@
       }
     }
 
+    function toggleCamera() {
+      // FIX: Parent sends a PAUSE command to the baby to cut data & battery usage
+      if (!isBaby) {
+          for(var i=0; i<dataConnections.length; i++) {
+             if(dataConnections[i].open) dataConnections[i].send('TOGGLE_CAM');
+          }
+          var b = document.getElementById('camBtn');
+          if(b) {
+              var isPaused = b.className === 'off';
+              if (isPaused) {
+                  b.innerHTML = '<span class="material-symbols-outlined">videocam_off</span> Pause';
+                  b.className = '';
+              } else {
+                  b.innerHTML = '<span class="material-symbols-outlined">videocam</span> Resume';
+                  b.className = 'off';
+              }
+          }
+          return;
+      }
+      
+      // Fallback for baby side
+      if (!rawStream) return;
+      var track = rawStream.getVideoTracks()[0];
+      if(track) track.enabled = !track.enabled;
+    }
+
     function handleDataChannelMessage(data, conn) {
       if (typeof data !== 'string') return;
 
@@ -1306,6 +1335,13 @@
             select.selectedIndex = (select.selectedIndex + 1) % select.options.length;
             switchCamera(); 
           }
+        }
+      }
+      else if (data === 'TOGGLE_CAM') {
+        // FIX: Receive PAUSE command from Parent
+        if (isBaby && rawStream) {
+            var track = rawStream.getVideoTracks()[0];
+            if(track) track.enabled = !track.enabled;
         }
       }
       else if (data === 'DIM_SCREEN') {
@@ -1368,20 +1404,6 @@
       var q = sel.value;
       for(var i=0; i<dataConnections.length; i++) {
          if(dataConnections[i].open) dataConnections[i].send("QUALITY:" + q);
-      }
-    }
-
-    function toggleCamera() {
-      if (!rawStream) return;
-      var track = rawStream.getVideoTracks()[0];
-      if(track) {
-        track.enabled = !track.enabled;
-        var state = track.enabled ? ['videocam_off', 'Pause', ''] : ['videocam', 'Resume', 'off'];
-        var b = document.getElementById('camBtn');
-        if(b) {
-            b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-            b.className = state[2];
-        }
       }
     }
 
