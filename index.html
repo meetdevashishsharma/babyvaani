@@ -338,11 +338,9 @@
   </div>
 
   <script>
+    // Completely silent error handling - no more native alert boxes blocking the thread
     window.onerror = function(msg, url, line) {
         console.error("App Error: " + msg + " at line " + line);
-        if (msg && msg.indexOf && msg.indexOf("SyntaxError") !== -1) {
-            alert("Your device's browser is too old to run this monitor. Please update your system or use a newer device.");
-        }
     };
 
     function getSavedItem(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
@@ -367,7 +365,6 @@
     var currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false, isCodeVisible = false, isBabyCodeVisible = false;
     var selectedNetworkMode = 'internet', currentQuality = 'balanced', isRemoteDimmed = false, reconnectAttempts = 0;
 
-    // Heartbeat Tracking
     var parentHeartbeatInterval = null;
     var lastHeartbeatReceived = 0;
 
@@ -581,7 +578,9 @@
 
     function setCanvasQuality(quality) {
         if (!isBaby || !proxyCanvas || !proxyCtx) return;
-        var w = 1280, h = 720, fps = 30;
+        
+        // Dropped default max FPS to 20 to give old GPUs more breathing room
+        var w = 1280, h = 720, fps = 20; 
         
         if (quality === 'ultra') {
             w = 256; h = 144; fps = 10;
@@ -608,8 +607,7 @@
                 proxyCtx.clearRect(0, 0, proxyCanvas.width, proxyCanvas.height); 
                 proxyCtx.drawImage(hiddenVideo, 0, 0, proxyCanvas.width, proxyCanvas.height);
 
-                // --- BURNED-IN CCTV CLOCK ---
-                // Physically draws the timestamp onto the video frames. If video freezes, clock freezes.
+                // --- BURNED-IN CCTV CLOCK (GPU OPTIMIZED) ---
                 var d = new Date();
                 var hStr = d.getHours() % 12 || 12;
                 var mStr = d.getMinutes().toString().padStart(2, '0');
@@ -619,14 +617,13 @@
                 
                 var fontSize = Math.max(14, Math.floor(proxyCanvas.height / 20));
                 proxyCtx.font = "bold " + fontSize + "px monospace";
-                proxyCtx.fillStyle = "#48bb78"; // Live Green
-                proxyCtx.shadowColor = "black";
-                proxyCtx.shadowBlur = 4;
-                proxyCtx.lineWidth = 3;
-                proxyCtx.strokeStyle = "black";
                 
-                // Draw text at bottom left
-                proxyCtx.strokeText(timeStr, 15, proxyCanvas.height - 15);
+                // SHADOW REMOVED. Using a flat black contrast box instead to prevent GPU Aw Snap crashes
+                var textWidth = proxyCtx.measureText(timeStr).width;
+                proxyCtx.fillStyle = "rgba(0, 0, 0, 0.6)"; 
+                proxyCtx.fillRect(10, proxyCanvas.height - fontSize - 20, textWidth + 10, fontSize + 10);
+                
+                proxyCtx.fillStyle = "#48bb78"; // Live Green
                 proxyCtx.fillText(timeStr, 15, proxyCanvas.height - 15);
             }
         }, ms);
@@ -843,6 +840,7 @@
           if (call) {
              try {
                  var checkPC = setInterval(function() {
+                     if (!call) return clearInterval(checkPC);
                      if (call.peerConnection) {
                          clearInterval(checkPC);
                          call.peerConnection.addEventListener('iceconnectionstatechange', function() {
@@ -924,7 +922,6 @@
 
           if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
               setLiveStatus('offline', 'Camera Offline');
-              alert("Camera access is not supported.");
               goBack();
               return;
           }
@@ -1103,6 +1100,7 @@
         
         try {
             var checkPC = setInterval(function() {
+                if (!currentCall) return clearInterval(checkPC);
                 if (call.peerConnection) {
                     clearInterval(checkPC);
                     call.peerConnection.addEventListener('iceconnectionstatechange', function() {
@@ -1129,7 +1127,6 @@
           parentHeartbeatInterval = setInterval(function() {
               if (!isBaby && currentCall) {
                    if (Date.now() - lastHeartbeatReceived > 4000) { 
-                       // 4 seconds without ping = connection is dead. Force reconnect instantly.
                        clearInterval(parentHeartbeatInterval);
                        handleParentDisconnect();
                    }
@@ -1202,7 +1199,7 @@
       });
 
       peer.on('error', function(err) {
-        // SILENT AUTO-RECONNECT: No more alerts. Just trigger the retry loop.
+        // STRICTLY SILENT FALLBACK. No alerts anywhere.
         handleParentDisconnect();
       });
     }
@@ -1214,13 +1211,17 @@
       
       setLiveStatus('offline', 'Disconnected');
       
+      // PURGE DEAD MEMORY ARRAYS TO PREVENT AW SNAP
+      if (peer) { peer.destroy(); peer = null; }
+      dataConnections = [];
+      activeCalls = [];
+      if(parentHeartbeatInterval) { clearInterval(parentHeartbeatInterval); parentHeartbeatInterval = null; }
+      
       var discText = document.getElementById('disconnectText');
       
       // Infinite Reconnection Loop
       reconnectAttempts++;
       if(discText) discText.innerText = "Reconnecting (Attempt " + reconnectAttempts + ")...";
-      
-      if(parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
       
       setTimeout(function() {
         connectToBaby();
@@ -1282,7 +1283,6 @@
     function handleDataChannelMessage(data, conn) {
       if (typeof data !== 'string') return;
 
-      // REGISTER HEARTBEAT PING INSTANTLY
       if (data === 'PING') {
           lastHeartbeatReceived = Date.now();
           return;
@@ -1375,10 +1375,7 @@
     }
 
     function toggleTalk() {
-      if (!parentLocalStream) {
-         alert("Microphone access is not available. Check permissions.");
-         return;
-      }
+      if (!parentLocalStream) return;
       var track = parentLocalStream.getAudioTracks()[0];
       if (!track) return;
       
@@ -1537,14 +1534,10 @@
         } else {
           var pipPromise = videoBox.requestPictureInPicture();
           if (pipPromise && typeof pipPromise.catch === 'function') {
-              pipPromise.catch(function(e){
-                 alert("Picture-in-Picture is not supported or was blocked by this device's browser.");
-              });
+              pipPromise.catch(function(e){});
           }
         }
-      } catch (err) {
-        alert("Picture-in-Picture is not supported or was blocked by this device's browser.");
-      }
+      } catch (err) {}
     }
 
     function goBack() {
