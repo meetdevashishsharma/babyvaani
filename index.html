@@ -238,10 +238,10 @@
       <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
         <label style="font-size: 12px; font-weight: 600;">Stream Quality:</label>
         <select id="qualitySelect" onchange="requestQualityChange()" style="padding: 6px; font-size: 12px; border-radius: 8px; max-width: 150px;">
-          <option value="balanced" selected>Balanced (720p)</option>
+          <option value="balanced">Balanced (720p)</option>
           <option value="fast">Fast (240p)</option>
           <option value="ultra_high_fps">Smooth Ultra (144p 30fps)</option>
-          <option value="ultra">Ultra-Low Data (144p)</option>
+          <option value="ultra" selected>Ultra-Low Data (144p)</option>
         </select>
       </div>
     </div>
@@ -363,7 +363,9 @@
     var visualizerCtx = null, visualizerCanvas = null, visualizerAnimationFrame = null;
 
     var currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false, isCodeVisible = false, isBabyCodeVisible = false;
-    var selectedNetworkMode = 'internet', currentQuality = 'balanced', isRemoteDimmed = false, reconnectAttempts = 0;
+    
+    // DEFAULT TO ULTRA-LOW (144p @ 10fps) TO SAVE MASSIVE BATTERY
+    var selectedNetworkMode = 'internet', currentQuality = 'ultra', isRemoteDimmed = false, reconnectAttempts = 0;
 
     var parentHeartbeatInterval = null;
     var lastHeartbeatReceived = 0;
@@ -579,7 +581,6 @@
     function setCanvasQuality(quality) {
         if (!isBaby || !proxyCanvas || !proxyCtx) return;
         
-        // Dropped default max FPS to 20 to give old GPUs more breathing room
         var w = 1280, h = 720, fps = 20; 
         
         if (quality === 'ultra') {
@@ -607,7 +608,7 @@
                 proxyCtx.clearRect(0, 0, proxyCanvas.width, proxyCanvas.height); 
                 proxyCtx.drawImage(hiddenVideo, 0, 0, proxyCanvas.width, proxyCanvas.height);
 
-                // --- BURNED-IN CCTV CLOCK (GPU OPTIMIZED) ---
+                // --- BURNED-IN CCTV CLOCK (SMALLER & OPTIMIZED) ---
                 var d = new Date();
                 var hStr = d.getHours() % 12 || 12;
                 var mStr = d.getMinutes().toString().padStart(2, '0');
@@ -615,16 +616,18 @@
                 var ampm = d.getHours() >= 12 ? 'PM' : 'AM';
                 var timeStr = "● LIVE " + hStr + ":" + mStr + ":" + sStr + " " + ampm;
                 
-                var fontSize = Math.max(14, Math.floor(proxyCanvas.height / 20));
+                // Divisor changed from 20 to 30 to make the font smaller and cleaner
+                var fontSize = Math.max(10, Math.floor(proxyCanvas.height / 30));
                 proxyCtx.font = "bold " + fontSize + "px monospace";
                 
-                // SHADOW REMOVED. Using a flat black contrast box instead to prevent GPU Aw Snap crashes
                 var textWidth = proxyCtx.measureText(timeStr).width;
                 proxyCtx.fillStyle = "rgba(0, 0, 0, 0.6)"; 
-                proxyCtx.fillRect(10, proxyCanvas.height - fontSize - 20, textWidth + 10, fontSize + 10);
+                
+                // Adjusted background box to wrap tightly around the smaller text
+                proxyCtx.fillRect(10, proxyCanvas.height - fontSize - 12, textWidth + 10, fontSize + 8);
                 
                 proxyCtx.fillStyle = "#48bb78"; // Live Green
-                proxyCtx.fillText(timeStr, 15, proxyCanvas.height - 15);
+                proxyCtx.fillText(timeStr, 15, proxyCanvas.height - 10);
             }
         }, ms);
 
@@ -710,7 +713,12 @@
       
       var select = document.getElementById('cameraSelect');
       var deviceId = select ? select.value : null;
-      var constraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true };
+      
+      // HARDWARE AUDIO BYPASS: Force echoCancellation and noiseSuppression OFF to save CPU
+      var constraints = { 
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } }, 
+          audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+      };
       if (deviceId) { constraints.video.deviceId = { exact: deviceId }; }
       
       try {
@@ -926,7 +934,11 @@
               return;
           }
 
-          var basicConstraints = { video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }, audio: true };
+          // HARDWARE AUDIO BYPASS: Force echoCancellation and noiseSuppression OFF to save CPU
+          var basicConstraints = { 
+              video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }, 
+              audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } 
+          };
 
           var cameraStarted = false;
           var fallbackTimeout = setTimeout(function() {
@@ -963,7 +975,6 @@
               }
               startBatteryTracking();
               
-              // SEND HEARTBEAT PING EVERY 1.5 SECONDS
               tickInterval = setInterval(function() {
                   if (!isBaby) return;
                   for(var i=0; i<dataConnections.length; i++) {
@@ -1121,7 +1132,6 @@
           showScreen('videoScreen');
           setLiveStatus('live', 'Live - Monitoring');
           
-          // START HEARTBEAT MONITOR
           lastHeartbeatReceived = Date.now();
           if(parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
           parentHeartbeatInterval = setInterval(function() {
@@ -1199,7 +1209,6 @@
       });
 
       peer.on('error', function(err) {
-        // STRICTLY SILENT FALLBACK. No alerts anywhere.
         handleParentDisconnect();
       });
     }
@@ -1211,7 +1220,6 @@
       
       setLiveStatus('offline', 'Disconnected');
       
-      // PURGE DEAD MEMORY ARRAYS TO PREVENT AW SNAP
       if (peer) { peer.destroy(); peer = null; }
       dataConnections = [];
       activeCalls = [];
@@ -1219,7 +1227,6 @@
       
       var discText = document.getElementById('disconnectText');
       
-      // Infinite Reconnection Loop
       reconnectAttempts++;
       if(discText) discText.innerText = "Reconnecting (Attempt " + reconnectAttempts + ")...";
       
