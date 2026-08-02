@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    /* Global Box Sizing Fix - Prevents mobile layout overflow */
     *, *::before, *::after { box-sizing: border-box; }
 
     body {
@@ -251,8 +250,6 @@
       <video id="hiddenBabyCam" autoplay playsinline muted style="display:none;"></video>
       <canvas id="proxyCanvas" style="display:none;"></canvas>
 
-      <div id="cctvClock" style="display:none; position:absolute; bottom:15px; left:15px; background: rgba(0,0,0,0.6); color: #48bb78; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; z-index: 9999; letter-spacing: 1px; font-family: monospace;"></div>
-
       <canvas id="audioVisualizer" style="position:absolute; bottom:15px; right:15px; width:100px; height:30px; z-index:9999; pointer-events:none;"></canvas>
       
       <div id="liveStatusBanner" class="live-status-banner" style="display:none;">
@@ -369,6 +366,10 @@
 
     var currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false, isCodeVisible = false, isBabyCodeVisible = false;
     var selectedNetworkMode = 'internet', currentQuality = 'balanced', isRemoteDimmed = false, reconnectAttempts = 0;
+
+    // Heartbeat Tracking
+    var parentHeartbeatInterval = null;
+    var lastHeartbeatReceived = 0;
 
     function initNetworkMode() { 
         setNetworkMode(getSavedItem('babyVaani_netMode') || 'internet', false); 
@@ -601,10 +602,32 @@
         
         if (canvasInterval) clearInterval(canvasInterval);
         var ms = Math.floor(1000 / fps);
+        
         canvasInterval = setInterval(function() {
             if (hiddenVideo && hiddenVideo.readyState >= 2) {
                 proxyCtx.clearRect(0, 0, proxyCanvas.width, proxyCanvas.height); 
                 proxyCtx.drawImage(hiddenVideo, 0, 0, proxyCanvas.width, proxyCanvas.height);
+
+                // --- BURNED-IN CCTV CLOCK ---
+                // Physically draws the timestamp onto the video frames. If video freezes, clock freezes.
+                var d = new Date();
+                var hStr = d.getHours() % 12 || 12;
+                var mStr = d.getMinutes().toString().padStart(2, '0');
+                var sStr = d.getSeconds().toString().padStart(2, '0');
+                var ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+                var timeStr = "● LIVE " + hStr + ":" + mStr + ":" + sStr + " " + ampm;
+                
+                var fontSize = Math.max(14, Math.floor(proxyCanvas.height / 20));
+                proxyCtx.font = "bold " + fontSize + "px monospace";
+                proxyCtx.fillStyle = "#48bb78"; // Live Green
+                proxyCtx.shadowColor = "black";
+                proxyCtx.shadowBlur = 4;
+                proxyCtx.lineWidth = 3;
+                proxyCtx.strokeStyle = "black";
+                
+                // Draw text at bottom left
+                proxyCtx.strokeText(timeStr, 15, proxyCanvas.height - 15);
+                proxyCtx.fillText(timeStr, 15, proxyCanvas.height - 15);
             }
         }, ms);
 
@@ -739,13 +762,11 @@
                 }
                 setTimeout(function() { window.cameraSwitchingLock = false; }, 1000);
             }).catch(function(err) {
-                alert("Failed to switch camera: " + err.message);
                 window.cameraSwitchingLock = false;
             });
         }, 600);
 
       } catch (err) { 
-          alert("Failed to switch camera: " + err.message); 
           window.cameraSwitchingLock = false;
       }
     }
@@ -903,7 +924,7 @@
 
           if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
               setLiveStatus('offline', 'Camera Offline');
-              alert("Camera access is not supported. Ensure you are not in Incognito mode and have granted permissions.");
+              alert("Camera access is not supported.");
               goBack();
               return;
           }
@@ -914,7 +935,6 @@
           var fallbackTimeout = setTimeout(function() {
               if (!cameraStarted) {
                   setLiveStatus('offline', 'Camera Offline');
-                  alert("Camera request timed out. Please check permissions.");
                   goBack();
               }
           }, 8000);
@@ -946,34 +966,23 @@
               }
               startBatteryTracking();
               
+              // SEND HEARTBEAT PING EVERY 1.5 SECONDS
               tickInterval = setInterval(function() {
                   if (!isBaby) return;
-                  var d = new Date();
-                  var h = d.getHours();
-                  var m = d.getMinutes();
-                  var s = d.getSeconds();
-                  var ampm = h >= 12 ? 'PM' : 'AM';
-                  h = h % 12;
-                  h = h ? h : 12;
-                  m = m < 10 ? '0' + m : m;
-                  s = s < 10 ? '0' + s : s;
-                  var timeStr = h + ":" + m + ":" + s + " " + ampm;
                   for(var i=0; i<dataConnections.length; i++) {
-                      if(dataConnections[i].open) dataConnections[i].send("TICK:" + timeStr);
+                      if(dataConnections[i].open) dataConnections[i].send("PING");
                   }
-              }, 1000);
+              }, 1500);
 
             })
             .catch(function(err) {
               cameraStarted = true;
               clearTimeout(fallbackTimeout);
               setLiveStatus('offline', 'Camera Offline');
-              alert("Camera Error: " + err.message);
               goBack();
             });
 
       } catch (error) {
-          alert("Error starting baby monitor: " + error.message);
           goBack();
       }
     }
@@ -1005,7 +1014,6 @@
                 }).catch(function(err) { parentLocalStream = null; });
           }
       } catch (error) {
-          alert("Error starting parent monitor: " + error.message);
           goBack();
       }
     }
@@ -1057,7 +1065,7 @@
       if(!joinInp) return;
       
       var targetCode = joinInp.value.toUpperCase().trim();
-      if (targetCode.length !== 6) { alert("Enter a 6-character code."); return; }
+      if (targetCode.length !== 6) return;
       
       var connectBtn = document.getElementById('connectBtn');
       if (connectBtn) {
@@ -1115,6 +1123,19 @@
           showScreen('videoScreen');
           setLiveStatus('live', 'Live - Monitoring');
           
+          // START HEARTBEAT MONITOR
+          lastHeartbeatReceived = Date.now();
+          if(parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
+          parentHeartbeatInterval = setInterval(function() {
+              if (!isBaby && currentCall) {
+                   if (Date.now() - lastHeartbeatReceived > 4000) { 
+                       // 4 seconds without ping = connection is dead. Force reconnect instantly.
+                       clearInterval(parentHeartbeatInterval);
+                       handleParentDisconnect();
+                   }
+              }
+          }, 2000);
+
           var aCode = document.getElementById('activeCodeDisplay');
           if(aCode) {
               if(!isCodeVisible) {
@@ -1181,12 +1202,8 @@
       });
 
       peer.on('error', function(err) {
-        if (err.type === 'peer-unavailable') {
-          alert("Cannot find baby monitor. Please ensure the baby device is active and the 6-digit code is correct.");
-          goBack();
-        } else {
-          handleParentDisconnect();
-        }
+        // SILENT AUTO-RECONNECT: No more alerts. Just trigger the retry loop.
+        handleParentDisconnect();
       });
     }
 
@@ -1196,24 +1213,18 @@
       if(discOverlay) discOverlay.style.display = 'flex';
       
       setLiveStatus('offline', 'Disconnected');
-      var cClock = document.getElementById('cctvClock');
-      if(cClock) cClock.style.display = 'none';
       
       var discText = document.getElementById('disconnectText');
-      if (reconnectAttempts < 5) {
-        reconnectAttempts++;
-        if(discText) discText.innerText = "Reconnecting (" + reconnectAttempts + "/5)...";
-        setTimeout(function() {
-          connectToBaby();
-        }, 3000);
-      } else {
-        if(discText) discText.innerText = 'Connection Lost. Please End Session.';
-        var connectBtn = document.getElementById('connectBtn');
-        if (connectBtn) {
-            connectBtn.disabled = false;
-            connectBtn.innerHTML = '<span class="material-symbols-outlined">link</span> Connect Now';
-        }
-      }
+      
+      // Infinite Reconnection Loop
+      reconnectAttempts++;
+      if(discText) discText.innerText = "Reconnecting (Attempt " + reconnectAttempts + ")...";
+      
+      if(parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
+      
+      setTimeout(function() {
+        connectToBaby();
+      }, 3000);
     }
 
     function updateAudioBoost() {
@@ -1248,16 +1259,14 @@
     }
 
     function requestCameraSwitch() {
-      // 1. Parent-Side UI Cooldown Lock (Anti-Spam)
       var flipBtn = document.getElementById('flipCamBtn');
       if (flipBtn) {
-          if (flipBtn.disabled) return; // Prevent firing if already locked
+          if (flipBtn.disabled) return; 
           
           flipBtn.disabled = true;
           flipBtn.style.opacity = '0.5';
           flipBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> Flipping...';
           
-          // Unlock after 3.5 seconds
           setTimeout(function() {
               flipBtn.disabled = false;
               flipBtn.style.opacity = '1';
@@ -1265,7 +1274,6 @@
           }, 3500); 
       }
 
-      // 2. Send the command to the Baby Device
       for(var i=0; i<dataConnections.length; i++) {
          if(dataConnections[i].open) dataConnections[i].send('SWITCH_CAM');
       }
@@ -1273,6 +1281,12 @@
 
     function handleDataChannelMessage(data, conn) {
       if (typeof data !== 'string') return;
+
+      // REGISTER HEARTBEAT PING INSTANTLY
+      if (data === 'PING') {
+          lastHeartbeatReceived = Date.now();
+          return;
+      }
       
       if (data === 'SWITCH_CAM') {
         if (isBaby) {
@@ -1333,13 +1347,6 @@
         if(isBaby) {
           currentQuality = data.split(':')[1];
           setCanvasQuality(currentQuality); 
-        }
-      }
-      else if (data.indexOf('TICK:') === 0) {
-        var clockEl = document.getElementById('cctvClock');
-        if (clockEl) {
-            if (clockEl.style.display !== 'block') clockEl.style.display = 'block';
-            clockEl.innerText = "LIVE 🟢 " + data.substring(5);
         }
       }
     }
@@ -1526,85 +1533,4 @@
       try {
         if (document.pictureInPictureElement) {
           var exitPromise = document.exitPictureInPicture();
-          if (exitPromise && typeof exitPromise.catch === 'function') exitPromise.catch(function(e){});
-        } else {
-          var pipPromise = videoBox.requestPictureInPicture();
-          if (pipPromise && typeof pipPromise.catch === 'function') {
-              pipPromise.catch(function(e){
-                 alert("Picture-in-Picture is not supported or was blocked by this device's browser.");
-              });
-          }
-        }
-      } catch (err) {
-        alert("Picture-in-Picture is not supported or was blocked by this device's browser.");
-      }
-    }
-
-    function goBack() {
-      try {
-          for(var i=0; i<dataConnections.length; i++) {
-             if(dataConnections[i].open) dataConnections[i].send('DISCONNECT');
-          }
-
-          clearInterval(batteryInterval);
-          clearInterval(alarmBeepInterval);
-          clearInterval(pingInterval);
-          clearInterval(tickInterval);
-          if (canvasInterval) clearInterval(canvasInterval);
-          if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
-
-          alarmActive = false;
-          isAlarmRinging = false;
-          reconnectAttempts = 0;
-          
-          var mCont = document.getElementById('monitorContainer');
-          if(mCont) mCont.style.borderColor = '#ffffff';
-          
-          var cClock = document.getElementById('cctvClock');
-          if(cClock) cClock.style.display = 'none';
-          
-          var connectBtn = document.getElementById('connectBtn');
-          if (connectBtn) {
-              connectBtn.disabled = false;
-              connectBtn.innerHTML = '<span class="material-symbols-outlined">link</span> Connect Now';
-          }
-
-          if (rawStream) {
-             var tracks = rawStream.getTracks();
-             for(var t=0; t<tracks.length; t++) tracks[t].stop();
-          }
-          if (parentLocalStream) {
-             var pTracks = parentLocalStream.getTracks();
-             for(var pt=0; pt<pTracks.length; pt++) pTracks[pt].stop();
-          }
-          if (peer) peer.destroy();
-          
-          rawStream = activeStream = parentLocalStream = peer = currentCall = null;
-          activeCalls = []; dataConnections = [];
-          
-          var rBatt = document.getElementById('remoteBattery');
-          if(rBatt) rBatt.style.display = 'none';
-          
-          var pInd = document.getElementById('pingIndicator');
-          if(pInd) pInd.style.display = 'none';
-          
-          var lBatt = document.getElementById('lowBatteryAlert');
-          if(lBatt) lBatt.style.display = 'none';
-          
-          var dOver = document.getElementById('disconnectOverlay');
-          if(dOver) dOver.style.display = 'none';
-          
-          var bAud = document.getElementById('babyAudioContainer');
-          if(bAud) bAud.innerHTML = ''; 
-          
-          if(videoBox) videoBox.srcObject = null;
-          if(hiddenVideo) hiddenVideo.srcObject = null;
-          
-          showScreen('selectionScreen');
-      } catch(e) {
-          showScreen('selectionScreen');
-      }
-    }
-  </script>
-</body>
-</html>
+          if (exitPromise && typeof exitPromise.catch ===
