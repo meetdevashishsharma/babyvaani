@@ -23,16 +23,13 @@
     .brand-baby { color: #f6ad55; } .brand-vaani { color: #2d3748; }
     .brand-subtitle { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #a0aec0; margin-top: 4px; }
     .context-lineart-banner { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px auto 15px auto; background: #fffaf0; padding: 6px 16px; border-radius: 30px; border: 1px solid #feebc8; }
-    .context-lineart-banner span { font-size: 12px; font-weight: 600; color: #dd6b20; }
+    
     .screen { display: none; width: 100%; max-width: 900px; flex-direction: column; align-items: center; }
     .screen.active { display: flex; animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
     .usp-banner, .onboarding-grid, .hero-image-container, .input-group, .checkbox-container, #parentTopBar, #cameraSelect, .monitor-container, #babyControls, .controls { width: 100%; }
-    .network-mode-box { background: #ffffff; border: 2px solid #feebc8; border-radius: 16px; padding: 16px; margin-bottom: 20px; width: 100%; box-shadow: 0 4px 12px rgba(246, 173, 85, 0.08); text-align: left; }
-    .network-mode-box h4 { margin: 0 0 10px 0; font-size: 14px; color: #dd6b20; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
-    .mode-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .mode-option-btn { background: #fffaf0; border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; font-size: 13px; font-weight: 700; color: #4a5568; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.2s ease; }
-    .mode-option-btn.selected { background: #f6ad55; color: #ffffff; border-color: #dd6b20; box-shadow: 0 4px 12px rgba(246, 173, 85, 0.3); }
+    
     .usp-banner { background: linear-gradient(135deg, #fffaf0 100%, #f0fff4 0%); border-left: 4px solid #f6ad55; padding: 16px 20px; border-radius: 16px; margin: 0 auto 20px auto; display: flex; align-items: center; gap: 16px; text-align: left; }
     .usp-banner .material-symbols-outlined { font-size: 36px; color: #f6ad55; background: #ffffff; padding: 8px; border-radius: 50%; }
     .usp-text h3 { margin: 0 0 4px 0; font-size: 15px; color: #dd6b20; text-transform: uppercase; font-weight: 800; }
@@ -56,7 +53,6 @@
       outline: none; text-transform: uppercase; letter-spacing: 4px; 
       box-shadow: inset 0 2px 6px rgba(0,0,0,0.06); transition: all 0.2s ease;
     }
-    input[type="text"]::placeholder { color: #a0aec0; font-weight: 500; letter-spacing: 2px; }
     input[type="text"]:focus { border-color: #f6ad55; background: #ffffff; box-shadow: inset 0 2px 6px rgba(0,0,0,0.03), 0 0 0 4px rgba(246, 173, 85, 0.2); }
     
     select { font-family: inherit; font-size: 14px; padding: 14px; text-align: center; border: 2px solid #e2e8f0; background: #ffffff; border-radius: 14px; width: 100%; max-width: 320px; font-weight: 600; color: #2d3748; outline: none; }
@@ -102,7 +98,7 @@
       border: none !important;
     }
     .controls { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 5px; width: 100%; }
-    button { font-family: inherit; background-color: #2d3748; color: white; border: none; padding: 8px 4px; font-size: 11px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: all 0.15s ease; position: relative; z-index: 5; }
+    button { font-family: inherit; background-color: #2d3748; color: white; border: none; padding: 8px 4px; font-size: 11px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: all 0.15s ease; position: relative; z-index: 5; user-select: none; -webkit-user-select: none; }
     button .material-symbols-outlined { font-size: 20px; }
     button:active { transform: scale(0.95); }
     button.off { background-color: #cbd5e0; color: #4a5568; }
@@ -111,7 +107,7 @@
     button.back-btn, button.icon-btn { background-color: #ffffff; color: #2d3748; border: 1px solid #e2e8f0; padding: 8px 14px; margin-bottom: 8px; border-radius: 10px; flex-direction: row; font-size: 12px; width: auto; min-height: auto; }
     button:disabled { cursor: not-allowed; opacity: 0.7; }
     .slider-container { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #ffffff; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; border: 2px solid #e2e8f0; width: 100%; min-height: 46px; color: #2d3748; transition: opacity 0.3s ease; }
-    .slider-container input { width: 100%; margin-top: 2px; cursor: pointer; accent-color: #f6ad55; height: 14px; }
+    .slider-container input[type="range"] { width: 100%; margin-top: 2px; cursor: pointer; accent-color: #f6ad55; height: 14px; }
     .wizard-step { background: #ffffff; border: 1px solid #edf2f7; border-radius: 20px; padding: 24px 16px; display: none; width: 100%; }
     .wizard-step.active { display: block; animation: fadeIn 0.4s ease-out; }
     .wizard-step h3 { margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; }
@@ -119,6 +115,12 @@
   </style>
 </head>
 <body>
+  
+  <!-- Audio Context Unblock Banner -->
+  <div id="audioUnblockBanner" style="display:none; position: fixed; top: 0; left: 0; width: 100%; background: #f56565; color: white; padding: 14px; text-align: center; z-index: 10000; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(245,101,101,0.3);">
+    <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 18px; margin-right: 4px;">volume_up</span> Tap anywhere to enable live audio
+  </div>
+
   <div id="dimOverlay" onclick="wakeScreen()"></div>
   
   <div id="selectionScreen" class="screen active">
@@ -134,13 +136,6 @@
         <span style="color: #cbd5e0; font-size: 11px;">⇄</span>
         <span class="material-symbols-outlined" style="font-size: 16px; color: #f6ad55;">child_care</span>
         <span id="activeModeBannerText" style="font-size: 11px; font-weight: 600; color: #dd6b20;">Secure P2P Stream</span>
-      </div>
-    </div>
-    <div class="usp-banner">
-      <span class="material-symbols-outlined">family_restroom</span>
-      <div class="usp-text">
-        <h3>Turn any device into baby monitor</h3>
-        <p>Secure baby monitor from any device.</p>
       </div>
     </div>
     
@@ -161,38 +156,44 @@
         <p class="onboard-text">Watch and talk from anywhere.</p>
       </div>
     </div>
-    <div class="network-mode-box">
-      <h4><span class="material-symbols-outlined" style="font-size: 18px;">router</span> Connection Settings</h4>
-      <div class="mode-options">
-        <button type="button" id="modeInternet" class="mode-option-btn selected" onclick="setNetworkMode('internet')">
-          <span class="material-symbols-outlined">public</span> Internet P2P
-          <small style="font-size: 10px; font-weight: 400; color: #718096;">Works anywhere</small>
-        </button>
-        <button type="button" id="modeWifi" class="mode-option-btn" onclick="setNetworkMode('wifi')">
-          <span class="material-symbols-outlined">wifi</span> Local Wi-Fi (LAN)
-          <small style="font-size: 10px; font-weight: 400; color: #718096;">*Devices must share Wi-Fi</small>
-        </button>
-      </div>
-      <div style="background: #fffaf0; border: 1px dashed #feebc8; padding: 8px 12px; border-radius: 10px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #dd6b20; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
-        <span class="material-symbols-outlined" style="font-size: 16px;">warning</span> Warning: Choose the exact same mode as the baby cam!
-      </div>
-    </div>
+
+    <!-- Removed manual network selection to allow Auto-Fallback engine to handle STUN/TURN natively -->
+    
     <div class="controls" style="grid-template-columns: repeat(2, 1fr);">
       <button onclick="startBabyMode()" style="background-color: #f6ad55; color: #fff; flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">videocam</span> Baby Camera</button>
       <button onclick="startParentMode()" style="flex-direction: row; min-height: 52px;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
     </div>
-    <div class="hero-image-container" style="margin-top: 15px;">
-      <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" alt="Baby Monitor Setup">
+
+    <!-- FAQ & SUPPORT SECTION -->
+    <div style="width: 100%; max-width: 400px; text-align: left; margin: 25px auto 0 auto; background: #ffffff; padding: 20px; border-radius: 20px; border: 1px solid #edf2f7; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+      <h4 style="color: #dd6b20; border-bottom: 2px solid #feebc8; padding-bottom: 8px; margin-top: 0; margin-bottom: 12px; font-size: 14px;">Frequently Asked Questions</h4>
+      
+      <details style="margin-bottom: 8px; background: #fffaf0; padding: 10px; border-radius: 8px; border: 1px solid #feebc8;">
+        <summary style="font-weight: 700; font-size: 12px; color: #2d3748; cursor: pointer;">Is my video private?</summary>
+        <p style="font-size: 11px; color: #4a5568; margin: 6px 0 0 0;">Yes. Baby Vaani uses secure, encrypted Peer-to-Peer connections. Your stream never touches a server.</p>
+      </details>
+      
+      <details style="margin-bottom: 8px; background: #fffaf0; padding: 10px; border-radius: 8px; border: 1px solid #feebc8;">
+        <summary style="font-weight: 700; font-size: 12px; color: #2d3748; cursor: pointer;">Why is there an audio echo?</summary>
+        <p style="font-size: 11px; color: #4a5568; margin: 6px 0 0 0;">If both devices are in the same room, they create an audio feedback loop. Keep devices in separate rooms.</p>
+      </details>
+
+      <div style="margin-top: 20px; text-align: center;">
+        <a href="https://buymeacoffee.com/" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background-color: #48bb78; color: #fff; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 13px; width: 100%; box-shadow: 0 4px 12px rgba(72,187,120,0.2);">
+          <span class="material-symbols-outlined" style="font-size: 18px;">local_cafe</span> Support the Developer
+        </a>
+      </div>
     </div>
+    
     <div style="margin-top: 15px; margin-bottom: 25px; width: 100%;">
       <button onclick="factoryResetApp()" style="background: none; color: #a0aec0; border: none; font-size: 12px; text-decoration: underline; font-weight: 600; min-height: auto; width: auto; margin: 0 auto; padding: 8px;">Clear all app data & reset</button>
     </div>
   </div>
+
   <div id="parentScreen" class="screen" style="align-items: flex-start; padding-top: 10px;">
     <button class="back-btn" onclick="goBack()"><span class="material-symbols-outlined">arrow_back</span> Back</button>
     
     <div style="width: 100%; max-width: 400px; margin: 20px auto; background: #ffffff; padding: 24px; border-radius: 20px; border: 1px solid #edf2f7; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-      
       <p style="font-size: 16px; margin: 0 0 15px 0; font-weight: 700; width: 100%; text-align: center; color: #2d3748;">Connect to Baby Camera</p>
       
       <div class="saved-devices-container" id="savedDevicesWrapper" style="display:none;">
@@ -210,8 +211,8 @@
       <button id="connectBtn" onclick="initiateParentConnection()" style="width: 100%; background-color: #f6ad55; color: #fff; padding: 16px; font-size: 16px; flex-direction: row; border-radius: 14px; transition: all 0.3s ease;"><span class="material-symbols-outlined">link</span> Connect Now</button>
     </div>
   </div>
+
   <div id="videoScreen" class="screen">
-    
     <div id="parentTopBar" style="display:none; flex-direction: column; align-items: center; width: 100%;">
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
         <div id="activeCodeDisplay" class="room-code-box" style="font-size: 15px; padding: 10px 20px; margin-bottom: 0; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: default;">••••••</div>
@@ -219,7 +220,6 @@
       </div>
       <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
         <label style="font-size: 12px; font-weight: 600;">Stream Quality:</label>
-        <!-- UPDATED RESOLUTION LABELS -->
         <select id="qualitySelect" onchange="requestQualityChange()" style="padding: 6px; font-size: 12px; border-radius: 8px; max-width: 150px;">
           <option value="balanced">HD Clear (720p • 24 FPS)</option>
           <option value="fast">Standard (360p • 15 FPS)</option>
@@ -229,6 +229,7 @@
         </select>
       </div>
     </div>
+    
     <div class="monitor-container" id="monitorContainer">
       <video id="hiddenBabyCam" autoplay playsinline muted style="display:none;"></video>
       <canvas id="proxyCanvas" style="display:none;"></canvas>
@@ -252,22 +253,34 @@
       <div id="babyKeepOpenOverlay" class="keep-open-overlay" style="display:none;">
         <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span> Keep Screen Open
       </div>
+      
       <div id="lowBatteryAlert" class="keep-open-overlay low-battery-alert" style="display:none;">
         <span class="material-symbols-outlined" style="font-size: 18px;">battery_alert</span>
         Baby Monitor Battery Low! (<span id="lowBattText"></span>)
       </div>
+      
       <div id="disconnectOverlay" class="overlay" style="display:none;">
         <span class="material-symbols-outlined" style="font-size: 48px; color: #f56565; margin-bottom: 8px;">signal_disconnected</span>
         <span style="color:#f56565; font-size: 20px;" id="disconnectText">Disconnected - Reconnecting...</span>
-        <!-- ESCAPE HATCH STOP BUTTON -->
         <button onclick="cancelReconnect()" style="margin-top: 20px; background-color: #e53e3e; color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 14px; width: auto; min-height: auto; flex-direction: row; gap: 8px;">Stop & Exit</button>
+      </div>
+
+      <!-- TRUE DEEP SLEEP UI OVERLAY -->
+      <div id="sleepOverlay" class="overlay" style="display:none; background: rgba(18, 18, 18, 0.92); z-index: 4000;">
+        <span class="material-symbols-outlined" style="font-size: 56px; color: #f6ad55; margin-bottom: 12px;">bedtime</span>
+        <h3 style="color: #ffffff; margin-bottom: 6px; font-size: 20px;">Baby Camera is Asleep</h3>
+        <p style="color: #a0aec0; font-size: 13px; margin-bottom: 20px;">Stream is paused to save battery & privacy</p>
+        <button onclick="toggleRemotePower()" style="background-color: #f6ad55; color: #000; padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: bold; width: auto; min-height: auto; flex-direction: row; gap: 8px;">
+          <span class="material-symbols-outlined">power_settings_new</span> Wake Camera
+        </button>
       </div>
       
       <audio id="parentAudio" autoplay playsinline style="display:none;"></audio>
-      
       <video id="myCamera" autoplay playsinline webkit-playsinline disableRemotePlayback autoPictureInPicture></video>
     </div>
+    
     <div id="babyAudioContainer" style="opacity: 0; position: absolute; pointer-events: none; visibility: hidden;"></div>
+    
     <div id="babyControls" style="display:none; width: 100%;">
       <select id="cameraSelect" onchange="switchCamera()" style="display:none; margin-bottom: 10px; padding: 8px; width:100%; max-width: 250px;"></select>
       <div class="wizard-step active">
@@ -287,9 +300,15 @@
       </div>
       <button onclick="goBack()" class="off" style="margin-top: 15px; margin-left: auto; margin-right: auto; width: auto; flex-direction: row;"><span class="material-symbols-outlined">stop_circle</span> End Stream</button>
     </div>
+    
     <div class="controls" id="parentControls" style="display:none;">
       <button id="camBtn" onclick="toggleRemoteVideo()"><span class="material-symbols-outlined">videocam_off</span> Vid Off</button>
-      <button id="talkBtn" onclick="toggleTalk()"><span class="material-symbols-outlined">mic</span> Talk</button>
+      
+      <!-- PUSH-TO-TALK LOGIC MAPPED HERE -->
+      <button id="talkBtn" onmousedown="startTalk(event)" ontouchstart="startTalk(event)" onmouseup="stopTalk(event)" ontouchend="stopTalk(event)" onmouseleave="stopTalk(event)">
+        <span class="material-symbols-outlined">mic</span> Hold to Talk
+      </button>
+      
       <button id="micBtn" onclick="toggleParentListening()"><span class="material-symbols-outlined">volume_off</span> Unmute</button>
       <button onclick="rotateCamera()"><span class="material-symbols-outlined">screen_rotation</span> Rotate</button>
       <button id="flipCamBtn" onclick="requestCameraSwitch()"><span class="material-symbols-outlined">flip_camera_ios</span> Flip Cam</button>
@@ -299,13 +318,21 @@
       <button id="fsBtn" onclick="toggleFullScreen()"><span class="material-symbols-outlined">fullscreen</span> Full</button>
       <button id="alarmBtn" onclick="toggleAlarm()" class="off"><span class="material-symbols-outlined">notifications_off</span> Alarm</button>
       <button id="remoteDimBtn" onclick="toggleRemoteDim()" class="off"><span class="material-symbols-outlined">mode_night</span> Screen Off</button>
+      
       <div class="slider-container" style="grid-column: span 2;">
         <label for="audioBoostSlider">Audio Boost (<span id="boostVal">1.0</span>x)</label>
         <input type="range" id="audioBoostSlider" min="1" max="15" step="0.5" value="1" oninput="updateAudioBoost()" disabled style="opacity: 0.5;">
       </div>
-      <div class="slider-container" style="grid-column: span 3;">
-        <label for="alarmSensitivity">Sensitivity</label>
-        <input type="range" id="alarmSensitivity" min="1" max="100" value="80">
+      
+      <!-- VISUAL VU NOISE METER INTEGRATED WITH SLIDER -->
+      <div class="slider-container" style="grid-column: span 3; position: relative;">
+        <label for="alarmSensitivity">Cry Sensitivity Threshold</label>
+        <div style="display:flex; align-items:center; width:100%; gap: 6px; margin-top:4px;">
+            <input type="range" id="alarmSensitivity" min="1" max="100" value="80" style="flex-grow:1;">
+            <div style="width: 30px; height: 12px; background: #e2e8f0; border-radius: 4px; overflow: hidden; position: relative; border: 1px solid #cbd5e0;">
+               <div id="vuFill" style="width: 0%; height: 100%; background: #48bb78; transition: width 0.1s, background-color 0.2s;"></div>
+            </div>
+        </div>
       </div>
       
       <button onclick="goBack()" class="off" style="grid-column: 1 / -1; background-color: #2d3748; color: white; min-height: 40px; flex-direction: row; gap: 8px;">
@@ -313,6 +340,7 @@
       </button>
     </div>
   </div>
+  
   <script>
     window.onerror = function(msg, url, line) {
         console.error("App Error: " + msg + " at line " + line);
@@ -320,6 +348,7 @@
     function getSavedItem(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
     function setSavedItem(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
     function removeSavedItem(key) { try { localStorage.removeItem(key); } catch(e) {} }
+    
     var videoBox = document.getElementById('myCamera');
     var hiddenVideo = document.getElementById('hiddenBabyCam');
     var proxyCanvas = document.getElementById('proxyCanvas');
@@ -335,20 +364,35 @@
     var parentIsMuted = true;
     var visualizerCtx = null, visualizerCanvas = null, visualizerAnimationFrame = null;
     var currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false, isCodeVisible = false, isBabyCodeVisible = false;
-    var selectedNetworkMode = 'internet', currentQuality = 'ultra', isRemoteDimmed = false, reconnectAttempts = 0;
-    var parentHeartbeatInterval = null;
-    var lastHeartbeatReceived = 0;
-    var networkFallbackAttempted = false;
-    // RECONNECT ESCAPE HATCH TIMEOUT
+    
+    var currentQuality = 'ultra', isRemoteDimmed = false, reconnectAttempts = 0;
+    var parentHeartbeatInterval = null, lastHeartbeatReceived = 0;
     var reconnectTimeout = null;
+
+    // Push To Talk Variables
+    var isTalking = false;
+    var preTalkGain = 1.0;
+
+    // Mobile Audio Unblocker
+    function unblockAudio() {
+        if (parentAudioCtx && parentAudioCtx.state === 'suspended') {
+            parentAudioCtx.resume().then(function() {
+                document.getElementById('audioUnblockBanner').style.display = 'none';
+            });
+        }
+    }
+    document.body.addEventListener('click', unblockAudio);
+    document.body.addEventListener('touchstart', unblockAudio, {passive: true});
 
     window.addEventListener('popstate', function(event) {
         teardownConnections();
         showScreen('selectionScreen', true);
     });
+    
     if (videoBox && 'autoPictureInPicture' in videoBox) {
         videoBox.autoPictureInPicture = true;
     }
+    
     document.addEventListener('visibilitychange', function() {
         if (document.visibilityState === 'hidden' && !isBaby && videoBox && videoBox.readyState >= 2) {
             try {
@@ -358,43 +402,21 @@
             } catch(e) {}
         }
     });
-    function initNetworkMode() { 
-        setNetworkMode(getSavedItem('babyVaani_netMode') || 'internet', false); 
-    }
     
-    function setNetworkMode(mode, save) {
-      if (save === undefined) save = true;
-      selectedNetworkMode = mode;
-      if (save) setSavedItem('babyVaani_netMode', mode);
-      var btnInternet = document.getElementById('modeInternet');
-      var btnWifi = document.getElementById('modeWifi');
-      var bannerText = document.getElementById('activeModeBannerText');
-      
-      if (mode === 'wifi') {
-        if (btnWifi) btnWifi.className = 'mode-option-btn selected';
-        if (btnInternet) btnInternet.className = 'mode-option-btn';
-        if (bannerText) bannerText.innerText = 'Local Wi-Fi LAN Stream (Zero Latency)';
-      } else {
-        if (btnInternet) btnInternet.className = 'mode-option-btn selected';
-        if (btnWifi) btnWifi.className = 'mode-option-btn';
-        if (bannerText) bannerText.innerText = 'Secure P2P Stream';
-      }
-    }
-    initNetworkMode();
     function factoryResetApp() {
       if (confirm("Clear all saved devices, network modes, and room codes? This will completely reset the app.")) {
-        removeSavedItem('babyVaani_netMode');
         removeSavedItem('babyVaani_roomCode');
         removeSavedItem('babyVaani_parentCode');
         removeSavedItem('babyVaani_savedDevices');
         window.location.reload();
       }
     }
+    
+    // Auto-Fallback Network Config - Lets WebRTC handle STUN/TURN natively
     function getPeerConfig() {
-      return selectedNetworkMode === 'wifi' 
-        ? { config: { iceServers: [] } } 
-        : { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
+      return { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
     }
+    
     function getSavedParentDevices() { 
       try { 
         var data = getSavedItem('babyVaani_savedDevices');
@@ -437,6 +459,7 @@
       input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
       document.getElementById('savedDevicesSelect').value = ""; 
     }
+    
     function toggleCodeVisibility() {
       isCodeVisible = !isCodeVisible;
       var display = document.getElementById('activeCodeDisplay');
@@ -449,6 +472,7 @@
         icon.innerText = 'visibility';
       }
     }
+    
     function toggleBabyCodeVisibility() {
       isBabyCodeVisible = !isBabyCodeVisible;
       var display = document.getElementById('wizardCodeDisplay');
@@ -461,6 +485,7 @@
         icon.innerText = 'visibility';
       }
     }
+    
     function setLiveStatus(mode, text) {
       var banner = document.getElementById('liveStatusBanner');
       if (!mode) { banner.style.display = 'none'; return; }
@@ -468,10 +493,12 @@
       document.getElementById('liveStatusText').innerText = text;
       document.getElementById('statusDot').className = 'status-dot ' + mode;
     }
+    
     function wakeScreen() {
       var dim = document.getElementById('dimOverlay');
       if(dim) dim.classList.remove('active');
     }
+    
     var dimOverlayEl = document.getElementById('dimOverlay');
     if(dimOverlayEl) {
         dimOverlayEl.addEventListener('touchstart', function(e) {
@@ -479,6 +506,7 @@
           wakeScreen();
         }, {passive: false});
     }
+    
     function startBatteryTracking() {
       if ('getBattery' in navigator && typeof navigator.getBattery === 'function') {
         navigator.getBattery().then(function(battery) {
@@ -504,6 +532,7 @@
         batteryInterval = setInterval(sendUnsupported, 60000);
       }
     }
+    
     function startPingTracking() {
       pingInterval = setInterval(function() {
         if (currentCall && currentCall.peerConnection) {
@@ -563,6 +592,7 @@
         }
       }, 3000);
     }
+    
     function setCanvasQuality(quality) {
         if (!isBaby || !proxyCanvas || !proxyCtx) return;
         
@@ -671,6 +701,7 @@
             }
         }
     }
+    
     function buildProxyStream() {
         if (!isBaby || !proxyCanvas || typeof proxyCanvas.captureStream !== 'function') {
             activeStream = rawStream;
@@ -689,6 +720,7 @@
         }
         setCanvasQuality(currentQuality);
     }
+    
     function populateCameras() {
       var select = document.getElementById('cameraSelect');
       if(!select) return;
@@ -721,6 +753,7 @@
         }).catch(function(e) {});
       } catch (err) {}
     }
+    
     function wakeBabyDevice(callback) {
         if (!isBaby) return;
         var dim = document.getElementById('dimOverlay');
@@ -776,6 +809,7 @@
             if (callback) callback(null);
         });
     }
+    
     function switchCamera() {
       if (window.cameraSwitchingLock) return;
       window.cameraSwitchingLock = true;
@@ -845,6 +879,7 @@
           window.cameraSwitchingLock = false;
       }
     }
+    
     function requestWakeLock() {
       try {
         if ('wakeLock' in navigator && navigator.wakeLock) {
@@ -859,6 +894,7 @@
         }
       } catch (err) {}
     }
+    
     function showScreen(screenId, isBackwards) {
       var screens = document.querySelectorAll('.screen');
       for (var i = 0; i < screens.length; i++) {
@@ -870,6 +906,7 @@
           history.pushState({ screen: screenId }, "");
       }
     }
+    
     function initBabyPeer(forceNew) {
       if (forceNew === undefined) forceNew = false;
       var code = getSavedItem('babyVaani_roomCode');
@@ -893,7 +930,8 @@
       }
       if (peer) peer.destroy();
       
-      var isolatedPeerId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + activeRoomCode;
+      // Removed network separation ID constraint to enable pure WebRTC auto-routing
+      var isolatedPeerId = "BV-" + activeRoomCode;
       peer = new Peer(isolatedPeerId, getPeerConfig());
       
       peer.on('error', function(err) {
@@ -901,6 +939,7 @@
           initBabyPeer(true);
         }
       });
+      
       peer.on('connection', function(conn) {
         dataConnections.push(conn);
         conn.on('data', function(data) { handleDataChannelMessage(data, conn); });
@@ -939,8 +978,10 @@
             var audioCont = document.getElementById('babyAudioContainer');
             if(audioCont) audioCont.appendChild(parentAudioEl);
             parentAudioEl.play().catch(function(e){});
+            
             activeCalls.push({ peerId: conn.peer, call: call });
             setCanvasQuality(currentQuality); 
+            
             call.on('stream', function(parentStream) { 
                // 3X AUDIO BOOST FOR PARENT VOICE
                try {
@@ -951,7 +992,6 @@
                    source.connect(gainNode);
                    gainNode.connect(babyAudioCtx.destination);
                } catch(e) {
-                   // Fallback if browser strictly blocks AudioContext here
                    if(parentAudioEl) {
                        parentAudioEl.srcObject = parentStream;
                        parentAudioEl.play().catch(function(e){});
@@ -962,6 +1002,7 @@
         });
       });
     }
+    
     function cleanUpParent(peerId) {
        var newDataConn = [];
        for (var i = 0; i < dataConnections.length; i++) {
@@ -989,6 +1030,7 @@
            if (dim) dim.classList.add('active'); 
        }
     }
+    
     function startBabyMode() {
       try {
           isBaby = true;
@@ -1034,6 +1076,7 @@
           goBack();
       }
     }
+    
     function startParentMode() {
       try {
           isBaby = false;
@@ -1061,6 +1104,7 @@
           goBack();
       }
     }
+    
     function drawWaveform() {
       if (!visualizerCtx || !visualizerCanvas) return;
       visualizerAnimationFrame = requestAnimationFrame(drawWaveform);
@@ -1074,11 +1118,34 @@
          visualizerCtx.lineWidth = 2;
          visualizerCtx.strokeStyle = 'rgba(246, 173, 85, 0.3)'; 
          visualizerCtx.stroke();
+         
+         var fill = document.getElementById('vuFill');
+         if(fill) fill.style.width = '0%';
+         
          return;
       }
       var bufferLength = parentAnalyser.frequencyBinCount;
       var dataArray = new Uint8Array(bufferLength);
       parentAnalyser.getByteTimeDomainData(dataArray);
+      
+      // VISUAL VU NOISE METER INTEGRATION
+      var freqArray = new Uint8Array(parentAnalyser.frequencyBinCount);
+      parentAnalyser.getByteFrequencyData(freqArray);
+      var sum = 0, validBins = 0;
+      for (var i = 2; i < 16 && i < freqArray.length; i++) { 
+          sum += freqArray[i];
+          validBins++;
+      }
+      var average = validBins > 0 ? (sum / validBins) : 0;
+      var pct = Math.min(100, Math.round((average / 255) * 100));
+      var fill = document.getElementById('vuFill');
+      if(fill) {
+          fill.style.width = pct + '%';
+          var sensInp = document.getElementById('alarmSensitivity');
+          var threshold = 150 - (sensInp ? sensInp.value : 80);
+          fill.style.backgroundColor = (average > threshold) ? '#f56565' : '#48bb78';
+      }
+
       visualizerCtx.lineWidth = 2;
       visualizerCtx.strokeStyle = '#f6ad55'; 
       visualizerCtx.beginPath();
@@ -1097,6 +1164,7 @@
       visualizerCtx.lineTo(visualizerCanvas.width, visualizerCanvas.height / 2);
       visualizerCtx.stroke();
     }
+    
     function initiateParentConnection() {
         var joinInp = document.getElementById('joinCode');
         if(!joinInp) return;
@@ -1120,22 +1188,22 @@
         }
         
         activeRoomCode = targetCode; 
-        networkFallbackAttempted = false; 
-        
-        executePeerConnection(targetCode, false);
+        executePeerConnection(targetCode);
     }
-    function executePeerConnection(targetCode, isFallback) {
+    
+    function executePeerConnection(targetCode) {
         if (peer) peer.destroy();
         peer = new Peer(getPeerConfig());
         
-        setLiveStatus('waiting', isFallback ? 'Auto-Switching...' : 'Connecting...');
+        setLiveStatus('waiting', 'Connecting...');
         peer.on('open', function(id) {
-            var targetIsolatedId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + targetCode;
+            var targetIsolatedId = "BV-" + targetCode;
             var conn = peer.connect(targetIsolatedId);
             
             dataConnections.push(conn);
             conn.on('data', function(data) { handleDataChannelMessage(data, conn); });
         });
+        
         peer.on('call', function(call) {
             currentCall = call;
             call.answer(parentLocalStream || null); 
@@ -1154,9 +1222,9 @@
                     }
                 }, 500);
             } catch(e) {}
+            
             call.on('stream', function(remoteStream) {
               reconnectAttempts = 0;
-              networkFallbackAttempted = false;
               
               var disc = document.getElementById('disconnectOverlay');
               if(disc) disc.style.display = 'none';
@@ -1164,6 +1232,11 @@
               showScreen('videoScreen');
               setLiveStatus('live', 'Live - Monitoring');
               
+              // Mobile Audio Unblock check
+              if (parentAudioCtx && parentAudioCtx.state === 'suspended') {
+                  document.getElementById('audioUnblockBanner').style.display = 'block';
+              }
+
               lastHeartbeatReceived = Date.now();
               if(parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
               parentHeartbeatInterval = setInterval(function() {
@@ -1174,6 +1247,7 @@
                        }
                   }
               }, 2000);
+              
               var aCode = document.getElementById('activeCodeDisplay');
               if(aCode) {
                   if(!isCodeVisible) {
@@ -1234,27 +1308,18 @@
               handleParentDisconnect();
             });
         });
+        
         peer.on('error', function(err) {
-            if (err.type === 'peer-unavailable' && !networkFallbackAttempted) {
-                networkFallbackAttempted = true;
-                selectedNetworkMode = (selectedNetworkMode === 'wifi') ? 'internet' : 'wifi';
-                
-                var connectBtn = document.getElementById('connectBtn');
-                if (connectBtn) connectBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> Trying ' + selectedNetworkMode.toUpperCase() + '...';
-                
-                setTimeout(function() {
-                    executePeerConnection(targetCode, true);
-                }, 1000);
-            } else {
-                handleParentDisconnect();
-            }
+            handleParentDisconnect();
         });
     }
+    
     function cancelReconnect() {
         if (reconnectTimeout) { clearTimeout(reconnectTimeout); reconnectTimeout = null; }
         reconnectAttempts = 0;
         goBack();
     }
+    
     function handleParentDisconnect() {
       if (isBaby) return;
       var discOverlay = document.getElementById('disconnectOverlay');
@@ -1274,9 +1339,10 @@
       
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       reconnectTimeout = setTimeout(function() {
-        executePeerConnection(activeRoomCode, false);
+        executePeerConnection(activeRoomCode);
       }, 3000);
     }
+    
     function updateAudioBoost() {
       var slider = document.getElementById('audioBoostSlider');
       var boostV = document.getElementById('boostVal');
@@ -1287,6 +1353,7 @@
         parentGainNode.gain.value = parseFloat(val);
       }
     }
+    
     function toggleRemoteDim() {
       isRemoteDimmed = !isRemoteDimmed;
       var b = document.getElementById('remoteDimBtn');
@@ -1306,6 +1373,7 @@
         }
       }
     }
+    
     function toggleRemoteVideo() {
         if (!isBaby) {
             var b = document.getElementById('camBtn');
@@ -1327,27 +1395,24 @@
             }
         }
     }
+    
     function toggleRemotePower() {
         if (!isBaby) {
-            var b = document.getElementById('powerBtn');
-            if(b) {
-                var isSleeping = b.className === 'off';
-                if (isSleeping) {
-                    b.innerHTML = '<span class="material-symbols-outlined">power_settings_new</span> Sleep';
-                    b.className = '';
-                    for(var i=0; i<dataConnections.length; i++) {
-                       if(dataConnections[i].open) dataConnections[i].send('WAKE_CAM');
-                    }
-                } else {
-                    b.innerHTML = '<span class="material-symbols-outlined">power_settings_new</span> Wake';
-                    b.className = 'off';
-                    for(var i=0; i<dataConnections.length; i++) {
-                       if(dataConnections[i].open) dataConnections[i].send('SLEEP_CAM');
-                    }
+            var sleepOverlay = document.getElementById('sleepOverlay');
+            var isSleeping = sleepOverlay && sleepOverlay.style.display === 'flex';
+            
+            if (isSleeping) {
+                for(var i=0; i<dataConnections.length; i++) {
+                   if(dataConnections[i].open) dataConnections[i].send('WAKE_CAM');
+                }
+            } else {
+                for(var i=0; i<dataConnections.length; i++) {
+                   if(dataConnections[i].open) dataConnections[i].send('SLEEP_CAM');
                 }
             }
         }
     }
+    
     function requestCameraSwitch() {
       var flipBtn = document.getElementById('flipCamBtn');
       if (flipBtn) {
@@ -1367,6 +1432,7 @@
          if(dataConnections[i].open) dataConnections[i].send('SWITCH_CAM');
       }
     }
+    
     function handleDataChannelMessage(data, conn) {
       if (typeof data !== 'string') return;
       if (data === 'PING') {
@@ -1393,21 +1459,62 @@
             rawStream.getVideoTracks().forEach(t => t.enabled = true);
         }
       }
+      
+      // TRUE DEEP SLEEP IMPLEMENTATION
       else if (data === 'SLEEP_CAM') {
-        if (isBaby && rawStream) {
-            var tracks = rawStream.getTracks();
-            for (var t = 0; t < tracks.length; t++) tracks[t].stop();
-            rawStream = null;
-            activeStream = null;
-            if (canvasInterval) clearInterval(canvasInterval);
+        if (isBaby) {
+            if (rawStream) {
+                var tracks = rawStream.getTracks();
+                for (var t = 0; t < tracks.length; t++) tracks[t].stop();
+                rawStream = null;
+            }
             setLiveStatus('waiting', 'Standby (Sleeping)');
+            var d = document.getElementById('dimOverlay');
+            if(d) d.classList.add('active');
+            
+            for(var i=0; i<dataConnections.length; i++) {
+                if(dataConnections[i].open) dataConnections[i].send('STATE_SLEEPING');
+            }
         }
       }
       else if (data === 'WAKE_CAM') {
-        if (isBaby && !rawStream) {
-            wakeBabyDevice(); 
+        if (isBaby) {
+            wakeBabyDevice(function() {
+                setLiveStatus('live', 'Live - Monitoring');
+                var d = document.getElementById('dimOverlay');
+                if(d) d.classList.remove('active');
+                
+                for(var i=0; i<dataConnections.length; i++) {
+                    if(dataConnections[i].open) dataConnections[i].send('STATE_AWAKE');
+                }
+            }); 
         }
       }
+      else if (data === 'STATE_SLEEPING') {
+        if (!isBaby) {
+            var sOver = document.getElementById('sleepOverlay');
+            if(sOver) sOver.style.display = 'flex';
+            setLiveStatus('waiting', 'Baby Cam Asleep');
+            var b = document.getElementById('powerBtn');
+            if(b) {
+                b.innerHTML = '<span class="material-symbols-outlined">power_settings_new</span> Wake';
+                b.className = 'off';
+            }
+        }
+      }
+      else if (data === 'STATE_AWAKE') {
+        if (!isBaby) {
+            var sOver = document.getElementById('sleepOverlay');
+            if(sOver) sOver.style.display = 'none';
+            setLiveStatus('live', 'Live - Monitoring');
+            var b = document.getElementById('powerBtn');
+            if(b) {
+                b.innerHTML = '<span class="material-symbols-outlined">power_settings_new</span> Sleep';
+                b.className = '';
+            }
+        }
+      }
+      
       else if (data === 'DIM_SCREEN') {
         if (isBaby) {
             var d = document.getElementById('dimOverlay');
@@ -1424,7 +1531,7 @@
         if (isBaby && conn && conn.peer) {
           cleanUpParent(conn.peer);
         } else if (!isBaby) {
-          cancelReconnect(); // Escape hatch: The baby device intentionally ended the stream
+          cancelReconnect(); 
         }
       }
       else if (data.indexOf('BAT:') === 0) {
@@ -1471,6 +1578,7 @@
         }
       }
     }
+    
     function requestQualityChange() {
       var sel = document.getElementById('qualitySelect');
       if(!sel) return;
@@ -1479,20 +1587,56 @@
          if(dataConnections[i].open) dataConnections[i].send("QUALITY:" + q);
       }
     }
-    function toggleTalk() {
-      if (!parentLocalStream) return;
+    
+    // PUSH TO TALK & FEEDBACK PREVENTION
+    function startTalk(e) {
+      if (e) {
+          if(e.type === 'touchstart') e.preventDefault();
+      }
+      if (!parentLocalStream || isTalking) return;
+      
       var track = parentLocalStream.getAudioTracks()[0];
-      if (!track) return;
-      
-      track.enabled = !track.enabled; 
-      
-      var state = track.enabled ? ['mic_off', 'Unmic', 'active-green'] : ['mic', 'Talk', ''];
-      var b = document.getElementById('talkBtn');
-      if(b) {
-          b.innerHTML = '<span class="material-symbols-outlined">' + state[0] + '</span> ' + state[1];
-          b.className = state[2];
+      if (track) {
+          track.enabled = true; 
+          isTalking = true;
+          
+          var b = document.getElementById('talkBtn');
+          if(b) {
+              b.innerHTML = '<span class="material-symbols-outlined">mic</span> Talking...';
+              b.className = 'active-green';
+          }
+          
+          // Mute incoming room audio instantly to prevent high-pitched speaker feedback
+          if (parentGainNode) {
+              preTalkGain = parentGainNode.gain.value;
+              parentGainNode.gain.value = 0;
+          }
       }
     }
+    
+    function stopTalk(e) {
+      if (e && e.type === 'touchend') e.preventDefault();
+      if (!parentLocalStream || !isTalking) return;
+      
+      var track = parentLocalStream.getAudioTracks()[0];
+      if (track) {
+          track.enabled = false; 
+          isTalking = false;
+          
+          var b = document.getElementById('talkBtn');
+          if(b) {
+              b.innerHTML = '<span class="material-symbols-outlined">mic</span> Hold to Talk';
+              b.className = '';
+          }
+          
+          // Restore volume from slider immediately after releasing the button
+          if (parentGainNode && !parentIsMuted) {
+              var slider = document.getElementById('audioBoostSlider');
+              parentGainNode.gain.value = slider ? parseFloat(slider.value) : 1.0;
+          }
+      }
+    }
+    
     function toggleParentListening() {
       parentIsMuted = !parentIsMuted;
       
@@ -1518,10 +1662,12 @@
           b.className = state[2];
       }
     }
+    
     function rotateCamera() {
       currentRotation = (currentRotation + 90) % 360;
       if(videoBox) videoBox.style.transform = "rotate(" + currentRotation + "deg) translateZ(0)";
     }
+    
     function toggleNightMode() {
       isNightMode = !isNightMode;
       if(videoBox) {
@@ -1538,6 +1684,7 @@
           b.className = state[2];
       }
     }
+    
     function toggleAlarm() {
       alarmActive = !alarmActive;
       var state = alarmActive ? ['notifications_active', 'On', 'active-green'] : ['notifications_off', 'Alarm', 'off'];
@@ -1555,7 +1702,7 @@
         if(mCont) mCont.style.borderColor = '#ffffff';
       }
     }
-    // ALGORITHMIC CRY DETECTION (Frequency Filtered)
+    
     function startAudioAnalysis() {
       if (!alarmActive || !parentAnalyser || !parentAudioCtx) return;
       if (parentAudioCtx.state === 'suspended') parentAudioCtx.resume();
@@ -1568,14 +1715,11 @@
         var sum = 0;
         var validBins = 0;
         
-        // Loop ONLY through the target "Cry" frequencies (roughly bins 2 to 15)
-        // Ignoring the entire rest of the spectrum (background noise like fans/trucks)
         for (var i = 2; i < 16 && i < dataArray.length; i++) { 
             sum += dataArray[i];
             validBins++;
         }
         
-        // Average volume of JUST the human vocal range
         var average = validBins > 0 ? (sum / validBins) : 0;
         
         var sensInp = document.getElementById('alarmSensitivity');
@@ -1588,6 +1732,7 @@
       }
       checkAudioLevel();
     }
+    
     function triggerAlarmUI() {
       isAlarmRinging = true;
       var toggle = false;
@@ -1610,6 +1755,7 @@
         toggle = !toggle;
       }, 500);
     }
+    
     function toggleFullScreen() {
       var c = document.getElementById('monitorContainer'); 
       if(!c) return;
@@ -1633,6 +1779,7 @@
         }
       }
     }
+    
     function togglePiP() {
       if(!videoBox) return;
       try {
@@ -1647,6 +1794,7 @@
         }
       } catch (err) {}
     }
+    
     function teardownConnections() {
         for(var i=0; i<dataConnections.length; i++) {
             if(dataConnections[i].open) dataConnections[i].send('DISCONNECT');
@@ -1659,10 +1807,10 @@
         if (visualizerAnimationFrame) cancelAnimationFrame(visualizerAnimationFrame);
         if (parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
         if (reconnectTimeout) { clearTimeout(reconnectTimeout); reconnectTimeout = null; }
+        
         alarmActive = false;
         isAlarmRinging = false;
         reconnectAttempts = 0;
-        networkFallbackAttempted = false;
         
         var mCont = document.getElementById('monitorContainer');
         if(mCont) {
@@ -1706,6 +1854,7 @@
         if(videoBox) videoBox.srcObject = null;
         if(hiddenVideo) hiddenVideo.srcObject = null;
     }
+    
     function goBack() {
       try {
           teardownConnections();
