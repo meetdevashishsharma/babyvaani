@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Baby Vaani Monitor</title>
-    <!-- PeerJS for WebRTC P2P communication -->
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <style>
         /* Global Reset & Box Sizing */
@@ -175,20 +174,17 @@
             display: none;
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
+            background: rgba(0,0,0,0.8);
             z-index: 5000;
             color: white;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            padding: 20px;
         }
     </style>
 </head>
 <body>
 
-    <!-- HOME SCREEN -->
     <div id="home-screen" class="screen active">
         <div class="home-container">
             <h1 class="app-title">Baby Vaani</h1>
@@ -202,56 +198,44 @@
                 <div class="warning-text">Choose the exact same mode as the baby cam</div>
             </div>
 
-            <!-- Baby Setup -->
             <button class="btn" onclick="startBabyMode()">Start Baby Camera</button>
             
             <hr style="border-color: #333; margin: 20px 0;">
 
-            <!-- Parent Setup -->
             <input type="text" id="joinCode" class="input-box" placeholder="ENTER 6-DIGIT CODE" maxlength="6">
             <button class="btn btn-secondary" onclick="startParentMode()">Connect as Parent</button>
 
-            <!-- Reset -->
             <button class="btn" style="background: transparent; color: #666; margin-top: 30px; font-size: 12px;" onclick="resetAppData()">Clear all app data & reset</button>
         </div>
     </div>
 
-    <!-- BABY SCREEN -->
     <div id="baby-screen" class="screen">
         <div class="video-wrapper">
             <div class="status-overlay">Room Code: <span id="babyRoomCodeDisplay">••••••</span></div>
             <video id="babyVideoPreview" autoplay playsinline muted class="baby-locked"></video>
             
-            <!-- Controls for Baby Device -->
             <div style="position: absolute; bottom: 20px; width: 100%; text-align: center; z-index: 20;">
                 <button class="control-btn" style="padding: 10px 20px; font-size: 16px;" onclick="toggleBabyScreenOff()">Baby Screen Off</button>
                 <button class="control-btn" style="padding: 10px 20px; font-size: 16px; background: #d32f2f;" onclick="endSession()">End Stream</button>
             </div>
         </div>
-        <!-- Pitch Black Overlay -->
         <div id="blackout-overlay" onclick="toggleBabyScreenOff()"></div>
     </div>
 
-    <!-- PARENT SCREEN -->
     <div id="parent-screen" class="screen">
         <div class="video-wrapper">
             <div class="status-overlay" id="connectionStrength">Signal: Connecting...</div>
             <video id="parentVideoFeed" autoplay playsinline></video>
             
-            <!-- Dynamic CCTV Clock -->
             <div class="cctv-clock" id="cctvClock">LIVE 🟢 --:--:--</div>
             
-            <!-- Audio Visualizer -->
             <canvas id="audioVisualizer" class="waveform-canvas"></canvas>
 
-            <!-- Disconnected State -->
             <div id="disconnect-overlay">
                 <h2>Connection Lost</h2>
-                <p style="margin: 10px 0;">Attempting to reconnect...</p>
-                <button class="btn" style="background: #d32f2f; width: 200px; margin-top: 20px;" onclick="cancelReconnect()">Stop & Exit</button>
+                <p>Attempting to reconnect...</p>
             </div>
 
-            <!-- Parent Controls -->
             <div class="parent-controls">
                 <button class="control-btn" id="muteBtn" onclick="toggleParentMute()">Unmute</button>
                 <button class="control-btn" onclick="toggleTalk()">Talk</button>
@@ -333,6 +317,7 @@
             savedRoomCode = code;
             document.getElementById('babyRoomCodeDisplay').innerText = code;
             
+            // Clean legacy caches
             try { localStorage.setItem('lastBabyCode', code); } catch(e) {}
 
             showScreen('baby-screen');
@@ -358,19 +343,20 @@
 
                 peer.on('call', function(call) {
                     activeCall = call;
-                    // Answer with Canvas Proxy Stream
+                    // Answer with the Canvas Proxy Stream, NOT the raw camera hardware!
                     var proxyStream = proxyCanvas.captureStream(24);
+                    // Append raw audio to the proxy stream
                     proxyStream.addTrack(localMediaStream.getAudioTracks()[0]);
                     
                     call.answer(proxyStream);
                     
                     call.on('stream', function(remoteStream) {
-                        // 3X AUDIO BOOST FOR PARENT VOICE ON BABY SPEAKER
+                        // 3X AUDIO BOOST FOR PARENT VOICE
                         if (remoteStream.getVideoTracks().length === 0 && remoteStream.getAudioTracks().length > 0) {
                             var babyAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
                             var source = babyAudioCtx.createMediaStreamSource(remoteStream);
                             var gainNode = babyAudioCtx.createGain();
-                            gainNode.gain.value = 3.0; // Boost parent voice
+                            gainNode.gain.value = 3.0; // Crank up parent's voice
                             source.connect(gainNode);
                             gainNode.connect(babyAudioCtx.destination);
                         }
@@ -418,7 +404,7 @@
             animationFrameId = requestAnimationFrame(drawLoop);
         }
 
-        // --- BABY CONTROLS & DATA CHANNEL ---
+        // --- BABY CONTROLS ---
         function toggleBabyScreenOff() {
             isBabyScreenOff = !isBabyScreenOff;
             document.getElementById('blackout-overlay').style.display = isBabyScreenOff ? 'block' : 'none';
@@ -434,9 +420,7 @@
                     document.getElementById('blackout-overlay').style.display = 'none';
                 } else if (data.command && data.command.indexOf('QUALITY:') === 0) {
                     var q = data.command.split(':')[1];
-                    updateCanvasProxy(q);
-                } else if (data.command === 'END_SESSION') {
-                    cancelReconnect();
+                    updateCanvasProxy(q); // Instantly scales software canvas
                 }
             });
         }
@@ -455,17 +439,20 @@
         }
 
         function connectToBaby() {
+            // Clean up old connections if auto-reconnecting
             if (peer) { peer.destroy(); }
             
             peer = new Peer(getPeerConfig());
             
             peer.on('open', function() {
+                // Establish Data Channel
                 activeConnection = peer.connect(savedRoomCode);
                 
                 activeConnection.on('open', function() {
                     document.getElementById('connectionStrength').innerText = "Signal: Good 🟢";
                     document.getElementById('connectionStrength').style.color = "#4caf50";
                     
+                    // Stop reconnect loop if it was running
                     if (reconnectInterval) {
                         clearInterval(reconnectInterval);
                         reconnectInterval = null;
@@ -476,14 +463,13 @@
                 activeConnection.on('data', function(data) {
                     if (data.type === 'heartbeat') {
                         document.getElementById('cctvClock').innerText = "LIVE 🟢 " + data.time;
-                    } else if (data.command === 'END_SESSION') {
-                        cancelReconnect();
                     }
                 });
 
                 activeConnection.on('close', handleDisconnect);
                 activeConnection.on('error', handleDisconnect);
 
+                // Establish Video Call
                 activeCall = peer.call(savedRoomCode, createSilentStream());
                 
                 activeCall.on('stream', function(remoteStream) {
@@ -506,7 +492,7 @@
             });
         }
 
-        // --- SMART AUTO-RECONNECT & ESCAPE HATCH ---
+        // --- SMART AUTO-RECONNECT ---
         function handleDisconnect() {
             if (currentRole !== 'parent') return;
             document.getElementById('connectionStrength').innerText = "Signal: Lost 🔴";
@@ -514,18 +500,11 @@
             document.getElementById('disconnect-overlay').style.display = 'flex';
             
             if (!reconnectInterval) {
+                // Ping every 5 seconds
                 reconnectInterval = setInterval(function() {
                     connectToBaby();
                 }, 5000);
             }
-        }
-
-        function cancelReconnect() {
-            if (reconnectInterval) {
-                clearInterval(reconnectInterval);
-                reconnectInterval = null;
-            }
-            window.location.reload(); 
         }
 
         // --- PARENT CONTROLS & WEB AUDIO ---
@@ -537,6 +516,7 @@
             parentGainNode = parentAudioCtx.createGain();
             parentAnalyser = parentAudioCtx.createAnalyser();
             
+            // Start completely Muted
             parentGainNode.gain.value = 0;
             isParentMuted = true;
             document.getElementById('muteBtn').innerText = "Unmute";
@@ -545,6 +525,7 @@
             parentGainNode.connect(parentAnalyser);
             parentAnalyser.connect(parentAudioCtx.destination);
             
+            // Draw Waveform
             var canvas = document.getElementById('audioVisualizer');
             var ctx = canvas.getContext('2d');
             parentAnalyser.fftSize = 256;
@@ -580,6 +561,7 @@
         }
 
         function toggleTalk() {
+            // Maximize parent microphone sensitivity for Baby's 3x Amplifier
             navigator.mediaDevices.getUserMedia({
                 video: false,
                 audio: { autoGainControl: true, noiseSuppression: true, echoCancellation: true }
@@ -620,20 +602,15 @@
         }
 
         function endSession() {
-            if (activeConnection && activeConnection.open) {
-                activeConnection.send({ command: 'END_SESSION' });
+            if (peer) { peer.destroy(); }
+            if (reconnectInterval) { clearInterval(reconnectInterval); }
+            if (localMediaStream) {
+                localMediaStream.getTracks().forEach(function(t) { t.stop(); });
             }
-            
-            setTimeout(function() {
-                if (peer) { peer.destroy(); }
-                if (reconnectInterval) { clearInterval(reconnectInterval); }
-                if (localMediaStream) {
-                    localMediaStream.getTracks().forEach(function(t) { t.stop(); });
-                }
-                window.location.reload();
-            }, 100);
+            window.location.reload();
         }
 
+        // Silent audio track to initialize 2-way call
         function createSilentStream() {
             var ctx = new (window.AudioContext || window.webkitAudioContext)();
             var dest = ctx.createMediaStreamDestination();
