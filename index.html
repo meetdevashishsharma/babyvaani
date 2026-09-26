@@ -600,13 +600,17 @@
         if (currentCall && currentCall.peerConnection) {
           var pc = currentCall.peerConnection;
           
-          if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+          if (pc.iceConnectionState === 'disconnected') {
               var iconEl = document.getElementById('connIcon');
               var textEl = document.getElementById('pingText');
-              if(iconEl) {
-                  iconEl.innerText = 'signal_cellular_connected_no_internet_0_bar';
-                  iconEl.style.color = '#f56565';
-              }
+              if(iconEl) { iconEl.innerText = 'signal_cellular_null'; iconEl.style.color = '#ecc94b'; }
+              if(textEl) textEl.innerText = 'Buffering...';
+              return;
+          }
+          if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'closed') {
+              var iconEl = document.getElementById('connIcon');
+              var textEl = document.getElementById('pingText');
+              if(iconEl) { iconEl.innerText = 'signal_cellular_connected_no_internet_0_bar'; iconEl.style.color = '#f56565'; }
               if(textEl) textEl.innerText = 'Offline';
               handleParentDisconnect();
               return;
@@ -1031,12 +1035,22 @@
                        if (!call) return clearInterval(checkPC);
                        if (call.peerConnection) {
                            clearInterval(checkPC);
+                           var babyIceGraceTimer = null;
                            call.peerConnection.addEventListener('iceconnectionstatechange', function() {
                                var state = call.peerConnection.iceConnectionState;
-                               if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+                               if (state === 'connected' || state === 'completed') {
+                                   if (babyIceGraceTimer) { clearTimeout(babyIceGraceTimer); babyIceGraceTimer = null; }
+                               } else if (state === 'disconnected') {
+                                   if (!babyIceGraceTimer) {
+                                       babyIceGraceTimer = setTimeout(function() {
+                                           if (call.peerConnection && (call.peerConnection.iceConnectionState === 'disconnected' || call.peerConnection.iceConnectionState === 'failed')) {
+                                               cleanUpParent(conn.peer);
+                                           }
+                                       }, 8000);
+                                   }
+                               } else if (state === 'failed' || state === 'closed') {
                                    cleanUpParent(conn.peer);
                                }
-                           });
                        }
                    }, 500);
                } catch(e) {}
@@ -1292,12 +1306,24 @@
                     if (!currentCall) return clearInterval(checkPC);
                     if (call.peerConnection) {
                         clearInterval(checkPC);
+                        var parentIceGraceTimer = null;
                         call.peerConnection.addEventListener('iceconnectionstatechange', function() {
                             var state = call.peerConnection.iceConnectionState;
-                            if (state === 'disconnected' || state === 'failed' || state === 'closed') {
+                            if (state === 'connected' || state === 'completed') {
+                                if (parentIceGraceTimer) { clearTimeout(parentIceGraceTimer); parentIceGraceTimer = null; }
+                                setLiveStatus('live', 'Live - Monitoring');
+                            } else if (state === 'disconnected') {
+                                setLiveStatus('waiting', 'Reconnecting...');
+                                if (!parentIceGraceTimer) {
+                                    parentIceGraceTimer = setTimeout(function() {
+                                        if (call.peerConnection && (call.peerConnection.iceConnectionState === 'disconnected' || call.peerConnection.iceConnectionState === 'failed')) {
+                                            handleParentDisconnect();
+                                        }
+                                    }, 8000);
+                                }
+                            } else if (state === 'failed' || state === 'closed') {
                                 handleParentDisconnect();
                             }
-                        });
                     }
                 }, 500);
             } catch(e) {}
