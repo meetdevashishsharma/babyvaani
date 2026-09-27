@@ -835,10 +835,6 @@
             rawStream = newStream;
             activeStream = newStream; // Stream camera directly with hardware acceleration
             
-            if(hiddenVideo) {
-                hiddenVideo.srcObject = rawStream;
-                hiddenVideo.play().catch(function(e){}); 
-            }
             
             buildProxyStream();
             if(videoBox) {
@@ -1176,15 +1172,7 @@
           if (savedCode && joinInp) joinInp.value = savedCode;
           
           showScreen('parentScreen');
-          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-              navigator.mediaDevices.getUserMedia({ audio: true, video: false })
-                .then(function(stream) {
-                  parentLocalStream = stream;
-                  if (parentLocalStream.getAudioTracks().length > 0) {
-                     parentLocalStream.getAudioTracks()[0].enabled = false; 
-                  }
-                }).catch(function(err) { parentLocalStream = null; });
-          }
+          showScreen('parentScreen');
       } catch (error) {
           goBack();
       }
@@ -1300,7 +1288,7 @@
         
         peer.on('call', function(call) {
             currentCall = call;
-            call.answer(parentLocalStream || null); 
+            call.answer(); // Pure receive mode - ensures remote video/audio are received without track mismatch
             
             try {
                 var checkPC = setInterval(function() {
@@ -1347,15 +1335,7 @@
 
 
               lastHeartbeatReceived = Date.now();
-              if(parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
-              parentHeartbeatInterval = setInterval(function() {
-                  if (!isBaby && currentCall) {
-                       if (Date.now() - lastHeartbeatReceived > 15000) { 
-                           clearInterval(parentHeartbeatInterval);
-                           handleParentDisconnect();
-                       }
-                  }
-              }, 2000);
+              lastHeartbeatReceived = Date.now();
               
               var aCode = document.getElementById('activeCodeDisplay');
               if(aCode) {
@@ -1375,9 +1355,25 @@
               if(pCont) pCont.style.display = "grid";
               
               if(videoBox) {
-                  videoBox.muted = true; 
+                  videoBox.muted = true;
+                  videoBox.defaultMuted = true;
+                  videoBox.playsInline = true;
+                  videoBox.setAttribute('playsinline', '');
+                  videoBox.setAttribute('webkit-playsinline', '');
                   videoBox.srcObject = remoteStream;
-                  videoBox.play().catch(function(e){}); 
+                  
+                  videoBox.onloadedmetadata = function() {
+                      videoBox.play().catch(function(e){ console.warn('Play on metadata error:', e); });
+                  };
+                  
+                  remoteStream.getVideoTracks().forEach(function(track) {
+                      track.enabled = true;
+                      track.onunmute = function() {
+                          videoBox.play().catch(function(e){});
+                      };
+                  });
+                  
+                  videoBox.play().catch(function(e){ console.warn('Initial play error:', e); });
               }
               parentIsMuted = true;
               var slider = document.getElementById('audioBoostSlider');
