@@ -1051,7 +1051,8 @@
                                } else if (state === 'failed' || state === 'closed') {
                                    cleanUpParent(conn.peer);
                                }
-                       }
+                            });
+                        }
                    }, 500);
                } catch(e) {}
             }
@@ -1324,6 +1325,7 @@
                             } else if (state === 'failed' || state === 'closed') {
                                 handleParentDisconnect();
                             }
+                        });
                     }
                 }, 500);
             } catch(e) {}
