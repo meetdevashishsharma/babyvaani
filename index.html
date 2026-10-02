@@ -60,7 +60,7 @@
     .checkbox-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
     .checkbox-container input { width: 16px; height: 16px; accent-color: #f6ad55; }
     
-    .monitor-container { background: #000; border-radius: 20px; overflow: hidden; position: relative; height: 52vh; width: 100%; display: flex; align-items: center; justify-content: center; border: 3px solid #ffffff; margin-bottom: 10px; cursor: pointer; }
+    .monitor-container { background: #000; border-radius: 20px; overflow: hidden; position: relative; height: 52vh; width: 100%; display: flex; align-items: center; justify-content: center; border: 3px solid #ffffff; margin-bottom: 10px; cursor: pointer; transform: translateZ(0); transition: border-color 0.3s ease; will-change: transform; }
     
     .live-status-banner { position: absolute; top: 15px; left: 15px; background: rgba(45, 55, 72, 0.8); color: #ffffff; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; z-index: 20; backdrop-filter: blur(8px); }
     .battery-indicator { display: none; align-items: center; gap: 4px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 12px; margin-left: 8px; font-size: 11px; }
@@ -74,7 +74,7 @@
     .status-dot.offline { background-color: #f56565; }
     @keyframes pulseLive { 0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.6); } 70% { box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); } 100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); } }
     
-    video { width: 100%; height: 100%; object-fit: contain; display: block; position: relative; z-index: 1; transition: filter 0.3s ease; }
+    video { width: 100%; height: 100%; object-fit: contain; display: block; transition: transform 0.3s ease, filter 0.3s ease; transform: translateZ(0); }
     video.night-mode { filter: brightness(1.4) contrast(1.2) sepia(0.4) hue-rotate(-10deg) saturate(1.1); }
     video.baby-locked { pointer-events: none; }
     video.baby-locked::-webkit-media-controls-enclosure { display: none !important; }
@@ -108,7 +108,6 @@
   <div id="audioUnblockBanner" style="display:none; position: fixed; top: 0; left: 0; width: 100%; background: #f56565; color: white; padding: 14px; text-align: center; z-index: 10000; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(245,101,101,0.3);">
     <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 18px; margin-right: 4px;">volume_up</span> Tap anywhere to enable live audio
   </div>
-
 
   <div id="dimOverlay" onclick="wakeScreen()"></div>
   
@@ -151,7 +150,6 @@
       </div>
     </div>
 
-
     <div class="network-mode-box">
       <h4><span class="material-symbols-outlined" style="font-size: 18px;">router</span> Connection Settings</h4>
       <div class="mode-options">
@@ -174,7 +172,6 @@
       <button onclick="startParentMode()" style="flex-direction: row; min-height: 52px; font-size: 14px;"><span class="material-symbols-outlined">visibility</span> Parent Monitor</button>
     </div>
 
-
     <div style="width: 100%; max-width: 400px; text-align: left; margin: 25px auto 0 auto; background: #ffffff; padding: 20px; border-radius: 20px; border: 1px solid #edf2f7; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
       <h4 style="color: #dd6b20; border-bottom: 2px solid #feebc8; padding-bottom: 8px; margin-top: 0; margin-bottom: 12px; font-size: 14px;">Frequently Asked Questions</h4>
       
@@ -188,7 +185,6 @@
         <p style="font-size: 11px; color: #4a5568; margin: 6px 0 0 0;">If both devices are in the same room, they create an audio feedback loop. Keep devices in separate rooms.</p>
       </details>
 
-
       <div style="margin-top: 20px; text-align: center;">
         <a href="https://buymeacoffee.com/" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background-color: #48bb78; color: #fff; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 13px; width: 100%; box-shadow: 0 4px 12px rgba(72,187,120,0.2);">
           <span class="material-symbols-outlined" style="font-size: 18px;">local_cafe</span> Support the Developer
@@ -200,7 +196,6 @@
       <button onclick="factoryResetApp()" style="background: none; color: #a0aec0; border: none; font-size: 12px; text-decoration: underline; font-weight: 600; min-height: auto; width: auto; margin: 0 auto; padding: 8px;">Clear all app data & reset</button>
     </div>
   </div>
-
 
   <div id="parentScreen" class="screen" style="align-items: flex-start; padding-top: 10px;">
     <button class="back-btn" onclick="goBack()"><span class="material-symbols-outlined">arrow_back</span> Back</button>
@@ -224,7 +219,6 @@
     </div>
   </div>
 
-
   <div id="videoScreen" class="screen">
     <div id="parentTopBar" style="display:none; flex-direction: column; align-items: center; width: 100%;">
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
@@ -234,21 +228,16 @@
       <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
         <label style="font-size: 12px; font-weight: 600;">Stream Quality:</label>
         <select id="qualitySelect" onchange="requestQualityChange()" style="padding: 6px; font-size: 12px; border-radius: 8px; max-width: 150px;">
-          <option value="balanced" selected>HD Clear (720p • 24 FPS)</option>
+          <option value="balanced">HD Clear (720p • 24 FPS)</option>
           <option value="fast">Standard (360p • 15 FPS)</option>
           <option value="ultra_high_fps">Fluid Motion (144p • 30 FPS)</option>
-          <option value="ultra">Max Battery Saver (144p • 10 FPS)</option>
+          <option value="ultra" selected>Max Battery Saver (144p • 10 FPS)</option>
           <option value="audio_only">Audio Only (Max Battery)</option>
         </select>
       </div>
     </div>
     
-    <div class="monitor-container" id="monitorContainer" onclick="forcePlayRemoteVideo()">
-      <div id="tapPlayPrompt" onclick="forcePlayRemoteVideo()" style="display:none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 50; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; text-align: center; padding: 20px;">
-        <span class="material-symbols-outlined" style="font-size: 64px; color: #48bb78; margin-bottom: 8px;">play_circle</span>
-        <span style="color: #fff; font-size: 18px; font-weight: 800;">Tap to Start Video</span>
-        <span style="color: #cbd5e0; font-size: 13px; margin-top: 6px;">Mobile browser paused video autoplay</span>
-      </div>
+    <div class="monitor-container" id="monitorContainer">
       <video id="hiddenBabyCam" autoplay playsinline muted style="display:none;"></video>
       <canvas id="proxyCanvas" style="display:none;"></canvas>
       <canvas id="audioVisualizer" style="position:absolute; bottom:15px; right:15px; width:100px; height:30px; z-index:9999; pointer-events:none;"></canvas>
@@ -283,7 +272,6 @@
         <button onclick="cancelReconnect()" style="margin-top: 20px; background-color: #e53e3e; color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 14px; width: auto; min-height: auto; flex-direction: row; gap: 8px;">Stop & Exit</button>
       </div>
 
-
       <div id="sleepOverlay" class="overlay" style="display:none; background: rgba(18, 18, 18, 0.92); z-index: 4000;">
         <span class="material-symbols-outlined" style="font-size: 56px; color: #f6ad55; margin-bottom: 12px;">bedtime</span>
         <h3 style="color: #ffffff; margin-bottom: 6px; font-size: 20px;">Baby Camera is Asleep</h3>
@@ -294,7 +282,7 @@
       </div>
       
       <audio id="parentAudio" autoplay playsinline style="display:none;"></audio>
-      <video id="myCamera" autoplay playsinline webkit-playsinline muted disableRemotePlayback autoPictureInPicture></video>
+      <video id="myCamera" autoplay playsinline webkit-playsinline disableRemotePlayback autoPictureInPicture></video>
     </div>
     
     <div id="babyAudioContainer" style="opacity: 0; position: absolute; pointer-events: none; visibility: hidden;"></div>
@@ -355,18 +343,6 @@
         <span class="material-symbols-outlined" style="font-size: 18px;">close</span> End Session
       </button>
     </div>
-    
-    <div id="debugDiagBox" style="margin-top: 14px; background: #1a202c; border: 1px solid #4a5568; border-radius: 12px; padding: 12px; font-family: monospace; font-size: 11px; color: #cbd5e0; text-align: left; width: 100%;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #2d3748; padding-bottom: 6px;">
-        <strong style="color: #63b3ed; font-size: 12px;">Live Connection Diagnostics</strong>
-        <button onclick="forcePlayRemoteVideo()" style="background: #3182ce; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; min-height: auto; width: auto;">Reload Video</button>
-      </div>
-      <div id="diagVideoState" style="margin-bottom: 4px;">Video: waiting for stream...</div>
-      <div id="diagRTPState" style="margin-bottom: 4px;">Inbound RTP: checking...</div>
-      <div id="diagICEState" style="margin-bottom: 4px;">ICE State: new</div>
-      <div id="diagCandPair" style="margin-bottom: 4px;">Candidate Pair: none</div>
-      <div id="diagErrors" style="color: #fc8181;">Errors: none</div>
-    </div>
   </div>
   
   <script>
@@ -393,16 +369,14 @@
     var visualizerCtx = null, visualizerCanvas = null, visualizerAnimationFrame = null;
     var currentRotation = 0, activeRoomCode = "", isBaby = false, isNightMode = false, isCodeVisible = false, isBabyCodeVisible = false;
     
-    var selectedNetworkMode = 'internet', currentQuality = 'balanced', isRemoteDimmed = false, reconnectAttempts = 0;
+    var selectedNetworkMode = 'internet', currentQuality = 'ultra', isRemoteDimmed = false, reconnectAttempts = 0;
     var parentHeartbeatInterval = null, lastHeartbeatReceived = 0;
     var networkFallbackAttempted = false;
     var reconnectTimeout = null;
 
-
     // Push To Talk Variables
     var isTalking = false;
     var preTalkGain = 1.0;
-
 
     // Mobile Audio Unblocker
     function unblockAudio() {
@@ -414,7 +388,6 @@
     }
     document.body.addEventListener('click', unblockAudio);
     document.body.addEventListener('touchstart', unblockAudio, {passive: true});
-
 
     window.addEventListener('popstate', function(event) {
         teardownConnections();
@@ -466,28 +439,10 @@
     }
     initNetworkMode();
 
-
     function getPeerConfig() {
-      return {
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' },
-            { urls: 'stun:stun2.l.google.com:19302' },
-            { urls: 'stun:stun.cloudflare.com:3478' },
-            { urls: 'stun:global.stun.twilio.com:3478' },
-            {
-              urls: [
-                'turn:turn.anyfirewall.com:443?transport=tcp',
-                'turn:turn.anyfirewall.com:443?transport=udp'
-              ],
-              username: 'webrtc',
-              credential: 'webrtc'
-            }
-          ],
-          sdpSemantics: 'unified-plan'
-        }
-      };
+      return selectedNetworkMode === 'wifi' 
+        ? { config: { iceServers: [] } } 
+        : { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' }] } };
     }
     
     function getSavedParentDevices() { 
@@ -611,17 +566,13 @@
         if (currentCall && currentCall.peerConnection) {
           var pc = currentCall.peerConnection;
           
-          if (pc.iceConnectionState === 'disconnected') {
+          if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
               var iconEl = document.getElementById('connIcon');
               var textEl = document.getElementById('pingText');
-              if(iconEl) { iconEl.innerText = 'signal_cellular_null'; iconEl.style.color = '#ecc94b'; }
-              if(textEl) textEl.innerText = 'Buffering...';
-              return;
-          }
-          if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'closed') {
-              var iconEl = document.getElementById('connIcon');
-              var textEl = document.getElementById('pingText');
-              if(iconEl) { iconEl.innerText = 'signal_cellular_connected_no_internet_0_bar'; iconEl.style.color = '#f56565'; }
+              if(iconEl) {
+                  iconEl.innerText = 'signal_cellular_connected_no_internet_0_bar';
+                  iconEl.style.color = '#f56565';
+              }
               if(textEl) textEl.innerText = 'Offline';
               handleParentDisconnect();
               return;
@@ -665,7 +616,6 @@
                     if(textE) textE.innerText = 'Online';
                 }
               }).catch(function(e) {});
-          updateDiagnostics();
           }
         }
       }, 3000);
@@ -764,19 +714,10 @@
                         if (videoSender.getParameters && typeof videoSender.getParameters === 'function') {
                             var params = videoSender.getParameters();
                             if (params.encodings && params.encodings.length > 0) {
-                                if (quality === 'ultra') {
-                                    params.encodings[0].scaleResolutionDownBy = 2;
-                                    params.encodings[0].maxBitrate = 500000;
-                                } else if (quality === 'ultra_high_fps') {
-                                    params.encodings[0].scaleResolutionDownBy = 2;
-                                    params.encodings[0].maxBitrate = 800000;
-                                } else if (quality === 'fast') {
-                                    params.encodings[0].scaleResolutionDownBy = 1.5;
-                                    params.encodings[0].maxBitrate = 1000000;
-                                } else {
-                                    delete params.encodings[0].maxBitrate;
-                                    delete params.encodings[0].scaleResolutionDownBy;
-                                }
+                                if (quality === 'ultra') params.encodings[0].maxBitrate = 80000; 
+                                else if (quality === 'ultra_high_fps') params.encodings[0].maxBitrate = 150000; 
+                                else if (quality === 'fast') params.encodings[0].maxBitrate = 200000; 
+                                else delete params.encodings[0].maxBitrate;
                                 
                                 if (videoSender.setParameters && typeof videoSender.setParameters === 'function') {
                                     videoSender.setParameters(params).catch(function(e){});
@@ -790,7 +731,22 @@
     }
     
     function buildProxyStream() {
-        activeStream = rawStream;
+        if (!isBaby || !proxyCanvas || typeof proxyCanvas.captureStream !== 'function') {
+            activeStream = rawStream;
+            return;
+        }
+        if (!activeStream || activeStream.getTracks().length === 0) {
+            activeStream = proxyCanvas.captureStream(30); 
+        }
+        
+        var oldAudio = activeStream.getAudioTracks();
+        for (var i = 0; i < oldAudio.length; i++) {
+            activeStream.removeTrack(oldAudio[i]);
+        }
+        if (rawStream && rawStream.getAudioTracks().length > 0) {
+            activeStream.addTrack(rawStream.getAudioTracks()[0]);
+        }
+        setCanvasQuality(currentQuality);
     }
     
     function populateCameras() {
@@ -830,32 +786,25 @@
         if (!isBaby) return;
         var dim = document.getElementById('dimOverlay');
         if(dim) dim.classList.remove('active');
-        if (rawStream) {
-            rawStream.getVideoTracks().forEach(function(t) { t.enabled = true; });
-            rawStream.getAudioTracks().forEach(function(t) { t.enabled = true; });
-            activeStream = rawStream;
+        if (rawStream && activeStream) {
             if (callback) callback(activeStream);
             return;
         }
         setLiveStatus('waiting', 'Waking Camera...');
         var select = document.getElementById('cameraSelect');
         var deviceId = select ? select.value : null;
-        
-        var vConstraints = deviceId 
-            ? { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
-            : { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } };
-            
         var constraints = { 
-            video: vConstraints, 
+            video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" }, 
             audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } 
         };
-        navigator.mediaDevices.getUserMedia(constraints).catch(function(err) {
-            console.warn('Initial camera constraints failed, retrying with standard video/audio:', err);
-            return navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        }).then(function(newStream) {
+        if (deviceId) { constraints.video.deviceId = { exact: deviceId }; }
+        navigator.mediaDevices.getUserMedia(constraints).then(function(newStream) {
             rawStream = newStream;
-            activeStream = newStream; // Stream camera directly with hardware acceleration
             
+            if(hiddenVideo) {
+                hiddenVideo.srcObject = rawStream;
+                hiddenVideo.play().catch(function(e){}); 
+            }
             
             buildProxyStream();
             if(videoBox) {
@@ -908,10 +857,7 @@
         }
         
         setTimeout(function() {
-            navigator.mediaDevices.getUserMedia(constraints).catch(function(err) {
-            console.warn('Initial camera constraints failed, retrying with standard video/audio:', err);
-            return navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        }).then(function(newStream) {
+            navigator.mediaDevices.getUserMedia(constraints).then(function(newStream) {
                 rawStream = newStream;
                 if(hiddenVideo) {
                     hiddenVideo.srcObject = rawStream;
@@ -1013,15 +959,8 @@
       if (peer) peer.destroy();
       
       // Strict network isolation restored
-      var isolatedPeerId = "BV-" + activeRoomCode.toUpperCase();
+      var isolatedPeerId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + activeRoomCode;
       peer = new Peer(isolatedPeerId, getPeerConfig());
-      
-      peer.on('disconnected', function() {
-        console.warn('Baby Peer disconnected from signaling server. Reconnecting...');
-        if (peer && !peer.destroyed) {
-          try { peer.reconnect(); } catch(e) {}
-        }
-      });
       
       peer.on('error', function(err) {
         if (err.type === 'unavailable-id') {
@@ -1034,13 +973,11 @@
         conn.on('data', function(data) { handleDataChannelMessage(data, conn); });
         conn.on('close', function() { cleanUpParent(conn.peer); });
         
-        conn.on('open', function() {
-          if ('getBattery' in navigator && typeof navigator.getBattery === 'function') {
-            navigator.getBattery().then(function(battery) {
-              try { conn.send("BAT:" + Math.round(battery.level * 100) + ":" + battery.charging); } catch(e){}
-            }).catch(function(e){});
-          }
-        });
+        if ('getBattery' in navigator && typeof navigator.getBattery === 'function') {
+          navigator.getBattery().then(function(battery) {
+            conn.send("BAT:" + Math.round(battery.level * 100) + ":" + battery.charging);
+          }).catch(function(e){});
+        }
         
         wakeBabyDevice(function(stream) {
             if (!stream) return;
@@ -1052,24 +989,13 @@
                        if (!call) return clearInterval(checkPC);
                        if (call.peerConnection) {
                            clearInterval(checkPC);
-                           var babyIceGraceTimer = null;
                            call.peerConnection.addEventListener('iceconnectionstatechange', function() {
                                var state = call.peerConnection.iceConnectionState;
-                               if (state === 'connected' || state === 'completed') {
-                                   if (babyIceGraceTimer) { clearTimeout(babyIceGraceTimer); babyIceGraceTimer = null; }
-                               } else if (state === 'disconnected') {
-                                   if (!babyIceGraceTimer) {
-                                       babyIceGraceTimer = setTimeout(function() {
-                                           if (call.peerConnection && (call.peerConnection.iceConnectionState === 'disconnected' || call.peerConnection.iceConnectionState === 'failed')) {
-                                               cleanUpParent(conn.peer);
-                                           }
-                                       }, 20000);
-                                   }
-                               } else if (state === 'failed' || state === 'closed') {
+                               if (state === 'disconnected' || state === 'failed' || state === 'closed') {
                                    cleanUpParent(conn.peer);
                                }
-                            });
-                        }
+                           });
+                       }
                    }, 500);
                } catch(e) {}
             }
@@ -1085,20 +1011,20 @@
             setCanvasQuality(currentQuality); 
             
             call.on('stream', function(parentStream) { 
-               // Direct playback on audio element for mobile OS compatibility
-               if (parentAudioEl) {
-                   parentAudioEl.srcObject = parentStream;
-                   parentAudioEl.play().catch(function(e){ console.warn("Audio play failed:", e); });
-               }
+               // 3X AUDIO BOOST FOR PARENT VOICE
                try {
                    var babyAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                   if (babyAudioCtx.state === 'suspended') babyAudioCtx.resume().catch(function(e){});
                    var source = babyAudioCtx.createMediaStreamSource(parentStream);
                    var gainNode = babyAudioCtx.createGain();
-                   gainNode.gain.value = 2.5;
+                   gainNode.gain.value = 3.0; // Boost volume to 300%
                    source.connect(gainNode);
                    gainNode.connect(babyAudioCtx.destination);
-               } catch(e) {}
+               } catch(e) {
+                   if(parentAudioEl) {
+                       parentAudioEl.srcObject = parentStream;
+                       parentAudioEl.play().catch(function(e){});
+                   }
+               }
             });
             call.on('close', function() { cleanUpParent(conn.peer); });
         });
@@ -1248,7 +1174,6 @@
           fill.style.backgroundColor = (average > threshold) ? '#f56565' : '#48bb78';
       }
 
-
       visualizerCtx.lineWidth = 2;
       visualizerCtx.strokeStyle = '#f6ad55'; 
       visualizerCtx.beginPath();
@@ -1294,31 +1219,14 @@
         executePeerConnection(targetCode, false);
     }
     
-    function createSilentMediaStream() {
-        try {
-            var aCtx = new (window.AudioContext || window.webkitAudioContext)();
-            var dest = aCtx.createMediaStreamDestination();
-            return dest.stream;
-        } catch(e) {
-            return null;
-        }
-    }
-    
     function executePeerConnection(targetCode, isFallback) {
         if (peer) peer.destroy();
         peer = new Peer(getPeerConfig());
         
-        peer.on('disconnected', function() {
-            console.warn('Parent Peer disconnected from signaling server. Reconnecting...');
-            if (peer && !peer.destroyed) {
-                try { peer.reconnect(); } catch(e) {}
-            }
-        });
-        
         setLiveStatus('waiting', isFallback ? 'Auto-Switching...' : 'Connecting...');
         peer.on('open', function(id) {
             // Strict network isolation restored
-            var targetIsolatedId = "BV-" + targetCode.toUpperCase();
+            var targetIsolatedId = "BV-" + selectedNetworkMode.toUpperCase() + "-" + targetCode;
             var conn = peer.connect(targetIsolatedId);
             
             dataConnections.push(conn);
@@ -1327,30 +1235,16 @@
         
         peer.on('call', function(call) {
             currentCall = call;
-            var silentStream = createSilentMediaStream();
-            call.answer(silentStream); // Provides a valid stream to PeerJS so bidirectional ICE candidate gathering starts
+            call.answer(parentLocalStream || null); 
             
             try {
                 var checkPC = setInterval(function() {
                     if (!currentCall) return clearInterval(checkPC);
                     if (call.peerConnection) {
                         clearInterval(checkPC);
-                        var parentIceGraceTimer = null;
                         call.peerConnection.addEventListener('iceconnectionstatechange', function() {
                             var state = call.peerConnection.iceConnectionState;
-                            if (state === 'connected' || state === 'completed') {
-                                if (parentIceGraceTimer) { clearTimeout(parentIceGraceTimer); parentIceGraceTimer = null; }
-                                setLiveStatus('live', 'Live - Monitoring');
-                            } else if (state === 'disconnected') {
-                                setLiveStatus('waiting', 'Reconnecting...');
-                                if (!parentIceGraceTimer) {
-                                    parentIceGraceTimer = setTimeout(function() {
-                                        if (call.peerConnection && (call.peerConnection.iceConnectionState === 'disconnected' || call.peerConnection.iceConnectionState === 'failed')) {
-                                            handleParentDisconnect();
-                                        }
-                                    }, 20000);
-                                }
-                            } else if (state === 'failed' || state === 'closed') {
+                            if (state === 'disconnected' || state === 'failed' || state === 'closed') {
                                 handleParentDisconnect();
                             }
                         });
@@ -1359,7 +1253,6 @@
             } catch(e) {}
             
             call.on('stream', function(remoteStream) {
-              currentRemoteStream = remoteStream;
               reconnectAttempts = 0;
               networkFallbackAttempted = false;
               
@@ -1374,9 +1267,16 @@
                   document.getElementById('audioUnblockBanner').style.display = 'block';
               }
 
-
               lastHeartbeatReceived = Date.now();
-              lastHeartbeatReceived = Date.now();
+              if(parentHeartbeatInterval) clearInterval(parentHeartbeatInterval);
+              parentHeartbeatInterval = setInterval(function() {
+                  if (!isBaby && currentCall) {
+                       if (Date.now() - lastHeartbeatReceived > 4000) { 
+                           clearInterval(parentHeartbeatInterval);
+                           handleParentDisconnect();
+                       }
+                  }
+              }, 2000);
               
               var aCode = document.getElementById('activeCodeDisplay');
               if(aCode) {
@@ -1396,23 +1296,9 @@
               if(pCont) pCont.style.display = "grid";
               
               if(videoBox) {
-                  videoBox.muted = true;
-                  videoBox.defaultMuted = true;
-                  videoBox.playsInline = true;
-                  videoBox.setAttribute('playsinline', '');
-                  videoBox.setAttribute('webkit-playsinline', '');
-                  if (videoBox.srcObject !== remoteStream) {
-                      videoBox.srcObject = remoteStream;
-                  }
-                  
-                  videoBox.onloadedmetadata = function() { safePlayVideo(); };
-                  remoteStream.getVideoTracks().forEach(function(track) {
-                      track.enabled = true;
-                      track.onunmute = function() {
-                          safePlayVideo();
-                      };
-                  });
-                  safePlayVideo();
+                  videoBox.muted = true; 
+                  videoBox.srcObject = remoteStream;
+                  videoBox.play().catch(function(e){}); 
               }
               parentIsMuted = true;
               var slider = document.getElementById('audioBoostSlider');
@@ -1454,15 +1340,16 @@
         });
         
         peer.on('error', function(err) {
-            console.error('Peer error:', err);
-            if (err.type === 'peer-unavailable') {
+            if (err.type === 'peer-unavailable' && !networkFallbackAttempted) {
+                networkFallbackAttempted = true;
+                selectedNetworkMode = (selectedNetworkMode === 'wifi') ? 'internet' : 'wifi';
+                
                 var connectBtn = document.getElementById('connectBtn');
-                if (connectBtn) {
-                    connectBtn.disabled = false;
-                    connectBtn.innerHTML = '<span class="material-symbols-outlined">link</span> Connect Now';
-                }
-                setLiveStatus('offline', 'Baby Cam Not Found');
-                alert('Baby Camera (' + targetCode + ') not found. Please verify the code is entered correctly and the Baby Camera is active.');
+                if (connectBtn) connectBtn.innerHTML = '<span class="material-symbols-outlined">sync</span> Trying ' + selectedNetworkMode.toUpperCase() + '...';
+                
+                setTimeout(function() {
+                    executePeerConnection(targetCode, true);
+                }, 1000);
             } else {
                 handleParentDisconnect();
             }
@@ -2023,99 +1910,8 @@
           showScreen('selectionScreen', true);
       }
     }
-
-    var playInProgress = false;
-    function safePlayVideo() {
-        if (!videoBox || playInProgress) return;
-        videoBox.muted = true;
-        videoBox.defaultMuted = true;
-        videoBox.playsInline = true;
-        playInProgress = true;
-        var p = videoBox.play();
-        if (p && p.then) {
-            p.then(function() {
-                playInProgress = false;
-                var tapP = document.getElementById('tapPlayPrompt');
-                if (tapP) tapP.style.display = 'none';
-            }).catch(function(err) {
-                playInProgress = false;
-                if (err.name !== 'AbortError') {
-                    reportDiagError('Play error: ' + (err.message || err));
-                }
-            });
-        } else {
-            playInProgress = false;
-        }
-    }
-
-    function forcePlayRemoteVideo() {
-        safePlayVideo();
-    }
-    
-    function reportDiagError(msg) {
-        var errEl = document.getElementById('diagErrors');
-        if (errEl) errEl.innerHTML = "<strong>Error:</strong> " + msg;
-    }
-    
-    var currentRemoteStream = null;
-    function updateDiagnostics() {
-        var vState = document.getElementById('diagVideoState');
-        var rtpState = document.getElementById('diagRTPState');
-        var iceState = document.getElementById('diagICEState');
-        var candPair = document.getElementById('diagCandPair');
-        
-        if (videoBox && vState) {
-            var vTracks = currentRemoteStream ? currentRemoteStream.getVideoTracks() : [];
-            var trackInfo = vTracks.length > 0 
-                ? (vTracks[0].readyState + ", muted=" + vTracks[0].muted + ", enabled=" + vTracks[0].enabled)
-                : "no video track";
-            vState.innerHTML = "<strong>Video:</strong> " + videoBox.videoWidth + "x" + videoBox.videoHeight + 
-                               " | Paused: " + videoBox.paused + 
-                               " | Ready: " + videoBox.readyState + 
-                               " | Time: " + Math.round(videoBox.currentTime) + "s<br>" +
-                               "<strong>Track:</strong> " + trackInfo;
-                               
-            var tapP = document.getElementById('tapPlayPrompt');
-            if (tapP && currentRemoteStream) {
-                if (videoBox.paused || videoBox.videoWidth === 0) {
-                    tapP.style.display = 'flex';
-                } else {
-                    tapP.style.display = 'none';
-                }
-            }
-        }
-        
-        if (currentCall && currentCall.peerConnection) {
-            var pc = currentCall.peerConnection;
-            if (iceState) iceState.innerHTML = "<strong>ICE:</strong> " + pc.iceConnectionState + " | <strong>Signaling:</strong> " + pc.signalingState;
-            
-            if (pc.getStats && typeof pc.getStats === 'function') {
-                pc.getStats().then(function(stats) {
-                    stats.forEach(function(report) {
-                        if (report.type === 'inbound-rtp' && report.kind === 'video') {
-                            if (rtpState) {
-                                rtpState.innerHTML = "<strong>Inbound Video:</strong> Bytes: " + Math.round((report.bytesReceived || 0)/1024) + " KB" +
-                                                     " | Pkts: " + (report.packetsReceived || 0) + 
-                                                     " | Decoded: " + (report.framesDecoded || 0) +
-                                                     " | Lost: " + (report.packetsLost || 0);
-                            }
-                        }
-                        if (report.type === 'candidate-pair' && (report.selected || report.state === 'succeeded')) {
-                            if (candPair) {
-                                candPair.innerHTML = "<strong>Pair:</strong> " + (report.state || 'active') + 
-                                                     " | RTT: " + Math.round((report.currentRoundTripTime || 0) * 1000) + "ms";
-                            }
-                        }
-                    });
-                }).catch(function(e){});
-            }
-        }
-    }
   </script>
 </body>
 </html>
-
-
-
 
 
