@@ -485,7 +485,6 @@
             },
             { urls: 'stun:global.stun.twilio.com:3478' }
           ],
-          iceCandidatePoolSize: 2,
           sdpSemantics: 'unified-plan'
         }
       };
@@ -1391,20 +1390,18 @@
                   videoBox.playsInline = true;
                   videoBox.setAttribute('playsinline', '');
                   videoBox.setAttribute('webkit-playsinline', '');
-                  videoBox.srcObject = remoteStream;
+                  if (videoBox.srcObject !== remoteStream) {
+                      videoBox.srcObject = remoteStream;
+                  }
                   
-                  videoBox.onloadedmetadata = function() {
-                      videoBox.play().catch(function(e){ console.warn('Play on metadata error:', e); });
-                  };
-                  
+                  videoBox.onloadedmetadata = function() { safePlayVideo(); };
                   remoteStream.getVideoTracks().forEach(function(track) {
                       track.enabled = true;
                       track.onunmute = function() {
-                          videoBox.play().catch(function(e){});
+                          safePlayVideo();
                       };
                   });
-                  
-                  videoBox.play().catch(function(e){ console.warn('Initial play error:', e); });
+                  safePlayVideo();
               }
               parentIsMuted = true;
               var slider = document.getElementById('audioBoostSlider');
@@ -2016,19 +2013,32 @@
       }
     }
 
-    function forcePlayRemoteVideo() {
-        if (videoBox) {
-            videoBox.muted = true;
-            videoBox.defaultMuted = true;
-            videoBox.playsInline = true;
-            videoBox.play().then(function() {
+    var playInProgress = false;
+    function safePlayVideo() {
+        if (!videoBox || playInProgress) return;
+        videoBox.muted = true;
+        videoBox.defaultMuted = true;
+        videoBox.playsInline = true;
+        playInProgress = true;
+        var p = videoBox.play();
+        if (p && p.then) {
+            p.then(function() {
+                playInProgress = false;
                 var tapP = document.getElementById('tapPlayPrompt');
                 if (tapP) tapP.style.display = 'none';
             }).catch(function(err) {
-                console.error("Force play error:", err);
-                reportDiagError('Play error: ' + (err.message || err));
+                playInProgress = false;
+                if (err.name !== 'AbortError') {
+                    reportDiagError('Play error: ' + (err.message || err));
+                }
             });
+        } else {
+            playInProgress = false;
         }
+    }
+
+    function forcePlayRemoteVideo() {
+        safePlayVideo();
     }
     
     function reportDiagError(msg) {
