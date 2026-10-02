@@ -1294,6 +1294,16 @@
         executePeerConnection(targetCode, false);
     }
     
+    function createSilentMediaStream() {
+        try {
+            var aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var dest = aCtx.createMediaStreamDestination();
+            return dest.stream;
+        } catch(e) {
+            return null;
+        }
+    }
+    
     function executePeerConnection(targetCode, isFallback) {
         if (peer) peer.destroy();
         peer = new Peer(getPeerConfig());
@@ -1317,7 +1327,8 @@
         
         peer.on('call', function(call) {
             currentCall = call;
-            call.answer(); // Pure receive mode - ensures remote video/audio are received without track mismatch
+            var silentStream = createSilentMediaStream();
+            call.answer(silentStream); // Provides a valid stream to PeerJS so bidirectional ICE candidate gathering starts
             
             try {
                 var checkPC = setInterval(function() {
