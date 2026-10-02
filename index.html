@@ -243,7 +243,12 @@
       </div>
     </div>
     
-    <div class="monitor-container" id="monitorContainer" onclick="if(videoBox){videoBox.play().catch(function(e){});}">
+    <div class="monitor-container" id="monitorContainer" onclick="forcePlayRemoteVideo()">
+      <div id="tapPlayPrompt" onclick="forcePlayRemoteVideo()" style="display:none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 50; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; text-align: center; padding: 20px;">
+        <span class="material-symbols-outlined" style="font-size: 64px; color: #48bb78; margin-bottom: 8px;">play_circle</span>
+        <span style="color: #fff; font-size: 18px; font-weight: 800;">Tap to Start Video</span>
+        <span style="color: #cbd5e0; font-size: 13px; margin-top: 6px;">Mobile browser paused video autoplay</span>
+      </div>
       <video id="hiddenBabyCam" autoplay playsinline muted style="display:none;"></video>
       <canvas id="proxyCanvas" style="display:none;"></canvas>
       <canvas id="audioVisualizer" style="position:absolute; bottom:15px; right:15px; width:100px; height:30px; z-index:9999; pointer-events:none;"></canvas>
@@ -349,6 +354,18 @@
       <button onclick="goBack()" class="off" style="grid-column: 1 / -1; background-color: #2d3748; color: white; min-height: 40px; flex-direction: row; gap: 8px;">
         <span class="material-symbols-outlined" style="font-size: 18px;">close</span> End Session
       </button>
+    </div>
+    
+    <div id="debugDiagBox" style="margin-top: 14px; background: #1a202c; border: 1px solid #4a5568; border-radius: 12px; padding: 12px; font-family: monospace; font-size: 11px; color: #cbd5e0; text-align: left; width: 100%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #2d3748; padding-bottom: 6px;">
+        <strong style="color: #63b3ed; font-size: 12px;">Live Connection Diagnostics</strong>
+        <button onclick="forcePlayRemoteVideo()" style="background: #3182ce; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; min-height: auto; width: auto;">Reload Video</button>
+      </div>
+      <div id="diagVideoState" style="margin-bottom: 4px;">Video: waiting for stream...</div>
+      <div id="diagRTPState" style="margin-bottom: 4px;">Inbound RTP: checking...</div>
+      <div id="diagICEState" style="margin-bottom: 4px;">ICE State: new</div>
+      <div id="diagCandPair" style="margin-bottom: 4px;">Candidate Pair: none</div>
+      <div id="diagErrors" style="color: #fc8181;">Errors: none</div>
     </div>
   </div>
   
@@ -649,6 +666,7 @@
                     if(textE) textE.innerText = 'Online';
                 }
               }).catch(function(e) {});
+          updateDiagnostics();
           }
         }
       }, 3000);
@@ -1046,7 +1064,7 @@
                                            if (call.peerConnection && (call.peerConnection.iceConnectionState === 'disconnected' || call.peerConnection.iceConnectionState === 'failed')) {
                                                cleanUpParent(conn.peer);
                                            }
-                                       }, 8000);
+                                       }, 20000);
                                    }
                                } else if (state === 'failed' || state === 'closed') {
                                    cleanUpParent(conn.peer);
@@ -1320,7 +1338,7 @@
                                         if (call.peerConnection && (call.peerConnection.iceConnectionState === 'disconnected' || call.peerConnection.iceConnectionState === 'failed')) {
                                             handleParentDisconnect();
                                         }
-                                    }, 8000);
+                                    }, 20000);
                                 }
                             } else if (state === 'failed' || state === 'closed') {
                                 handleParentDisconnect();
@@ -1331,6 +1349,7 @@
             } catch(e) {}
             
             call.on('stream', function(remoteStream) {
+              currentRemoteStream = remoteStream;
               reconnectAttempts = 0;
               networkFallbackAttempted = false;
               
@@ -1994,6 +2013,80 @@
           }
       } catch(e) {
           showScreen('selectionScreen', true);
+    function forcePlayRemoteVideo() {
+        if (videoBox) {
+            videoBox.muted = true;
+            videoBox.defaultMuted = true;
+            videoBox.playsInline = true;
+            videoBox.play().then(function() {
+                var tapP = document.getElementById('tapPlayPrompt');
+                if (tapP) tapP.style.display = 'none';
+            }).catch(function(err) {
+                console.error("Force play error:", err);
+                reportDiagError('Play error: ' + (err.message || err));
+            });
+        }
+    }
+    
+    function reportDiagError(msg) {
+        var errEl = document.getElementById('diagErrors');
+        if (errEl) errEl.innerHTML = "<strong>Error:</strong> " + msg;
+    }
+    
+    var currentRemoteStream = null;
+    function updateDiagnostics() {
+        var vState = document.getElementById('diagVideoState');
+        var rtpState = document.getElementById('diagRTPState');
+        var iceState = document.getElementById('diagICEState');
+        var candPair = document.getElementById('diagCandPair');
+        
+        if (videoBox && vState) {
+            var vTracks = currentRemoteStream ? currentRemoteStream.getVideoTracks() : [];
+            var trackInfo = vTracks.length > 0 
+                ? (vTracks[0].readyState + ", muted=" + vTracks[0].muted + ", enabled=" + vTracks[0].enabled)
+                : "no video track";
+            vState.innerHTML = "<strong>Video:</strong> " + videoBox.videoWidth + "x" + videoBox.videoHeight + 
+                               " | Paused: " + videoBox.paused + 
+                               " | Ready: " + videoBox.readyState + 
+                               " | Time: " + Math.round(videoBox.currentTime) + "s<br>" +
+                               "<strong>Track:</strong> " + trackInfo;
+                               
+            var tapP = document.getElementById('tapPlayPrompt');
+            if (tapP && currentRemoteStream) {
+                if (videoBox.paused || videoBox.videoWidth === 0) {
+                    tapP.style.display = 'flex';
+                } else {
+                    tapP.style.display = 'none';
+                }
+            }
+        }
+        
+        if (currentCall && currentCall.peerConnection) {
+            var pc = currentCall.peerConnection;
+            if (iceState) iceState.innerHTML = "<strong>ICE:</strong> " + pc.iceConnectionState + " | <strong>Signaling:</strong> " + pc.signalingState;
+            
+            if (pc.getStats && typeof pc.getStats === 'function') {
+                pc.getStats().then(function(stats) {
+                    stats.forEach(function(report) {
+                        if (report.type === 'inbound-rtp' && report.kind === 'video') {
+                            if (rtpState) {
+                                rtpState.innerHTML = "<strong>Inbound Video:</strong> Bytes: " + Math.round((report.bytesReceived || 0)/1024) + " KB" +
+                                                     " | Pkts: " + (report.packetsReceived || 0) + 
+                                                     " | Decoded: " + (report.framesDecoded || 0) +
+                                                     " | Lost: " + (report.packetsLost || 0);
+                            }
+                        }
+                        if (report.type === 'candidate-pair' && (report.selected || report.state === 'succeeded')) {
+                            if (candPair) {
+                                candPair.innerHTML = "<strong>Pair:</strong> " + (report.state || 'active') + 
+                                                     " | RTT: " + Math.round((report.currentRoundTripTime || 0) * 1000) + "ms";
+                            }
+                        }
+                    });
+                }).catch(function(e){});
+            }
+        }
+    }
       }
     }
   </script>
