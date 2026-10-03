@@ -2114,6 +2114,8 @@
                                 }
                                 candPair.innerHTML = "<strong>Route:</strong> " + routeType + 
                                                      " | RTT: " + Math.round((report.currentRoundTripTime || 0) * 1000) + "ms";
+                            }
+                        }
                     });
                 }).catch(function(e){});
             }
