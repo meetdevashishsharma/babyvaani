@@ -836,6 +836,10 @@
             rawStream.getVideoTracks().forEach(function(t) { t.enabled = true; });
             rawStream.getAudioTracks().forEach(function(t) { t.enabled = true; });
             activeStream = rawStream;
+            if (videoBox) {
+                videoBox.muted = true;
+                videoBox.play().catch(function(e){});
+            }
             if (callback) callback(activeStream);
             return;
         }
@@ -1408,6 +1412,8 @@
                   }
                   
                   videoBox.onloadedmetadata = function() { safePlayVideo(); };
+                  videoBox.oncanplay = function() { safePlayVideo(); };
+                  videoBox.onloadeddata = function() { safePlayVideo(); };
                   remoteStream.getVideoTracks().forEach(function(track) {
                       track.enabled = true;
                       track.onunmute = function() {
@@ -1415,6 +1421,8 @@
                       };
                   });
                   safePlayVideo();
+                  setTimeout(safePlayVideo, 500);
+                  setTimeout(safePlayVideo, 1500);
               }
               parentIsMuted = true;
               var slider = document.getElementById('audioBoostSlider');
@@ -2026,28 +2034,31 @@
       }
     }
 
-    var playInProgress = false;
     function safePlayVideo() {
-        if (!videoBox || playInProgress) return;
+        if (!videoBox) return;
         videoBox.muted = true;
         videoBox.defaultMuted = true;
         videoBox.playsInline = true;
-        playInProgress = true;
-        var p = videoBox.play();
-        if (p && p.then) {
-            p.then(function() {
-                playInProgress = false;
-                var tapP = document.getElementById('tapPlayPrompt');
-                if (tapP) tapP.style.display = 'none';
-            }).catch(function(err) {
-                playInProgress = false;
-                if (err.name !== 'AbortError') {
-                    reportDiagError('Play error: ' + (err.message || err));
+        videoBox.setAttribute("playsinline", "");
+        videoBox.setAttribute("webkit-playsinline", "");
+        try {
+            var p = videoBox.play();
+            if (p) {
+                if (p.then) {
+                p.then(function() {
+                    var tapP = document.getElementById("tapPlayPrompt");
+                    if (tapP) tapP.style.display = "none";
+                }).catch(function(err) {
+                    if (err.name !== "AbortError") {
+                        reportDiagError("Play: " + (err.message || err));
+                    }
+                });
                 }
-            });
-        } else {
-            playInProgress = false;
-        }
+            } else {
+                var tapP = document.getElementById("tapPlayPrompt");
+                if (tapP) tapP.style.display = "none";
+            }
+        } catch(e) {}
     }
 
     function forcePlayRemoteVideo() {
@@ -2079,7 +2090,7 @@
                                
             var tapP = document.getElementById('tapPlayPrompt');
             if (tapP && currentRemoteStream) {
-                if (videoBox.paused || videoBox.videoWidth === 0) {
+                if (videoBox.paused) {
                     tapP.style.display = 'flex';
                 } else {
                     tapP.style.display = 'none';
