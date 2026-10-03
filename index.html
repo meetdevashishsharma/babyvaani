@@ -164,8 +164,8 @@
           <small style="font-size: 10px; font-weight: 400; color: #718096;">*Zero Latency. Devices must share Wi-Fi</small>
         </button>
       </div>
-      <div style="background: #fffaf0; border: 1px dashed #feebc8; padding: 8px 12px; border-radius: 10px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #dd6b20; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
-        <span class="material-symbols-outlined" style="font-size: 16px;">warning</span> Warning: Choose the exact same mode as the baby cam!
+      <div style="background: #f0fff4; border: 1px dashed #9ae6b4; padding: 8px 12px; border-radius: 10px; margin-top: 12px; font-size: 12px; font-weight: 700; color: #276749; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px;">
+        <span class="material-symbols-outlined" style="font-size: 16px; color: #38a169;">check_circle</span> Auto-Adaptive: Direct zero-latency on local Wi-Fi with automatic relay backup.
       </div>
     </div>
     
@@ -478,13 +478,15 @@
             { urls: 'stun:global.stun.twilio.com:3478' },
             {
               urls: [
-                'turn:turn.anyfirewall.com:443?transport=tcp',
-                'turn:turn.anyfirewall.com:443?transport=udp'
+                'turn:openrelay.metered.ca:80',
+                'turn:openrelay.metered.ca:443',
+                'turn:openrelay.metered.ca:443?transport=tcp'
               ],
-              username: 'webrtc',
-              credential: 'webrtc'
+              username: 'openrelayproject',
+              credential: 'openrelayproject'
             }
           ],
+          iceCandidatePoolSize: 4,
           sdpSemantics: 'unified-plan'
         }
       };
@@ -2102,10 +2104,16 @@
                         }
                         if (report.type === 'candidate-pair' && (report.selected || report.state === 'succeeded')) {
                             if (candPair) {
-                                candPair.innerHTML = "<strong>Pair:</strong> " + (report.state || 'active') + 
+                                var routeType = 'active';
+                                if (report.localCandidateId && stats.get(report.localCandidateId)) {
+                                    var cand = stats.get(report.localCandidateId);
+                                    if (cand.candidateType === 'host') routeType = 'Local Wi-Fi (LAN)';
+                                    else if (cand.candidateType === 'relay') routeType = 'Relay (TURN)';
+                                    else if (cand.candidateType === 'srflx') routeType = 'Direct P2P (STUN)';
+                                    else routeType = cand.candidateType;
+                                }
+                                candPair.innerHTML = "<strong>Route:</strong> " + routeType + 
                                                      " | RTT: " + Math.round((report.currentRoundTripTime || 0) * 1000) + "ms";
-                            }
-                        }
                     });
                 }).catch(function(e){});
             }
